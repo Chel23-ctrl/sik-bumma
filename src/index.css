@@ -1,0 +1,102 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Reset & Print */
+* { box-sizing: border-box; }
+@media print {
+  .print\:hidden { display: none !important; }
+  .print\:block { display: block !important; }
+}
+
+/* Custom Image Animations & Keyframes */
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(0.5deg); }
+}
+
+@keyframes floatReverse {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(8px) rotate(-0.5deg); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50% { opacity: 0.75; transform: scale(1.08); }
+}
+
+@keyframes kenburns {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08) translate(1%, -1%); }
+  100% { transform: scale(1); }
+}
+
+@keyframes driftDiagonal {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  50% { transform: translate(14px, -12px) rotate(2.5deg); }
+}
+
+@keyframes driftDiagonalReverse {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  50% { transform: translate(-14px, 12px) rotate(-2.5deg); }
+}
+
+@keyframes swaySlow {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+
+@keyframes rotateSunSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-float {
+  animation: floatSlow 5s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: floatReverse 6s ease-in-out infinite 1.5s;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 4s ease-in-out infinite;
+}
+
+.animate-kenburns {
+  animation: kenburns 14s ease-in-out infinite alternate;
+}
+
+.animate-drift {
+  animation: driftDiagonal 10s ease-in-out infinite;
+}
+
+.animate-drift-reverse {
+  animation: driftDiagonalReverse 12s ease-in-out infinite;
+}
+
+.animate-sway {
+  animation: swaySlow 7s ease-in-out infinite;
+}
+
+.animate-rotate-slow {
+  animation: rotateSunSlow 45s linear infinite;
+}
+
+/* Shimmer Gleam on Image Hover */
+.shimmer-gleam {
+  position: relative;
+  overflow: hidden;
+}
+.shimmer-gleam::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%; width: 50%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transform: skewX(-25deg);
+  transition: 0.75s;
+  pointer-events: none;
+}
+.shimmer-gleam:hover::after {
+  left: 200%;
+}
