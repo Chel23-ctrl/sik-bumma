@@ -3,9 +3,12 @@
   "version": "1.0.0",
   "private": true,
   "description": "Sistem Informasi Keuangan BUMMA Mekar Sari - TDA Kelompok 3C S1 Akuntansi FEB Universitas Cenderawasih",
+  "workspaces": [
+    "frontend"
+  ],
   "scripts": {
     "start": "npm start --prefix frontend",
-    "build": "npm run build --prefix frontend",
+    "build": "npm run build --prefix frontend && node copy-build.js",
     "test": "npm test --prefix frontend"
   },
   "keywords": [
