@@ -1,0 +1,21 @@
+{
+  "name": "sik-bumma-mekarsari",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sistem Informasi Keuangan BUMMA Mekar Sari - TDA Kelompok 3C S1 Akuntansi FEB Universitas Cenderawasih",
+  "scripts": {
+    "start": "npm start --prefix frontend",
+    "build": "npm run build --prefix frontend",
+    "test": "npm test --prefix frontend"
+  },
+  "keywords": [
+    "akuntansi",
+    "bumma",
+    "bumkam",
+    "sak-ep",
+    "tda",
+    "uncen"
+  ],
+  "author": "TDA Kelompok 3C - S1 Akuntansi FEB Uncen",
+  "license": "ISC"
+}
