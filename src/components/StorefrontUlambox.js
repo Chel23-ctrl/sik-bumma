@@ -34,16 +34,16 @@ export const DEFAULT_CORE_PRODUCTS = [
     unit: 'Per Rak (30 Butir)',
     images: [
       {
-        url: 'https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?w=1000&auto=format&fit=crop&q=80',
+        url: '/images/products/telur_segar_1.jpg',
         caption: 'Telur Ayam Ras Segar Pilihan - Disortir Bersih Setiap Pagi'
       },
       {
-        url: 'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=1000&auto=format&fit=crop&q=80',
+        url: '/images/products/kandang_ayam_2.jpg',
         caption: 'Kandang Peternakan Modern & Sehat Binaan Masyarakat Adat'
       },
       {
-        url: 'https://images.unsplash.com/photo-1516467508483-a7212febe31a?w=1000&auto=format&fit=crop&q=80',
-        caption: 'Kualitas Cangkang Tebal & Kuning Telur Alami Padat Nutrisi'
+        url: '/images/products/rak_telur_30_3.jpg',
+        caption: 'Rak Telur Karton Isi 30 Butir Pilihan - Panen Segar Harian'
       }
     ],
     description: 'Produksi telur ayam ras & kampung berkualitas prima dari peternakan binaan masyarakat adat BUMKam Mekar Sari. Dijamin selalu segar panen setiap pagi, bebas bahan pengawet, higienis, dan kaya nutrisi untuk kebutuhan konsumsi keluarga, warung, maupun katering.',
@@ -65,16 +65,16 @@ export const DEFAULT_CORE_PRODUCTS = [
     unit: 'Per Hari / Paket',
     images: [
       {
-        url: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=1000&auto=format&fit=crop&q=80',
-        caption: 'Tenda Kanopi Acara & Pesta Pernikahan Bersih & Megah'
+        url: '/images/products/tenda_marquee_1.jpg',
+        caption: 'Tenda Kanopi & Marquee Acara Pesta Luar Ruangan Bersih & Megah'
       },
       {
-        url: 'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=1000&auto=format&fit=crop&q=80',
-        caption: 'Rangka Baja Ringan Kokoh Tahan Angin & Cuaca Hujan'
+        url: '/images/products/tenda_kerucut_2.jpg',
+        caption: 'Tenda Tratak Kerucut & Rangka Baja Kokoh Tahan Angin & Cuaca Hujan'
       },
       {
-        url: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=1000&auto=format&fit=crop&q=80',
-        caption: 'Dekorasi Pesta & Suasana Kegiatan Adat yang Representatif'
+        url: '/images/products/tenda_tratak_3.jpg',
+        caption: 'Tenda Pesta Kapasitas Besar Lengkap Meja & Kursi Acara Adat'
       }
     ],
     description: 'Layanan persewaan tenda tratak, kanopi pesta, dan tenda upacara adat untuk berbagai kegiatan keluarga, syukuran, pernikahan, ibadah gereja, maupun acara duka cita warga kampung. Dilengkapi tim pemuda adat yang terampil untuk pemasangan dan pembongkaran cepat.',
@@ -96,16 +96,16 @@ export const DEFAULT_CORE_PRODUCTS = [
     unit: 'Per Acara / Hari',
     images: [
       {
-        url: 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=1000&auto=format&fit=crop&q=80',
-        caption: 'Gedung Pertemuan Serbaguna Representatif di Pusat Kampung'
+        url: '/images/products/gedung_aula_1.jpg',
+        caption: 'Aula Pertemuan Serbaguna Modern Representatif di Pusat Kampung'
       },
       {
-        url: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1000&auto=format&fit=crop&q=80',
-        caption: 'Tata Lampu & Panggung Lengkap untuk Acara Syukuran & Seminar'
+        url: '/images/products/gedung_resepsi_2.jpg',
+        caption: 'Tata Ruang Resepsi Pernikahan Megah & Meja Perjamuan Mewah'
       },
       {
-        url: 'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=1000&auto=format&fit=crop&q=80',
-        caption: 'Ruang Luas & Nyaman dengan Kapasitas Kursi 200 - 300 Tamu'
+        url: '/images/products/gedung_seminar_3.jpg',
+        caption: 'Panggung Kehormatan, Tata Lampu & Sound System Acara Akbar'
       }
     ],
     description: 'Gedung pertemuan serbaguna BUMKam Mekar Sari yang representatif, nyaman, dan strategis di pusat kampung. Sangat ideal untuk resepsi pernikahan adat, seminar, rapat koordinasi distrik, musyawarah kampung, ibadah perayaan, serta festival budaya.',
@@ -291,7 +291,7 @@ export default function StorefrontUlambox({ onOpenBackoffice, profile = {}, core
               {/* Main Animated Photo Frame with Ken Burns Effect */}
               <div className="rounded-3xl overflow-hidden shadow-2xl border-4 border-white/20 relative h-80 shimmer-gleam group">
                 <img
-                  src="https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?w=1000&auto=format&fit=crop&q=80"
+                  src="/images/products/telur_segar_1.jpg"
                   alt="Peternakan BUMKam Mekar Sari"
                   className="w-full h-full object-cover animate-kenburns"
                 />

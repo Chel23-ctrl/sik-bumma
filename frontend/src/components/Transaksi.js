@@ -25,12 +25,12 @@ export const formatIDR = (val) => {
 };
 
 const DEFAULT_PRODUCT_IMAGES = {
-  'PRD-001': 'https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?w=600&auto=format&fit=crop&q=80',
+  'PRD-001': '/images/products/telur_segar_1.jpg',
   'PRD-002': 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=600&auto=format&fit=crop&q=80',
   'PRD-003': 'https://images.unsplash.com/photo-1590736969955-71cc94801759?w=600&auto=format&fit=crop&q=80',
   'PRD-004': 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=600&auto=format&fit=crop&q=80',
-  'PRD-005': 'https://images.unsplash.com/photo-1519741497674-611481863552?w=600&auto=format&fit=crop&q=80',
-  'PRD-006': 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=600&auto=format&fit=crop&q=80'
+  'PRD-005': '/images/products/tenda_marquee_1.jpg',
+  'PRD-006': '/images/products/gedung_aula_1.jpg'
 };
 
 export default function Transaksi({

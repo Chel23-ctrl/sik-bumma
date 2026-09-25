@@ -220,7 +220,28 @@ export default function App() {
   const [customers, setCustomers] = useState(() => getStorage('customers', INITIAL_CUSTOMERS));
   const [suppliers, setSuppliers] = useState(() => getStorage('suppliers', INITIAL_SUPPLIERS));
   const [employees, setEmployees] = useState(() => getStorage('employees', INITIAL_EMPLOYEES));
-  const [coreProducts, setCoreProducts] = useState(() => getStorage('core_products', DEFAULT_CORE_PRODUCTS));
+  const [coreProducts, setCoreProducts] = useState(() => {
+    const stored = getStorage('core_products', DEFAULT_CORE_PRODUCTS);
+    if (Array.isArray(stored)) {
+      const hasOutdatedImages = stored.some(p => 
+        p.images && p.images.some(img => 
+          img.url && (
+            img.url.includes('1516467508483-a7212febe31a') ||
+            img.url.includes('1519741497674-611481863552') ||
+            img.url.includes('1464366400600-7168b8af9bc3') ||
+            img.url.includes('1533174072545-7a4b6ad7a6c3') ||
+            img.url.includes('1492684223066-81342ee5ff30') ||
+            img.url.includes('1475721027785-f74eccf877e2')
+          )
+        )
+      );
+      if (hasOutdatedImages) {
+        return DEFAULT_CORE_PRODUCTS;
+      }
+      return stored;
+    }
+    return DEFAULT_CORE_PRODUCTS;
+  });
   const [profile, setProfile] = useState(() => {
     const p = getStorage('profile', INITIAL_PROFILE);
     return { ...p, director: 'Eko L Wibowo', treasurer: 'Rita Fanghoi' };
