@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Printer, Download, Filter, Search } from 'lucide-react';
 import { formatIDR } from './Transaksi';
+import { exportToExcel, triggerPrint } from '../utils/exportUtils';
 
 export default function LaporanOperasional({ transactions, products }) {
   const [tab, setTab] = useState('penjualan');
@@ -10,20 +11,75 @@ export default function LaporanOperasional({ transactions, products }) {
   const purchaseRows = transactions.filter(t => t.type === 'pembelian');
   const cashRows = transactions.filter(t => t.type === 'kas_masuk' || t.type === 'kas_keluar');
 
+  const handleExportExcel = () => {
+    if (tab === 'penjualan') {
+      const data = salesRows.map(s => ({
+        'Tanggal': s.date,
+        'No. Faktur': s.number,
+        'Pelanggan': s.contact_name,
+        'Komoditas / Layanan': s.product_name,
+        'Volume': s.quantity,
+        'Harga Satuan (IDR)': s.price,
+        'Total (IDR)': s.total
+      }));
+      exportToExcel(data, 'Laporan_Operasional_Penjualan_BUMKam', 'Penjualan');
+    } else if (tab === 'pembelian') {
+      const data = purchaseRows.map(p => ({
+        'Tanggal': p.date,
+        'No. PO': p.number,
+        'Pemasok': p.contact_name,
+        'Item Barang': p.product_name,
+        'Volume': p.quantity,
+        'Harga Beli (IDR)': p.price,
+        'Total (IDR)': p.total
+      }));
+      exportToExcel(data, 'Laporan_Operasional_Pembelian_BUMKam', 'Pembelian');
+    } else if (tab === 'kas') {
+      const data = cashRows.map(c => ({
+        'Tanggal': c.date,
+        'No. Bukti': c.number,
+        'Kategori': c.type,
+        'Keterangan': c.description,
+        'Nominal (IDR)': c.total
+      }));
+      exportToExcel(data, 'Laporan_Mutasi_Kas_BUMKam', 'Mutasi Kas');
+    } else if (tab === 'persediaan') {
+      const data = products.map(p => ({
+        'Kode': p.code,
+        'Komoditas': p.name,
+        'Unit Usaha': p.unit_usaha,
+        'Perlakuan': p.perlakuan || 'Persediaan',
+        'Sisa Stok': p.stock,
+        'Satuan': p.unit,
+        'Harga Pokok (HPP)': p.buy_price,
+        'Nilai Stok (IDR)': (p.stock || 0) * (p.buy_price || 0)
+      }));
+      exportToExcel(data, 'Laporan_Status_Persediaan_BUMKam', 'Persediaan');
+    }
+  };
+
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold mb-0.5">LAPORAN</p>
-          <h1 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">Laporan Operasional BUMMA</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">Laporan Operasional BUMKam</h1>
           <p className="text-xs text-slate-500 mt-0.5">Rekapitulasi berkala penjualan, pengadaan logistik, arus kas harian, dan mutasi persediaan</p>
         </div>
-        <button
-          onClick={() => window.print()}
-          className="px-3.5 py-2 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center gap-1.5 print:hidden"
-        >
-          <Printer className="w-4 h-4" /> Cetak Rekapitulasi
-        </button>
+        <div className="flex items-center gap-2 print:hidden">
+          <button
+            onClick={handleExportExcel}
+            className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+          >
+            <Download className="w-4 h-4" /> Ekspor Excel (.xlsx)
+          </button>
+          <button
+            onClick={() => triggerPrint()}
+            className="px-3.5 py-2 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center gap-1.5"
+          >
+            <Printer className="w-4 h-4" /> Cetak Rekapitulasi
+          </button>
+        </div>
       </div>
 
       {/* Tabs */}

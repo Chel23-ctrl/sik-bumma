@@ -18,6 +18,39 @@ export default function ProfilBUMMA({ profile, setProfile }) {
       </div>
 
       <form onSubmit={handleSave} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-4 text-xs">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-emerald-50/50 dark:bg-emerald-950/20 p-4 rounded-xl border border-emerald-200/60 dark:border-emerald-800/40">
+          <div>
+            <label className="block font-bold text-emerald-900 dark:text-emerald-300 mb-1">Nama Aplikasi / Sistem</label>
+            <input
+              type="text"
+              value={pForm.systemName || 'ARVEA'}
+              onChange={(e) => setPForm({ ...pForm, systemName: e.target.value })}
+              className="w-full p-2.5 rounded-lg border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-slate-900 font-extrabold text-emerald-800 dark:text-emerald-300"
+              required
+            />
+          </div>
+          <div>
+            <label className="block font-bold text-emerald-900 dark:text-emerald-300 mb-1">Slogan / Tagline Resmi</label>
+            <input
+              type="text"
+              value={pForm.tagline || 'Satu Nilai, Satu Tujuan, Bertumbuh Bersama'}
+              onChange={(e) => setPForm({ ...pForm, tagline: e.target.value })}
+              className="w-full p-2.5 rounded-lg border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-slate-900 font-semibold"
+              required
+            />
+          </div>
+          <div>
+            <label className="block font-bold text-emerald-900 dark:text-emerald-300 mb-1">Standar Akuntansi</label>
+            <input
+              type="text"
+              value={pForm.standard || 'SAK EMKM'}
+              onChange={(e) => setPForm({ ...pForm, standard: e.target.value })}
+              className="w-full p-2.5 rounded-lg border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-slate-900 font-bold"
+              required
+            />
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Singkat BUMKam</label>

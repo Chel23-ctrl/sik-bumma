@@ -14,19 +14,21 @@ import {
 } from 'lucide-react';
 import { formatIDR } from './Transaksi';
 
-export default function DashboardView({ stats, transactions, onNavigate }) {
+export default function DashboardView({ stats, transactions, user, profile, onNavigate }) {
+  const userName = user?.name || 'Pengurus BUMKam';
+  const profileName = profile?.name || 'BUMKam Mekar Sari';
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Header Title Matching 3c */}
+      {/* Header Title */}
       <div>
         <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest block mb-1">
-          RINGKASAN KEUANGAN
+          RINGKASAN KEUANGAN &bull; ARVEA SAK EMKM
         </span>
         <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-          Selamat datang, Admin <span className="text-2xl">👋</span>
+          Selamat datang, {userName} <span className="text-2xl">👋</span>
         </h1>
         <p className="text-xs text-slate-500 mt-1">
-          Berikut ringkasan aktivitas BUMMA Mekar Sari.
+          Berikut ringkasan aktivitas keuangan dan operasional {profileName} Kampung Sabron Sari.
         </p>
       </div>
 

@@ -21,7 +21,8 @@ import {
   ShieldCheck,
   Lock,
   Unlock,
-  Users
+  Users,
+  Boxes
 } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
 
@@ -38,6 +39,7 @@ import AnalisisKinerja from './components/AnalisisKinerja';
 import LaporanOperasional from './components/LaporanOperasional';
 import Penggajian from './components/Penggajian';
 import MasterData from './components/MasterData';
+import InventarisasiAset from './components/InventarisasiAset';
 import ProfilBUMMA from './components/ProfilBUMMA';
 import StorefrontUlambox, { DEFAULT_CORE_PRODUCTS } from './components/StorefrontUlambox';
 import ScrollToTopButton from './components/ScrollToTopButton';
@@ -67,7 +69,7 @@ const INITIAL_ACCOUNTS = [
   { id: 'acc_1591', code: '1591', name: 'Akumulasi Penyusutan', category: 'Aset Tetap', type: 'asset', normal: 'Kredit' },
   { id: 'acc_2001', code: '2001', name: 'Utang Usaha', category: 'Liabilitas', type: 'liability', normal: 'Kredit' },
   { id: 'acc_2101', code: '2101', name: 'Utang Lainnya', category: 'Liabilitas', type: 'liability', normal: 'Kredit' },
-  { id: 'acc_3001', code: '3001', name: 'Modal BUMMA', category: 'Ekuitas', type: 'equity', normal: 'Kredit' },
+  { id: 'acc_3001', code: '3001', name: 'Modal BUMKam', category: 'Ekuitas', type: 'equity', normal: 'Kredit' },
   { id: 'acc_3101', code: '3101', name: 'Saldo Laba Ditahan', category: 'Ekuitas', type: 'equity', normal: 'Kredit' },
   { id: 'acc_4001', code: '4001', name: 'Pendapatan Penjualan Perdagangan', category: 'Pendapatan', type: 'revenue', normal: 'Kredit' },
   { id: 'acc_4002', code: '4002', name: 'Pendapatan Jasa Penyewaan', category: 'Pendapatan', type: 'revenue', normal: 'Kredit' },
@@ -80,12 +82,16 @@ const INITIAL_ACCOUNTS = [
 ];
 
 const INITIAL_PRODUCTS = [
-  { id: 'prd_1', code: 'PRD-001', name: 'Telur Ayam Segar', category: 'Peternakan Ayam', unit_usaha: 'perdagangan', unit: 'rak', buy_price: 35000, sell_price: 70000, stock: 42 },
-  { id: 'prd_2', code: 'PRD-002', name: 'Beras Lokal Papua', category: 'Produk Pertanian', unit_usaha: 'perdagangan', unit: 'kg', buy_price: 60000, sell_price: 120000, stock: 20 },
-  { id: 'prd_3', code: 'PRD-003', name: 'Kerajinan Noken Asli', category: 'Kerajinan Lokal', unit_usaha: 'perdagangan', unit: 'pcs', buy_price: 125000, sell_price: 250000, stock: 10 },
-  { id: 'prd_4', code: 'PRD-004', name: 'Pakan Ayam Petelur', category: 'Peternakan Ayam', unit_usaha: 'perdagangan', unit: 'karung', buy_price: 280000, sell_price: 560000, stock: 15 },
-  { id: 'prd_5', code: 'PRD-005', name: 'Sewa Tenda Acara / Pesta', category: 'Jasa Penyewaan', unit_usaha: 'jasa', unit: 'hari', buy_price: 0, sell_price: 1000000, stock: 5 },
-  { id: 'prd_6', code: 'PRD-006', name: 'Sewa Gedung Serba Guna', category: 'Jasa Penyewaan', unit_usaha: 'jasa', unit: 'acara', buy_price: 0, sell_price: 2000000, stock: 2 }
+  { id: 'prd_1', code: 'PRD-001', name: 'Telur Ayam Segar', category: 'Peternakan Ayam', unit_usaha: 'perdagangan', unit: 'rak', buy_price: 35000, sell_price: 70000, stock: 42, perlakuan: 'Persediaan' },
+  { id: 'prd_2', code: 'PRD-002', name: 'Beras Lokal Papua', category: 'Produk Pertanian', unit_usaha: 'perdagangan', unit: 'kg', buy_price: 60000, sell_price: 120000, stock: 20, perlakuan: 'Persediaan' },
+  { id: 'prd_3', code: 'PRD-003', name: 'Kerajinan Noken Asli', category: 'Kerajinan Lokal', unit_usaha: 'perdagangan', unit: 'pcs', buy_price: 125000, sell_price: 250000, stock: 10, perlakuan: 'Persediaan' },
+  { id: 'prd_4', code: 'PRD-004', name: 'Pakan Ayam Petelur', category: 'Peternakan Ayam', unit_usaha: 'perdagangan', unit: 'karung', buy_price: 280000, sell_price: 560000, stock: 15, perlakuan: 'Persediaan' },
+  { id: 'prd_5', code: 'PRD-005', name: 'Sewa Tenda Acara / Pesta', category: 'Jasa Penyewaan', unit_usaha: 'jasa', unit: 'hari', buy_price: 0, sell_price: 1000000, stock: 5, perlakuan: 'Jasa' },
+  { id: 'prd_6', code: 'PRD-006', name: 'Sewa Gedung Serba Guna', category: 'Jasa Penyewaan', unit_usaha: 'jasa', unit: 'acara', buy_price: 0, sell_price: 2000000, stock: 2, perlakuan: 'Jasa' },
+  { id: 'prd_7', code: 'PRD-007', name: 'Mesin Penetas Telur Otomatis 500 Butir', category: 'Mesin & Peralatan', unit_usaha: 'perdagangan', unit: 'unit', buy_price: 6500000, sell_price: 0, stock: 2, perlakuan: 'Aset Tetap' },
+  { id: 'prd_8', code: 'PRD-008', name: 'Laptop Asus Core i5 Kantor BUMKam', category: 'Peralatan Elektronik', unit_usaha: 'jasa', unit: 'unit', buy_price: 8500000, sell_price: 0, stock: 2, perlakuan: 'Aset Tetap' },
+  { id: 'prd_9', code: 'PRD-009', name: 'Kursi Plastik Napolly Hijau', category: 'Perlengkapan Acara', unit_usaha: 'jasa', unit: 'buah', buy_price: 85000, sell_price: 0, stock: 50, perlakuan: 'Inventaris Operasional' },
+  { id: 'prd_10', code: 'PRD-010', name: 'Timbangan Digital Peternakan 150kg', category: 'Peralatan Peternakan', unit_usaha: 'perdagangan', unit: 'unit', buy_price: 750000, sell_price: 0, stock: 3, perlakuan: 'Inventaris Operasional' }
 ];
 
 const INITIAL_CUSTOMERS = [
@@ -100,58 +106,61 @@ const INITIAL_SUPPLIERS = [
 ];
 
 const INITIAL_EMPLOYEES = [
-  { id: 'emp_1', nik: '9271000001', name: 'Eko L Wibowo', position: 'Direktur BUMKam', unit: 'BUMMA Mekar Sari', salary: 5000000, status: 'Aktif' },
-  { id: 'emp_2', nik: '9271000002', name: 'Rita Fanghoi', position: 'Bendahara BUMKam', unit: 'BUMMA Mekar Sari', salary: 4500000, status: 'Aktif' },
-  { id: 'emp_3', nik: '9271000003', name: 'Yohanis Wenda', position: 'Kepala Unit Perdagangan', unit: 'Unit Perdagangan & Peternakan', salary: 3800000, status: 'Aktif' },
-  { id: 'emp_4', nik: '9271000004', name: 'Markus Krey', position: 'Kepala Unit Jasa', unit: 'Unit Jasa Penyewaan', salary: 3800000, status: 'Aktif' }
+  { id: 'emp_1', nik: '9271000001', name: 'Eko L Wibowo', position: 'Direktur BUMKam', unit: 'BUMKam Mekar Sari', worker_type: 'Karyawan Tetap', basic_salary: 5000000, allowance: 750000, hourly_rate: 0, hours_worked: 0, deductions: 0, salary: 5750000, status: 'Aktif' },
+  { id: 'emp_2', nik: '9271000002', name: 'Rita Fanghoi', position: 'Bendahara BUMKam', unit: 'BUMKam Mekar Sari', worker_type: 'Karyawan Tetap', basic_salary: 4500000, allowance: 500000, hourly_rate: 0, hours_worked: 0, deductions: 0, salary: 5000000, status: 'Aktif' },
+  { id: 'emp_3', nik: '9271000003', name: 'Yohanis Wenda', position: 'Kepala Unit Perdagangan', unit: 'Unit Perdagangan & Peternakan', worker_type: 'Karyawan Tetap', basic_salary: 3800000, allowance: 350000, hourly_rate: 0, hours_worked: 0, deductions: 0, salary: 4150000, status: 'Aktif' },
+  { id: 'emp_4', nik: '9271000004', name: 'Markus Krey', position: 'Kepala Unit Jasa', unit: 'Unit Jasa Penyewaan', worker_type: 'Karyawan Tetap', basic_salary: 3800000, allowance: 350000, hourly_rate: 0, hours_worked: 0, deductions: 0, salary: 4150000, status: 'Aktif' },
+  { id: 'emp_5', nik: '9271000005', name: 'Korneles Tabuni', position: 'Tenaga Bongkar Muat & Panen', unit: 'Unit Perdagangan & Peternakan', worker_type: 'Tenaga Kerja Lepas', basic_salary: 0, allowance: 0, hourly_rate: 35000, hours_worked: 48, deductions: 0, salary: 1680000, status: 'Aktif' }
 ];
 
 const INITIAL_PROFILE = {
-  name: 'BUMMA MEKAR SARI',
-  legalName: 'Badan Usaha Milik Masyarakat Adat Mekar Sari',
-  region: 'Wilayah Adat Mamta',
+  name: 'BUMKAM MEKAR SARI',
+  systemName: 'ARVEA',
+  tagline: 'Satu Nilai, Satu Tujuan, Bertumbuh Bersama',
+  standard: 'SAK EMKM',
+  legalName: 'Badan Usaha Milik Kampung Mekar Sari',
+  village: 'Kampung Sabron Sari',
+  region: 'Distrik Sentani Barat',
   location: 'Kabupaten Jayapura, Provinsi Papua',
-  address: 'Jl. Raya Adat Mamta No. 12, Sentani, Kabupaten Jayapura',
+  address: 'Jl. Poros Sabron Sari, Distrik Sentani Barat, Kabupaten Jayapura, Papua',
   phone: '0812-4000-1122',
-  email: 'bummamekarsari@gmail.com',
+  email: 'bumkammekarsari.sabronsari@gmail.com',
   director: 'Eko L Wibowo',
   treasurer: 'Rita Fanghoi',
   bankName: 'Bank Papua',
   bankAccount: '100-01-02-03040-5',
-  bankHolder: 'BUMMA MEKAR SARI'
+  bankHolder: 'BUMKAM MEKAR SARI'
 };
 
 export const ROLE_PERMISSIONS = {
   'Administrator': [
-    'dashboard', 'profil', 'master', 'landing_unit', 'transaksi', 
+    'dashboard', 'profil', 'master', 'aset', 'landing_unit', 'transaksi', 
     'kas_bank', 'jurnal', 'buku_besar', 'neraca_saldo', 'laporan', 
     'analisis', 'operasional', 'penggajian'
   ],
-  'Akuntansi': [
-    'dashboard', 'master', 'landing_unit', 'transaksi', 'kas_bank', 
-    'jurnal', 'buku_besar', 'neraca_saldo', 'laporan', 'analisis'
+  'Ketua BUMKam': [
+    'dashboard', 'profil', 'landing_unit', 'kas_bank', 'laporan', 
+    'analisis', 'operasional'
   ],
-  'Keuangan': [
-    'dashboard', 'landing_unit', 'transaksi', 'kas_bank', 
-    'neraca_saldo', 'laporan', 'analisis', 'penggajian'
+  'Sekretaris BUMKam': [
+    'dashboard', 'profil', 'landing_unit', 'kas_bank', 'laporan', 
+    'analisis', 'operasional'
   ],
-  'Sales': [
-    'dashboard', 'landing_unit', 'master', 'transaksi', 'operasional'
-  ],
-  'Pembelian': [
-    'dashboard', 'landing_unit', 'master', 'transaksi', 'operasional'
-  ],
-  'Gudang': [
-    'dashboard', 'landing_unit', 'master', 'operasional'
-  ],
-  'Manajer': [
-    'dashboard', 'profil', 'master', 'landing_unit', 'transaksi', 
-    'kas_bank', 'laporan', 'analisis', 'operasional', 'penggajian'
+  'Bendahara': [
+    'dashboard', 'master', 'aset', 'landing_unit', 'transaksi', 
+    'kas_bank', 'jurnal', 'buku_besar', 'neraca_saldo', 'laporan', 
+    'analisis', 'operasional', 'penggajian'
   ],
   'Auditor': [
-    'dashboard', 'landing_unit', 'jurnal', 'buku_besar', 'neraca_saldo', 
-    'laporan', 'analisis', 'operasional'
-  ]
+    'dashboard', 'landing_unit', 'jurnal', 'buku_besar', 'neraca_saldo'
+  ],
+  'Umum': [
+    'dashboard', 'profil', 'landing_unit', 'laporan', 'analisis'
+  ],
+  // Fallbacks for previous sessions
+  'Akuntansi': ['dashboard', 'master', 'aset', 'landing_unit', 'transaksi', 'kas_bank', 'jurnal', 'buku_besar', 'neraca_saldo', 'laporan', 'analisis'],
+  'Keuangan': ['dashboard', 'landing_unit', 'transaksi', 'kas_bank', 'neraca_saldo', 'laporan', 'analisis', 'penggajian'],
+  'Manajer': ['dashboard', 'profil', 'master', 'aset', 'landing_unit', 'transaksi', 'kas_bank', 'laporan', 'analisis', 'operasional', 'penggajian']
 };
 
 export default function App() {
@@ -176,7 +185,7 @@ export default function App() {
   const allowedMenus = useMemo(() => {
     if (!rbacStrict) {
       return [
-        'dashboard', 'profil', 'master', 'landing_unit', 'transaksi', 
+        'dashboard', 'profil', 'master', 'aset', 'landing_unit', 'transaksi', 
         'kas_bank', 'jurnal', 'buku_besar', 'neraca_saldo', 'laporan', 
         'analisis', 'operasional', 'penggajian'
       ];
@@ -216,10 +225,40 @@ export default function App() {
   // App Data
   const [transactions, setTransactions] = useState(() => getStorage('transactions', []));
   const [accounts, setAccounts] = useState(() => getStorage('accounts', INITIAL_ACCOUNTS));
-  const [products, setProducts] = useState(() => getStorage('products', INITIAL_PRODUCTS));
+  const [products, setProducts] = useState(() => {
+    const stored = getStorage('products', INITIAL_PRODUCTS);
+    if (Array.isArray(stored) && stored.length > 0) {
+      const needsMigration = stored.some(p => !p.perlakuan);
+      if (needsMigration) {
+        const migrated = stored.map(p => {
+          if (p.perlakuan) return p;
+          if (p.unit_usaha === 'jasa') return { ...p, perlakuan: 'Jasa' };
+          return { ...p, perlakuan: 'Persediaan' };
+        });
+        INITIAL_PRODUCTS.forEach(ip => {
+          if (!migrated.some(p => p.code === ip.code)) {
+            migrated.push(ip);
+          }
+        });
+        return migrated;
+      }
+      return stored;
+    }
+    return INITIAL_PRODUCTS;
+  });
   const [customers, setCustomers] = useState(() => getStorage('customers', INITIAL_CUSTOMERS));
   const [suppliers, setSuppliers] = useState(() => getStorage('suppliers', INITIAL_SUPPLIERS));
-  const [employees, setEmployees] = useState(() => getStorage('employees', INITIAL_EMPLOYEES));
+  const [employees, setEmployees] = useState(() => {
+    const stored = getStorage('employees', INITIAL_EMPLOYEES);
+    if (Array.isArray(stored) && stored.length > 0) {
+      const needsMigration = stored.some(e => !e.worker_type);
+      if (needsMigration) {
+        return INITIAL_EMPLOYEES;
+      }
+      return stored;
+    }
+    return INITIAL_EMPLOYEES;
+  });
   const [coreProducts, setCoreProducts] = useState(() => {
     const stored = getStorage('core_products', DEFAULT_CORE_PRODUCTS);
     if (Array.isArray(stored)) {
@@ -244,7 +283,7 @@ export default function App() {
   });
   const [profile, setProfile] = useState(() => {
     const p = getStorage('profile', INITIAL_PROFILE);
-    return { ...p, director: 'Eko L Wibowo', treasurer: 'Rita Fanghoi' };
+    return { ...INITIAL_PROFILE, ...p, director: 'Eko L Wibowo', treasurer: 'Rita Fanghoi' };
   });
 
   useEffect(() => { setStorage('dark_mode', darkMode); }, [darkMode]);
@@ -365,10 +404,18 @@ export default function App() {
     };
   }, [transactions, products, employees]);
 
-  const availableYears = ['Semua Tahun', '2019', '2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028'];
+  const availableYears = [
+    'Semua Tahun',
+    '2019', '2020', '2021', '2022', '2023', '2024',
+    '2025', '2026', '2027', '2028', '2029', '2030',
+    '2031', '2032', '2033', '2034', '2035'
+  ];
 
   const menuTitles = {
     dashboard: 'Dashboard',
+    profil: 'Profil BUMKam',
+    master: 'Master Data',
+    aset: 'Inventarisasi Aset',
     landing_unit: 'Profil Unit Usaha',
     transaksi: 'Transaksi (Jual & Beli)',
     kas_bank: 'Kas & Bank',
@@ -378,9 +425,7 @@ export default function App() {
     laporan: 'Laporan Keuangan',
     analisis: 'Analisis Kinerja',
     operasional: 'Laporan Operasional',
-    penggajian: 'Penggajian',
-    master: 'Master Data',
-    profil: 'Profil BUMKam'
+    penggajian: 'Penggajian Karyawan & Tenaga Lepas'
   };
 
   const handleDirectOrder = (orderData) => {
@@ -455,9 +500,12 @@ export default function App() {
           </button>
           
           <div className="flex items-center gap-1.5 text-xs font-semibold">
-            <span className="text-slate-400">BUMMA</span>
+            <span className="text-emerald-700 dark:text-emerald-400 font-extrabold tracking-wide">ARVEA</span>
             <span className="text-slate-300 dark:text-slate-600">/</span>
             <span className="text-slate-900 dark:text-white font-bold">{menuTitles[activeMenu] || 'Dashboard'}</span>
+            <span className="hidden md:inline-block text-[10px] text-slate-400 font-normal pl-1">
+              &bull; SAK EMKM
+            </span>
           </div>
         </div>
 
@@ -574,13 +622,13 @@ export default function App() {
         >
           <div>
             <div className="p-4 flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800">
-              <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-extrabold text-xs">
-                BM
+              <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-extrabold text-xs shadow-xs">
+                AR
               </div>
               {sidebarOpen && (
                 <div>
-                  <h2 className="font-extrabold text-xs tracking-tight text-slate-900 dark:text-white uppercase">BUMMA</h2>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">MEKAR SARI</p>
+                  <h2 className="font-extrabold text-xs tracking-tight text-slate-900 dark:text-white uppercase">ARVEA</h2>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">BUMKam Mekar Sari</p>
                 </div>
               )}
             </div>
@@ -596,7 +644,7 @@ export default function App() {
                     ? 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200' 
                     : 'bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200'
                 }`}>
-                  {sidebarOpen && (rbacStrict ? `${allowedMenus.length} Menu` : 'Demo (13)')}
+                  {sidebarOpen && (rbacStrict ? `${allowedMenus.length} Menu` : 'Demo (14)')}
                 </span>
               </div>
             )}
@@ -606,6 +654,7 @@ export default function App() {
                 { id: 'dashboard', label: 'Dashboard', icon: Store },
                 { id: 'profil', label: 'Profil BUMKam', icon: Building2 },
                 { id: 'master', label: 'Master Data', icon: Package },
+                { id: 'aset', label: 'Inventarisasi Aset', icon: Boxes },
                 { id: 'landing_unit', label: 'Profil Unit Usaha', icon: Building2 },
                 { id: 'transaksi', label: 'Transaksi', icon: Receipt, badge: transactions.length ? String(transactions.length) : null },
                 { id: 'kas_bank', label: 'Kas & Bank', icon: Wallet },
@@ -724,7 +773,18 @@ export default function App() {
             <DashboardView
               stats={stats}
               transactions={transactions}
+              user={user}
+              profile={profile}
               onNavigate={(menu) => setActiveMenu(menu)}
+            />
+          )}
+
+          {activeMenu === 'aset' && (
+            <InventarisasiAset
+              products={products}
+              setProducts={setProducts}
+              profile={profile}
+              selectedYear={selectedYear}
             />
           )}
 
@@ -847,8 +907,10 @@ export default function App() {
 
           {/* Backoffice Footer */}
           <footer className="mt-14 pt-6 border-t border-slate-200 dark:border-slate-800 text-center text-slate-400 text-xs print:hidden">
-            <p>&copy; 2026 BUMKam Mekar Sari. Hak Cipta Dilindungi Undang-Undang.</p>
-            <p className="mt-1 text-slate-500 text-[11px]">Teknologi Digital Akuntansi (TDA) Kelompok 3C &bull; &bull; S1 Akuntansi FEB Uncen</p>
+            <p className="font-semibold text-slate-700 dark:text-slate-300">ARVEA &bull; Financial Management System BUMKam Mekar Sari</p>
+            <p className="italic text-emerald-600 dark:text-emerald-400 text-[11px] mt-0.5">&ldquo;Satu Nilai, Satu Tujuan, Bertumbuh Bersama&rdquo;</p>
+            <p className="mt-1 text-slate-500 text-[11px]">Kampung Sabron Sari, Distrik Sentani Barat, Kabupaten Jayapura &bull; Standar SAK EMKM</p>
+            <p className="mt-1 text-slate-400 text-[10px]">Teknologi Digital Akuntansi (TDA) Kelompok 3C &bull; S1 Akuntansi FEB Uncen</p>
           </footer>
 
           {/* Floating Universal Scroll to Top Button */}

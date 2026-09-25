@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Wallet, Plus, ArrowUpRight, ArrowDownLeft, Printer, X } from 'lucide-react';
+import { Wallet, Plus, ArrowUpRight, ArrowDownLeft, Printer, X, FileSpreadsheet } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatIDR } from './Transaksi';
+import { exportToExcel } from '../utils/exportUtils';
 
 export default function KasBank({ transactions, setTransactions, accounts }) {
   const [showModal, setShowModal] = useState(false);
@@ -18,6 +19,21 @@ export default function KasBank({ transactions, setTransactions, accounts }) {
   const totalIn = cashTransactions.filter(t => t.type === 'kas_masuk' || (t.type === 'penjualan' && t.payment_method === 'Tunai')).reduce((s, x) => s + Number(x.total || 0), 0);
   const totalOut = cashTransactions.filter(t => t.type === 'kas_keluar' || (t.type === 'pembelian' && t.payment_method === 'Tunai')).reduce((s, x) => s + Number(x.total || 0), 0);
   const balance = totalIn - totalOut;
+
+  const handleExportExcel = () => {
+    const data = cashTransactions.map((tx, idx) => ({
+      No: idx + 1,
+      Tanggal: tx.date,
+      'No. Bukti': tx.number,
+      Keterangan: tx.product_name || tx.description,
+      'Tipe Mutasi': tx.type === 'kas_masuk' || (tx.type === 'penjualan' && tx.payment_method === 'Tunai') ? 'Penerimaan (Masuk)' : 'Pengeluaran (Keluar)',
+      'Total (IDR)': tx.total,
+      'Metode Bayar': tx.payment_method || 'Tunai',
+      'Akun Kontra': `${tx.contra_account || '-'} - ${tx.contra_name || '-'}`
+    }));
+    exportToExcel(data, 'Buku_Kas_dan_Bank_BUMKam', 'Buku Kas');
+    toast.success('File Excel Buku Kas & Bank berhasil diunduh!');
+  };
 
   const handleSave = (e) => {
     e.preventDefault();
@@ -59,14 +75,21 @@ export default function KasBank({ transactions, setTransactions, accounts }) {
         <div>
           <p className="text-xs uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold mb-0.5">KAS &amp; BANK</p>
           <h1 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">Buku Kas &amp; Bank</h1>
-          <p className="text-xs text-slate-500 mt-0.5">Pencatatan mutasi kas masuk, pengeluaran operasional, dan saldo kas riil</p>
+          <p className="text-xs text-slate-500 mt-0.5">Pencatatan mutasi kas masuk, pengeluaran operasional, dan saldo kas riil SAK EMKM</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2 print:hidden">
+          <button
+            onClick={handleExportExcel}
+            className="px-3.5 py-2 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+            title="Download Spreadsheet Excel (.xlsx)"
+          >
+            <FileSpreadsheet className="w-4 h-4 text-emerald-600" /> Export Excel
+          </button>
           <button
             onClick={() => window.print()}
-            className="px-3.5 py-2 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center gap-1.5 print:hidden"
+            className="px-3.5 py-2 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center gap-1.5"
           >
-            <Printer className="w-4 h-4" /> Cetak Buku Kas
+            <Printer className="w-4 h-4 text-slate-500" /> Cetak Buku Kas
           </button>
           <button
             onClick={() => setShowModal(true)}

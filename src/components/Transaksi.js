@@ -12,9 +12,14 @@ import {
   CheckCircle2, 
   CreditCard,
   User,
-  Search
+  Search,
+  FileSpreadsheet,
+  Printer,
+  Globe
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { exportToExcel } from '../utils/exportUtils';
+import { SATUAN_OPTIONS } from './MasterData';
 
 export const formatIDR = (val) => {
   return new Intl.NumberFormat('id-ID', {
@@ -52,8 +57,10 @@ export default function Transaksi({
   const [formData, setFormData] = useState({
     date: new Date().toISOString().slice(0, 10),
     unit_usaha: selectedUnit !== 'all' ? selectedUnit : 'perdagangan',
+    transaction_method: 'Offline', // 'Online' | 'Offline' (Sesuai Butir Revisi Docx)
     contact_name: '',
     product_name: '',
+    unit: 'Pcs', // Satuan dari 33 pilihan resmi
     quantity: 1,
     price: 0,
     payment_method: 'Tunai',
@@ -64,6 +71,7 @@ export default function Transaksi({
   const [posCart, setPosCart] = useState([]);
   const [posCustomer, setPosCustomer] = useState('');
   const [posPaymentMethod, setPosPaymentMethod] = useState('Tunai');
+  const [posTransactionMethod, setPosTransactionMethod] = useState('Offline');
   const [posCategory, setPosCategory] = useState('Semua');
   const [posSearch, setPosSearch] = useState('');
 
@@ -83,8 +91,10 @@ export default function Transaksi({
     setFormData({
       date: new Date().toISOString().slice(0, 10),
       unit_usaha: selectedUnit !== 'all' ? selectedUnit : 'perdagangan',
+      transaction_method: 'Offline',
       contact_name: '',
       product_name: '',
+      unit: 'Pcs',
       quantity: 1,
       price: 0,
       payment_method: 'Tunai',
@@ -99,8 +109,10 @@ export default function Transaksi({
     setFormData({
       date: tx.date,
       unit_usaha: tx.unit_usaha || 'perdagangan',
+      transaction_method: tx.transaction_method || 'Offline',
       contact_name: tx.contact_name || '',
       product_name: tx.product_name || '',
+      unit: tx.unit || 'Pcs',
       quantity: tx.quantity || 1,
       price: tx.price || 0,
       payment_method: tx.payment_method || 'Tunai',
@@ -128,13 +140,15 @@ export default function Transaksi({
             type: formType,
             date: formData.date,
             unit_usaha: formData.unit_usaha,
+            transaction_method: formData.transaction_method,
             contact_name: formData.contact_name,
             product_name: formData.product_name,
+            unit: formData.unit,
             quantity: qty,
             price: prc,
             total: tot,
             payment_method: formData.payment_method,
-            description: formData.description || `${formType === 'penjualan' ? 'Penjualan' : 'Pembelian'} ${formData.product_name}`
+            description: formData.description || `${formType === 'penjualan' ? 'Penjualan' : 'Pembelian'} ${formData.product_name} (${formData.transaction_method})`
           };
         }
         return t;
@@ -151,55 +165,80 @@ export default function Transaksi({
         type: formType,
         date: formData.date,
         unit_usaha: formData.unit_usaha,
+        transaction_method: formData.transaction_method,
         contact_name: formData.contact_name,
         product_name: formData.product_name,
+        unit: formData.unit,
         quantity: qty,
         price: prc,
         total: tot,
         payment_method: formData.payment_method,
         status: 'Selesai',
-        description: formData.description || `${formType === 'penjualan' ? 'Penjualan' : 'Pembelian'} ${formData.product_name}`
+        description: formData.description || `${formType === 'penjualan' ? 'Penjualan' : 'Pembelian'} ${formData.product_name} (${formData.transaction_method})`,
+        created_at: new Date().toISOString()
       };
 
       setTransactions([newTx, ...transactions]);
-      toast.success('Transaksi berhasil dicatat dan diposting ke Jurnal Umum!');
+      toast.success(`Transaksi ${num} berhasil dicatat & masuk ke jurnal!`);
     }
 
     setShowModal(false);
   };
 
   const handleDelete = (id) => {
-    if (window.confirm('Apakah Anda yakin ingin menghapus data transaksi ini? Data di buku kas dan jurnal akan otomatis disesuaikan.')) {
+    if (window.confirm('Yakin ingin menghapus transaksi ini? Jurnal terkait juga akan dihapus.')) {
       setTransactions(transactions.filter(t => t.id !== id));
       toast.info('Transaksi telah dihapus.');
     }
   };
 
-  // POS Handlers
-  const addPosCart = (prod) => {
+  // Export Transactions to Excel
+  const handleExportExcel = () => {
+    const data = filteredTransactions.map((tx, idx) => ({
+      No: idx + 1,
+      Tanggal: tx.date,
+      'No. Bukti': tx.number,
+      'Tipe Transaksi': tx.type,
+      'Metode Transaksi': tx.transaction_method || 'Offline',
+      'Unit Usaha': tx.unit_usaha,
+      'Nama Kontak / Rekanan': tx.contact_name || '-',
+      'Item / Produk': tx.product_name || tx.description,
+      Kuantitas: tx.quantity || 1,
+      Satuan: tx.unit || 'Unit',
+      'Harga Satuan (IDR)': tx.price || tx.total,
+      'Total Nilai (IDR)': tx.total,
+      'Metode Pembayaran': tx.payment_method,
+      Status: tx.status || 'Selesai'
+    }));
+
+    exportToExcel(data, `Laporan_Transaksi_BUMKam_${selectedYear}`, 'Transaksi');
+    toast.success('File Excel transaksi berhasil diunduh!');
+  };
+
+  // POS Add to Cart
+  const addToPosCart = (prod) => {
     setPosCart(prev => {
-      const existing = prev.find(p => p.id === prod.id);
-      if (existing) {
-        return prev.map(p => p.id === prod.id ? { ...p, qty: p.qty + 1 } : p);
+      const exist = prev.find(item => item.id === prod.id);
+      if (exist) {
+        return prev.map(item => item.id === prod.id ? { ...item, qty: item.qty + 1 } : item);
       }
       return [...prev, { ...prod, qty: 1 }];
     });
-    toast.success(`${prod.name} ditambahkan ke kasir`);
   };
 
-  const updatePosQty = (id, delta) => {
+  const updatePosQty = (prodId, delta) => {
     setPosCart(prev => {
-      return prev.map(p => {
-        if (p.id === id) {
-          const n = p.qty + delta;
-          return n > 0 ? { ...p, qty: n } : null;
+      return prev.map(item => {
+        if (item.id === prodId) {
+          const newQty = item.qty + delta;
+          return newQty > 0 ? { ...item, qty: newQty } : null;
         }
-        return p;
+        return item;
       }).filter(Boolean);
     });
   };
 
-  const posTotal = posCart.reduce((sum, item) => sum + (Number(item.sell_price || 0) * item.qty), 0);
+  const posTotal = posCart.reduce((sum, item) => sum + (item.sell_price * item.qty), 0);
 
   const handleProcessPos = () => {
     if (posCart.length === 0) {
@@ -209,108 +248,128 @@ export default function Transaksi({
 
     const year = new Date().getFullYear();
     const dateStr = new Date().toISOString().slice(0, 10);
-    const newTransactions = posCart.map((item, idx) => {
-      const num = `POS-${year}-${String(transactions.length + idx + 1).padStart(4, '0')}`;
-      return {
-        id: 'tx_pos_' + Date.now() + '_' + idx,
-        number: num,
-        type: 'penjualan',
-        date: dateStr,
-        unit_usaha: item.unit_usaha || 'perdagangan',
-        contact_name: posCustomer || 'Pelanggan Umum',
-        product_name: item.name,
-        quantity: item.qty,
-        price: item.sell_price,
-        total: item.qty * item.sell_price,
-        payment_method: posPaymentMethod,
-        status: 'Selesai',
-        description: `Penjualan Kasir POS: ${item.name} (${item.qty} ${item.unit})`
-      };
-    });
+    const orderNumber = `POS-${year}-${String(transactions.length + 1).padStart(4, '0')}`;
 
-    setTransactions([...newTransactions, ...transactions]);
-    toast.success(`Transaksi kasir sebesar ${formatIDR(posTotal)} berhasil disimpan dan otomatis masuk ke Jurnal Umum!`);
+    const newTxList = posCart.map((item, idx) => ({
+      id: 'tx_pos_' + Date.now() + '_' + idx,
+      number: orderNumber + (posCart.length > 1 ? `-${idx + 1}` : ''),
+      type: 'penjualan',
+      date: dateStr,
+      unit_usaha: item.unit_usaha || 'perdagangan',
+      transaction_method: posTransactionMethod,
+      contact_name: posCustomer || 'Pembeli Langsung',
+      product_name: item.name,
+      unit: item.unit || 'Pcs',
+      quantity: item.qty,
+      price: item.sell_price,
+      total: item.qty * item.sell_price,
+      payment_method: posPaymentMethod,
+      status: 'Selesai',
+      description: `Kasir POS (${posTransactionMethod}): ${item.name} (${item.qty} ${item.unit || 'unit'})`,
+      created_at: new Date().toISOString()
+    }));
+
+    setTransactions([...newTxList, ...transactions]);
     setPosCart([]);
     setPosCustomer('');
+    toast.success(`Transaksi Kasir POS ${orderNumber} berhasil dicatat!`);
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      {/* HEADER SECTION WITH MODE SWITCHER */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-6 max-w-6xl mx-auto">
+      {/* Top Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Receipt className="w-6 h-6 text-emerald-600" />
-            Manajemen Transaksi BUMKam
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+              TRANSAKSI TERPADU BUMKAM
+            </span>
+            <span className="text-xs text-slate-400 font-medium">SAK EMKM</span>
+          </div>
+          <h1 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mt-1">
+            Transaksi Penjualan &amp; Pembelian
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
-            Pencatatan penjualan, pembelian barang dagang, dan layanan kasir terintegrasi otomatis ke SAK
+            Pusat pencatatan transaksi terintegrasi dilengkapi <strong>Metode Online/Offline</strong>, 33 pilihan satuan, dan kasir POS
           </p>
         </div>
 
-        {/* View Mode Toggle (Table vs Kasir POS Visual) */}
-        <div className="flex items-center gap-2">
+        {/* View Switcher & Action Buttons */}
+        <div className="flex flex-wrap items-center gap-2 print:hidden">
           <div className="bg-slate-100 dark:bg-slate-800 p-1 rounded-xl flex items-center gap-1 border border-slate-200 dark:border-slate-700">
             <button
               onClick={() => setViewMode('table')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
                 viewMode === 'table'
                   ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs'
-                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
               }`}
             >
-              <ListFilter className="w-3.5 h-3.5" /> Tabel Riwayat
+              Tabel Riwayat
             </button>
             <button
               onClick={() => setViewMode('pos')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
                 viewMode === 'pos'
                   ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
               }`}
             >
-              <Store className="w-3.5 h-3.5" /> Kasir POS Visual
+              <Store className="w-3.5 h-3.5" /> Kasir POS
             </button>
           </div>
 
-          {viewMode === 'table' && (
-            <button
-              onClick={handleOpenAdd}
-              className="bg-[#0a3a2a] hover:bg-[#06291d] text-white px-4 py-2 rounded-xl text-xs font-bold shadow transition flex items-center gap-1.5"
-            >
-              <Plus className="w-4 h-4" /> Tambah Transaksi
-            </button>
-          )}
+          <button
+            onClick={handleExportExcel}
+            className="px-3.5 py-2 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+            title="Download Spreadsheet Excel (.xlsx)"
+          >
+            <FileSpreadsheet className="w-4 h-4 text-emerald-600" /> Export Excel
+          </button>
+
+          <button
+            onClick={() => window.print()}
+            className="px-3.5 py-2 bg-white dark:bg-slate-800 hover:bg-slate-50 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+          >
+            <Printer className="w-4 h-4 text-slate-500" /> Cetak
+          </button>
+
+          <button
+            onClick={handleOpenAdd}
+            className="bg-[#0a3a2a] text-white px-4 py-2 rounded-xl text-xs font-bold shadow hover:bg-[#06291d] transition flex items-center gap-1.5"
+          >
+            <Plus className="w-4 h-4" /> + Catat Transaksi Baru
+          </button>
         </div>
       </div>
 
-      {/* VIEW 1: KASIR POS VISUAL (ALA ULAMBOX) */}
+      {/* VIEW 1: KASIR POINT OF SALE (POS) */}
       {viewMode === 'pos' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left 2 Cols: Product Cards Catalog */}
+          {/* Left 2 Cols: Product Catalog */}
           <div className="lg:col-span-2 space-y-4">
-            {/* Search & Category Filter Pills */}
-            <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
-              <div className="relative w-full sm:w-72">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            {/* Filter and Search */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
+              <div className="flex items-center gap-2 flex-1 w-full bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                <Search className="w-4 h-4 text-slate-400" />
                 <input
                   type="text"
                   value={posSearch}
                   onChange={(e) => setPosSearch(e.target.value)}
-                  placeholder="Cari produk kasir..."
-                  className="w-full pl-9 pr-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs outline-none focus:border-emerald-600"
+                  placeholder="Cari komoditas atau layanan..."
+                  className="w-full bg-transparent text-xs text-slate-800 dark:text-slate-200 outline-none"
                 />
               </div>
 
-              <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1">
-                {['Semua', 'Peternakan Ayam', 'Produk Pertanian', 'Kerajinan Lokal', 'Jasa Penyewaan'].map(cat => (
+              <div className="flex gap-1 overflow-x-auto w-full sm:w-auto">
+                {['Semua', 'Peternakan', 'Perdagangan', 'Jasa'].map((cat) => (
                   <button
                     key={cat}
                     onClick={() => setPosCategory(cat)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
                       posCategory === cat
-                        ? 'bg-[#0a3a2a] text-white shadow-xs'
-                        : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-50'
+                        ? 'bg-[#0a3a2a] text-white'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
                     }`}
                   >
                     {cat}
@@ -319,33 +378,25 @@ export default function Transaksi({
               </div>
             </div>
 
-            {/* Grid of Product Cards */}
+            {/* Product Cards Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               {products
-                .filter(p => {
-                  const matchCat = posCategory === 'Semua' || p.category === posCategory;
-                  const matchSearch = p.name.toLowerCase().includes(posSearch.toLowerCase());
-                  return matchCat && matchSearch;
-                })
-                .map(prod => {
-                  const img = DEFAULT_PRODUCT_IMAGES[prod.code] || 'https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?w=600&auto=format&fit=crop&q=80';
+                .filter(p => posCategory === 'Semua' || (p.category && p.category.toLowerCase().includes(posCategory.toLowerCase())))
+                .filter(p => !posSearch || p.name.toLowerCase().includes(posSearch.toLowerCase()))
+                .map((prod) => {
+                  const img = DEFAULT_PRODUCT_IMAGES[prod.code] || 'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=600&auto=format&fit=crop&q=80';
                   return (
                     <div
                       key={prod.id}
-                      onClick={() => addPosCart(prod)}
-                      className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-3 hover:border-emerald-500 hover:shadow-md transition cursor-pointer flex flex-col justify-between group"
+                      onClick={() => addToPosCart(prod)}
+                      className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs hover:border-emerald-500 hover:shadow-md transition cursor-pointer p-3 flex flex-col justify-between group"
                     >
                       <div>
-                        <div className="h-28 rounded-xl overflow-hidden mb-2 bg-slate-100 dark:bg-slate-800 relative">
+                        <div className="h-28 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 mb-2.5">
                           <img src={img} alt={prod.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
-                          <span className="absolute top-1.5 right-1.5 bg-black/60 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
-                            {prod.stock} {prod.unit}
-                          </span>
                         </div>
-                        <span className="text-[10px] text-slate-400 font-semibold block uppercase">{prod.category}</span>
-                        <h4 className="text-xs font-bold text-slate-900 dark:text-white line-clamp-1 group-hover:text-emerald-600 transition">
-                          {prod.name}
-                        </h4>
+                        <p className="font-bold text-xs text-slate-900 dark:text-white line-clamp-1">{prod.name}</p>
+                        <p className="text-[10px] text-slate-400 capitalize">{prod.unit_usaha} &bull; {prod.unit}</p>
                       </div>
 
                       <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
@@ -377,7 +428,7 @@ export default function Transaksi({
                 </span>
               </div>
 
-              {/* Form Input Pelanggan & Pembayaran */}
+              {/* Form Input Pelanggan, Metode Transaksi, & Pembayaran */}
               <div className="space-y-2.5 mb-4 text-xs">
                 <div>
                   <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">Nama Pembeli / Lembaga</label>
@@ -385,22 +436,35 @@ export default function Transaksi({
                     type="text"
                     value={posCustomer}
                     onChange={(e) => setPosCustomer(e.target.value)}
-                    placeholder="Contoh: Panitia Gereja / Toko Adat"
+                    placeholder="Contoh: Panitia Acara / Warga Adat"
                     className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-medium"
                   />
                 </div>
 
-                <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">Metode Bayar</label>
-                  <select
-                    value={posPaymentMethod}
-                    onChange={(e) => setPosPaymentMethod(e.target.value)}
-                    className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold"
-                  >
-                    <option value="Tunai">Tunai / Kas</option>
-                    <option value="Transfer Bank Papua">Transfer Bank Papua</option>
-                    <option value="Kredit">Kredit / Piutang Usaha</option>
-                  </select>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">Metode Transaksi</label>
+                    <select
+                      value={posTransactionMethod}
+                      onChange={(e) => setPosTransactionMethod(e.target.value)}
+                      className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold"
+                    >
+                      <option value="Offline">Offline (Langsung)</option>
+                      <option value="Online">Online (Digital)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">Metode Bayar</label>
+                    <select
+                      value={posPaymentMethod}
+                      onChange={(e) => setPosPaymentMethod(e.target.value)}
+                      className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold"
+                    >
+                      <option value="Tunai">Tunai / Kas</option>
+                      <option value="Transfer Bank Papua">Transfer Bank Papua</option>
+                      <option value="Kredit">Kredit / Piutang</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
@@ -415,7 +479,7 @@ export default function Transaksi({
                     <div key={item.id} className="flex items-center justify-between gap-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-xs">
                       <div className="flex-1 min-w-0">
                         <p className="font-bold text-slate-800 dark:text-slate-200 truncate">{item.name}</p>
-                        <p className="text-[10px] text-emerald-600 font-semibold">{formatIDR(item.sell_price)} x {item.qty}</p>
+                        <p className="text-[10px] text-emerald-600 font-semibold">{formatIDR(item.sell_price)} x {item.qty} {item.unit || 'unit'}</p>
                       </div>
                       <div className="flex items-center gap-1">
                         <button
@@ -461,11 +525,11 @@ export default function Transaksi({
         </div>
       )}
 
-      {/* VIEW 2: TABEL RIWAYAT TRANSAKSI DENGAN FITUR EDIT & HAPUS */}
+      {/* VIEW 2: TABEL RIWAYAT TRANSAKSI */}
       {viewMode === 'table' && (
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
           {/* Table Filters */}
-          <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
+          <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 print:hidden">
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-slate-600 dark:text-slate-400">Filter Tipe:</span>
               <div className="flex gap-1">
@@ -486,30 +550,32 @@ export default function Transaksi({
             </div>
 
             <span className="text-xs text-slate-500 font-semibold">
-              Total: {filteredTransactions.length} Transaksi
+              Total: {filteredTransactions.length} Transaksi Terdata
             </span>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left">
-              <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-800">
+              <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-800 text-[11px]">
                 <tr>
                   <th className="p-3.5">Tanggal</th>
                   <th className="p-3.5">No. Bukti</th>
                   <th className="p-3.5">Tipe</th>
+                  <th className="p-3.5 text-center">Metode</th>
                   <th className="p-3.5">Unit Usaha</th>
-                  <th className="p-3.5">Deskripsi / Produk</th>
+                  <th className="p-3.5">Deskripsi / Komoditas</th>
+                  <th className="p-3.5 text-center">Volume</th>
                   <th className="p-3.5">Kontak</th>
                   <th className="p-3.5 text-right">Total (IDR)</th>
-                  <th className="p-3.5">Metode Bayar</th>
-                  <th className="p-3.5 text-center">Aksi (Edit / Hapus)</th>
+                  <th className="p-3.5">Pembayaran</th>
+                  <th className="p-3.5 text-center print:hidden">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {filteredTransactions.length === 0 ? (
                   <tr>
-                    <td colSpan="9" className="text-center py-10 text-slate-400 text-xs">
-                      Belum ada data transaksi. Klik <strong>"+ Tambah Transaksi Baru"</strong> atau gunakan <strong>Kasir POS</strong> untuk mencatat.
+                    <td colSpan="11" className="text-center py-10 text-slate-400 text-xs">
+                      Belum ada data transaksi. Klik <strong>"+ Catat Transaksi Baru"</strong> atau gunakan <strong>Kasir POS</strong>.
                     </td>
                   </tr>
                 ) : (
@@ -526,9 +592,21 @@ export default function Transaksi({
                           {tx.type}
                         </span>
                       </td>
+                      <td className="p-3.5 text-center whitespace-nowrap">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold ${
+                          tx.transaction_method === 'Online'
+                            ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300'
+                            : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                        }`}>
+                          {tx.transaction_method || 'Offline'}
+                        </span>
+                      </td>
                       <td className="p-3.5 whitespace-nowrap capitalize text-slate-500">{tx.unit_usaha}</td>
-                      <td className="p-3.5 max-w-xs truncate text-slate-800 dark:text-slate-200">
-                        {tx.product_name ? `${tx.product_name} (${tx.quantity}x)` : tx.description}
+                      <td className="p-3.5 max-w-xs truncate text-slate-800 dark:text-slate-200 font-semibold">
+                        {tx.product_name ? tx.product_name : tx.description}
+                      </td>
+                      <td className="p-3.5 text-center font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
+                        {tx.quantity || 1} {tx.unit || 'unit'}
                       </td>
                       <td className="p-3.5 whitespace-nowrap text-slate-600 dark:text-slate-400">{tx.contact_name || '-'}</td>
                       <td className="p-3.5 whitespace-nowrap text-right font-extrabold text-slate-900 dark:text-white">
@@ -541,18 +619,18 @@ export default function Transaksi({
                           {tx.payment_method}
                         </span>
                       </td>
-                      <td className="p-3.5 text-center">
+                      <td className="p-3.5 text-center print:hidden">
                         <div className="flex items-center justify-center gap-1.5">
                           <button
                             onClick={() => handleOpenEdit(tx)}
-                            className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-100 dark:hover:bg-emerald-950/50 text-slate-600 hover:text-emerald-700 transition"
+                            className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-100 text-slate-600 hover:text-emerald-700 transition"
                             title="Edit Transaksi"
                           >
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => handleDelete(tx.id)}
-                            className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-red-100 dark:hover:bg-red-950/50 text-slate-600 hover:text-red-600 transition"
+                            className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-red-100 text-slate-600 hover:text-red-600 transition"
                             title="Hapus Transaksi"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -570,7 +648,7 @@ export default function Transaksi({
 
       {/* MODAL INPUT & EDIT TRANSAKSI */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
               <h3 className="text-base font-bold text-slate-900 dark:text-white">
@@ -590,7 +668,7 @@ export default function Transaksi({
                     onClick={() => setFormType('penjualan')}
                     className={`py-2 rounded-xl font-bold border transition ${
                       formType === 'penjualan'
-                        ? 'bg-emerald-600 text-white border-emerald-600'
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
                         : 'border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
                     }`}
                   >
@@ -601,12 +679,35 @@ export default function Transaksi({
                     onClick={() => setFormType('pembelian')}
                     className={`py-2 rounded-xl font-bold border transition ${
                       formType === 'pembelian'
-                        ? 'bg-emerald-600 text-white border-emerald-600'
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
                         : 'border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
                     }`}
                   >
                     Pembelian (Stok / Sarana)
                   </button>
+                </div>
+              </div>
+
+              {/* FIELD BARU: METODE TRANSAKSI (ONLINE / OFFLINE) */}
+              <div className="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+                <label className="block font-bold text-slate-800 dark:text-slate-200 mb-1">
+                  Metode {formType === 'penjualan' ? 'Penjualan' : 'Pembelian'} *
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {['Offline', 'Online'].map(m => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, transaction_method: m })}
+                      className={`py-2 rounded-lg font-bold border text-xs transition ${
+                        formData.transaction_method === m
+                          ? 'bg-[#0a3a2a] text-white border-[#0a3a2a] shadow-xs'
+                          : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                      }`}
+                    >
+                      {m === 'Offline' ? '🏬 Offline (Langsung / Fisik)' : '🌐 Online (Toko Digital / WA)'}
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -617,7 +718,7 @@ export default function Transaksi({
                     type="date"
                     value={formData.date}
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                    className="w-full p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
+                    className="w-full p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono"
                     required
                   />
                 </div>
@@ -657,6 +758,7 @@ export default function Transaksi({
                     setFormData({
                       ...formData,
                       product_name: e.target.value,
+                      unit: sel ? sel.unit : formData.unit,
                       price: sel ? (formType === 'penjualan' ? sel.sell_price : sel.buy_price) : formData.price,
                       unit_usaha: sel ? sel.unit_usaha : formData.unit_usaha
                     });
@@ -673,7 +775,8 @@ export default function Transaksi({
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              {/* SATUAN (33 PILIHAN SESUAI BUTIR CATATAN REVISI DOCX) & KUANTITAS & HARGA */}
+              <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Kuantitas</label>
                   <input
@@ -685,8 +788,22 @@ export default function Transaksi({
                     required
                   />
                 </div>
+
                 <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Harga Satuan (IDR)</label>
+                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Satuan Produk *</label>
+                  <select
+                    value={formData.unit}
+                    onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+                    className="w-full p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-semibold"
+                  >
+                    {SATUAN_OPTIONS.map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Harga / Satuan (IDR)</label>
                   <input
                     type="number"
                     min="0"
@@ -712,9 +829,9 @@ export default function Transaksi({
                   onChange={(e) => setFormData({ ...formData, payment_method: e.target.value })}
                   className="w-full p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-medium"
                 >
-                  <option value="Tunai">Tunai (Masuk ke Kas Fisik BUMKam - 1001)</option>
-                  <option value="Transfer Bank Papua">Transfer Bank Papua (1002)</option>
-                  <option value="Kredit">Kredit / Bertempo (Piutang 1101 / Utang 2001)</option>
+                  <option value="Tunai">Tunai (Kas Fisik - Akun 1001)</option>
+                  <option value="Transfer Bank Papua">Transfer Bank Papua (Akun 1002)</option>
+                  <option value="Kredit">Kredit / Piutang Usaha (Akun 1101)</option>
                 </select>
               </div>
 
@@ -724,7 +841,7 @@ export default function Transaksi({
                   type="text"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Contoh: Pesanan telur untuk acara kampung"
+                  placeholder="Contoh: Pesanan telur untuk konsumsi acara adat"
                   className="w-full p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
                 />
               </div>

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Printer } from 'lucide-react';
+import { Printer, FileSpreadsheet } from 'lucide-react';
 import { formatIDR } from './Transaksi';
+import { exportToExcel } from '../utils/exportUtils';
+import { toast } from 'sonner';
 
 export default function LaporanKeuangan({ journals, accounts, transactions, profile, selectedYear }) {
   const [activeReport, setActiveReport] = useState('laba_rugi');
@@ -58,23 +60,106 @@ export default function LaporanKeuangan({ journals, accounts, transactions, prof
     year: 'numeric'
   });
 
+  const handleExportExcel = () => {
+    let reportData = [];
+    let reportName = 'Laporan_Keuangan';
+
+    if (activeReport === 'laba_rugi') {
+      reportName = `Laporan_Laba_Rugi_${selectedYear || '2026'}`;
+      reportData = [
+        { Komponen: 'PENDAPATAN USAHA', 'Nilai (IDR)': '' },
+        { Komponen: 'Pendapatan Penjualan Perdagangan', 'Nilai (IDR)': revTrading },
+        { Komponen: 'Pendapatan Jasa Penyewaan', 'Nilai (IDR)': revServices },
+        { Komponen: 'TOTAL PENDAPATAN USAHA', 'Nilai (IDR)': totalRevenue },
+        { Komponen: '', 'Nilai (IDR)': '' },
+        { Komponen: 'BEBAN POKOK PENJUALAN (HPP)', 'Nilai (IDR)': hpp },
+        { Komponen: 'LABA KOTOR', 'Nilai (IDR)': grossProfit },
+        { Komponen: '', 'Nilai (IDR)': '' },
+        { Komponen: 'BEBAN OPERASIONAL', 'Nilai (IDR)': '' },
+        { Komponen: 'Beban Gaji Karyawan', 'Nilai (IDR)': expSalary },
+        { Komponen: 'Beban Listrik & Air', 'Nilai (IDR)': expElectricity },
+        { Komponen: 'Beban Transportasi & Logistik', 'Nilai (IDR)': expTransport },
+        { Komponen: 'Beban Pemeliharaan & Operasional', 'Nilai (IDR)': expMaintenance },
+        { Komponen: 'Beban Operasional Lainnya', 'Nilai (IDR)': expOthers },
+        { Komponen: 'TOTAL BEBAN OPERASIONAL', 'Nilai (IDR)': totalExpenses },
+        { Komponen: '', 'Nilai (IDR)': '' },
+        { Komponen: 'LABA BERSIH PERIODE BERJALAN', 'Nilai (IDR)': netIncome }
+      ];
+    } else if (activeReport === 'neraca') {
+      reportName = `Posisi_Keuangan_Neraca_${selectedYear || '2026'}`;
+      reportData = [
+        { Posisi: 'ASET', Akun: '', 'Nilai (IDR)': '' },
+        { Posisi: 'Aset Lancar', Akun: 'Kas', 'Nilai (IDR)': cashVal },
+        { Posisi: 'Aset Lancar', Akun: 'Bank Papua', 'Nilai (IDR)': bankVal },
+        { Posisi: 'Aset Lancar', Akun: 'Piutang Usaha', 'Nilai (IDR)': receivableVal },
+        { Posisi: 'Aset Lancar', Akun: 'Persediaan Barang Dagang', 'Nilai (IDR)': inventoryVal },
+        { Posisi: 'Aset Lancar', Akun: 'Perlengkapan Usaha', 'Nilai (IDR)': suppliesVal },
+        { Posisi: 'TOTAL ASET LANCAR', Akun: '', 'Nilai (IDR)': totalCurrentAssets },
+        { Posisi: '', Akun: '', 'Nilai (IDR)': '' },
+        { Posisi: 'Aset Tidak Lancar', Akun: 'Aset Tetap & Peralatan', 'Nilai (IDR)': fixedAssets },
+        { Posisi: 'Aset Tidak Lancar', Akun: 'Akumulasi Penyusutan', 'Nilai (IDR)': -accumDepreciation },
+        { Posisi: 'TOTAL ASET TIDAK LANCAR', Akun: '', 'Nilai (IDR)': totalNonCurrentAssets },
+        { Posisi: 'TOTAL ASET KESELURUHAN', Akun: '', 'Nilai (IDR)': totalAssets },
+        { Posisi: '', Akun: '', 'Nilai (IDR)': '' },
+        { Posisi: 'LIABILITAS & EKUITAS', Akun: '', 'Nilai (IDR)': '' },
+        { Posisi: 'Liabilitas', Akun: 'Utang Usaha', 'Nilai (IDR)': tradePayables },
+        { Posisi: 'Liabilitas', Akun: 'Utang Lainnya', 'Nilai (IDR)': otherPayables },
+        { Posisi: 'TOTAL LIABILITAS', Akun: '', 'Nilai (IDR)': totalLiabilities },
+        { Posisi: '', Akun: '', 'Nilai (IDR)': '' },
+        { Posisi: 'Ekuitas', Akun: 'Modal BUMKam', 'Nilai (IDR)': initialCapital },
+        { Posisi: 'Ekuitas', Akun: 'Saldo Laba Ditahan / Berjalan', 'Nilai (IDR)': retainedEarnings },
+        { Posisi: 'TOTAL EKUITAS', Akun: '', 'Nilai (IDR)': totalEquity },
+        { Posisi: 'TOTAL LIABILITAS & EKUITAS', Akun: '', 'Nilai (IDR)': totalLiabilitiesAndEquity }
+      ];
+    } else {
+      reportName = `Laporan_Keuangan_SAK_EMKM_${selectedYear || '2026'}`;
+      reportData = [
+        { Indikator: 'Pendapatan Usaha', 'Nilai (IDR)': totalRevenue },
+        { Indikator: 'Beban Pokok (HPP)', 'Nilai (IDR)': hpp },
+        { Indikator: 'Beban Operasional', 'Nilai (IDR)': totalExpenses },
+        { Indikator: 'Laba Bersih', 'Nilai (IDR)': netIncome },
+        { Indikator: 'Total Aset', 'Nilai (IDR)': totalAssets },
+        { Indikator: 'Total Liabilitas', 'Nilai (IDR)': totalLiabilities },
+        { Indikator: 'Total Ekuitas', 'Nilai (IDR)': totalEquity }
+      ];
+    }
+
+    exportToExcel(reportData, reportName, 'Laporan Keuangan');
+    toast.success(`File Excel "${reportName}" berhasil diunduh!`);
+  };
+
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       {/* Top Header & Report Switcher (Hidden in Print) */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 print:hidden">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">Laporan Keuangan Standar SAK</h1>
-          <p className="text-xs text-slate-500 mt-0.5">Disusun sesuai ketentuan Standar Akuntansi Keuangan Entitas Privat (SAK EP)</p>
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+              LAPORAN KEUANGAN RESMI
+            </span>
+            <span className="text-xs text-slate-400 font-medium">SAK EMKM</span>
+          </div>
+          <h1 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mt-1">Laporan Keuangan Standar SAK EMKM</h1>
+          <p className="text-xs text-slate-500 mt-0.5">Disusun sesuai ketentuan Standar Akuntansi Keuangan Entitas Mikro, Kecil, dan Menengah (SAK EMKM)</p>
         </div>
-        <button
-          onClick={() => window.print()}
-          className="bg-[#0a3a2a] text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow hover:bg-[#06291d] transition flex items-center gap-2 self-start"
-        >
-          <Printer className="w-4 h-4" /> Cetak Laporan Resmi (PDF)
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleExportExcel}
+            className="px-3.5 py-2.5 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+            title="Download Spreadsheet Excel (.xlsx)"
+          >
+            <FileSpreadsheet className="w-4 h-4 text-emerald-600" /> Export Excel
+          </button>
+          <button
+            onClick={() => window.print()}
+            className="bg-[#0a3a2a] text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow hover:bg-[#06291d] transition flex items-center gap-2 self-start"
+          >
+            <Printer className="w-4 h-4" /> Cetak Laporan Resmi (PDF)
+          </button>
+        </div>
       </div>
 
-      {/* 5 Tabs SAK (Hidden in Print) */}
+      {/* 5 Tabs SAK EMKM (Hidden in Print) */}
       <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto print:hidden">
         {[
           { id: 'laba_rugi', label: '1. Laporan Laba Rugi' },
@@ -380,7 +465,7 @@ export default function LaporanKeuangan({ journals, accounts, transactions, prof
               <div>
                 <h4 className="font-bold text-slate-900">2. Dasar Penyusunan Laporan Keuangan</h4>
                 <p className="mt-1">
-                  Laporan keuangan disusun berdasarkan Standar Akuntansi Keuangan Entitas Privat (SAK EP) dengan sistem pembukuan berpasangan (double-entry). Mata uang pelaporan adalah Rupiah (IDR).
+                  Laporan keuangan disusun berdasarkan Standar Akuntansi Keuangan Entitas Mikro, Kecil, dan Menengah (SAK EMKM) dengan sistem pembukuan berpasangan (double-entry). Mata uang pelaporan adalah Rupiah (IDR).
                 </p>
               </div>
 

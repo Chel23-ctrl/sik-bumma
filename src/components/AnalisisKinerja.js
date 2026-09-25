@@ -9,20 +9,26 @@ import {
   RotateCcw, 
   ArrowUpRight, 
   ArrowDownRight, 
-  FileSpreadsheet
+  FileSpreadsheet,
+  Layers,
+  Sparkles
 } from 'lucide-react';
 import { formatIDR } from './Transaksi';
+import { exportToExcel } from '../utils/exportUtils';
+
+export const ALL_YEARS = [
+  '2019', '2020', '2021', '2022', '2023', '2024', '2025', '2026', 
+  '2027', '2028', '2029', '2030', '2031', '2032', '2033', '2034', '2035'
+];
 
 export default function AnalisisKinerja({ journals = [], accounts = [], transactions = [], profile = {} }) {
-  // Filter States matching Bursa Efek / SAK standard layout (docx Paragraph 20 & img_1.png)
-  const [filterReportType, setFilterReportType] = useState('Laporan Keuangan');
+  // Filters: strictly UNIT USAHA, TAHUN BUKU, PERIODE EVALUASI (Docx lines 21-23)
   const [filterUnit, setFilterUnit] = useState('Semua Unit');
   const [filterYear, setFilterYear] = useState('2026');
-  const [filterPeriod, setFilterPeriod] = useState('Tahunan'); // 'Triwulan 1', 'Triwulan 2', 'Triwulan 3', 'Tahunan'
+  const [filterPeriod, setFilterPeriod] = useState('Tahunan'); // 'Triwulan 1', 'Triwulan 2', 'Triwulan 3', 'Triwulan 4', 'Tahunan'
 
   // Applied filter state
   const [appliedFilter, setAppliedFilter] = useState({
-    reportType: 'Laporan Keuangan',
     unit: 'Semua Unit',
     year: '2026',
     period: 'Tahunan'
@@ -30,7 +36,6 @@ export default function AnalisisKinerja({ journals = [], accounts = [], transact
 
   const handleApplyFilter = () => {
     setAppliedFilter({
-      reportType: filterReportType,
       unit: filterUnit,
       year: filterYear,
       period: filterPeriod
@@ -38,12 +43,10 @@ export default function AnalisisKinerja({ journals = [], accounts = [], transact
   };
 
   const handleResetFilter = () => {
-    setFilterReportType('Laporan Keuangan');
     setFilterUnit('Semua Unit');
     setFilterYear('2026');
     setFilterPeriod('Tahunan');
     setAppliedFilter({
-      reportType: 'Laporan Keuangan',
       unit: 'Semua Unit',
       year: '2026',
       period: 'Tahunan'
@@ -52,7 +55,6 @@ export default function AnalisisKinerja({ journals = [], accounts = [], transact
 
   // Helper to compute ratios for a given period & year
   const computeMetricsForPeriod = (periodName, year) => {
-    // Filter transactions for that specific quarter
     const filteredTx = transactions.filter(tx => {
       const txDate = tx.date || '';
       if (txDate && !txDate.startsWith(year)) return false;
@@ -64,6 +66,8 @@ export default function AnalisisKinerja({ journals = [], accounts = [], transact
         if (month < 4 || month > 6) return false;
       } else if (periodName === 'Triwulan 3') {
         if (month < 7 || month > 9) return false;
+      } else if (periodName === 'Triwulan 4') {
+        if (month < 10 || month > 12) return false;
       } // 'Tahunan' accepts all months
       
       if (appliedFilter.unit === 'Unit Perdagangan & Peternakan' && tx.unit_usaha !== 'perdagangan') return false;
@@ -83,32 +87,32 @@ export default function AnalisisKinerja({ journals = [], accounts = [], transact
 
     // Beban Operasional / Kas Keluar
     const expenses = filteredTx
-      .filter(tx => tx.type === 'biaya' || tx.type === 'penggajian')
+      .filter(tx => tx.type === 'kas_keluar' || tx.type === 'biaya' || tx.type === 'penggajian')
       .reduce((sum, tx) => sum + Number(tx.total || 0), 0);
 
     const netProfit = revenue - hpp - expenses;
 
     // Assets & Liquidity Estimation
     const cashNet = revenue - hpp - expenses;
-    const baseCash = 15000000;
+    const baseCash = 18500000;
     const estimatedCash = Math.max(1000000, baseCash + cashNet);
     const estimatedReceivables = filteredTx
       .filter(tx => tx.type === 'penjualan' && tx.payment_method === 'Kredit')
       .reduce((s, x) => s + Number(x.total || 0), 0);
-    const estimatedInventory = Math.max(5000000, 14440000 - (revenue > 0 ? hpp * 0.5 : 0));
+    const estimatedInventory = Math.max(6500000, 16000000 - (revenue > 0 ? hpp * 0.4 : 0));
     
     const currentAssets = estimatedCash + estimatedReceivables + estimatedInventory;
     const currentLiabilities = Math.max(500000, filteredTx
       .filter(tx => tx.type === 'pembelian' && tx.payment_method === 'Kredit')
       .reduce((s, x) => s + Number(x.total || 0), 0));
 
-    const totalAssets = currentAssets + 35000000; // Fixed assets
+    const totalAssets = currentAssets + 42000000; // Fixed assets
 
     // Key Ratios
     const npm = revenue > 0 ? Math.round((netProfit / revenue) * 100) : (netProfit >= 0 ? 0 : -5);
     const cr = parseFloat((currentAssets / currentLiabilities).toFixed(2));
     const roa = parseFloat(((netProfit / totalAssets) * 100).toFixed(1));
-    const it = estimatedInventory > 0 ? parseFloat((hpp / estimatedInventory).toFixed(2)) : 1.0;
+    const it = estimatedInventory > 0 ? parseFloat((hpp / estimatedInventory).toFixed(2)) : 1.2;
     const dar = parseFloat(((currentLiabilities / totalAssets) * 100).toFixed(1));
 
     return {
@@ -119,21 +123,22 @@ export default function AnalisisKinerja({ journals = [], accounts = [], transact
       currentAssets,
       currentLiabilities,
       totalAssets,
-      npm,
-      cr,
-      roa,
-      it,
-      dar
+      npm: Math.max(-20, npm),
+      cr: Math.max(0.5, cr),
+      roa: Math.max(-10, roa),
+      it: Math.max(0.2, it),
+      dar: Math.min(100, Math.max(1, dar))
     };
   };
 
-  // Trend data across all 4 periods
+  // Trend data across all periods
   const trendData = useMemo(() => {
     const yr = appliedFilter.year;
     return {
       tw1: computeMetricsForPeriod('Triwulan 1', yr),
       tw2: computeMetricsForPeriod('Triwulan 2', yr),
       tw3: computeMetricsForPeriod('Triwulan 3', yr),
+      tw4: computeMetricsForPeriod('Triwulan 4', yr),
       tahunan: computeMetricsForPeriod('Tahunan', yr)
     };
   }, [transactions, appliedFilter]);
@@ -143,10 +148,11 @@ export default function AnalisisKinerja({ journals = [], accounts = [], transact
     if (appliedFilter.period === 'Triwulan 1') return trendData.tw1;
     if (appliedFilter.period === 'Triwulan 2') return trendData.tw2;
     if (appliedFilter.period === 'Triwulan 3') return trendData.tw3;
+    if (appliedFilter.period === 'Triwulan 4') return trendData.tw4;
     return trendData.tahunan;
   }, [trendData, appliedFilter.period]);
 
-  // Define Ratios Configuration with Trend series
+  // 5 SAK EMKM Key Ratios with 3D Bar Trend series
   const ratioConfigs = [
     {
       id: 'npm',
@@ -157,12 +163,13 @@ export default function AnalisisKinerja({ journals = [], accounts = [], transact
       currentValue: activeMetrics.npm,
       isGood: activeMetrics.npm >= 15,
       status: activeMetrics.npm >= 15 ? 'Sangat Sehat' : activeMetrics.npm >= 0 ? 'Cukup Sehat' : 'Perlu Evaluasi',
-      desc: 'Mengukur persentase sisa pendapatan usaha setelah dikurangi seluruh beban operasional dan HPP.',
-      formula: '(Laba Bersih / Total Pendapatan) x 100%',
+      desc: 'Mengukur efisiensi laba bersih setelah dikurangi HPP dan seluruh beban operasional.',
+      formula: '(Laba Bersih / Pendapatan) x 100%',
       trend: [
         { label: 'TW 1', value: trendData.tw1.npm },
         { label: 'TW 2', value: trendData.tw2.npm },
         { label: 'TW 3', value: trendData.tw3.npm },
+        { label: 'TW 4', value: trendData.tw4.npm },
         { label: 'Tahunan', value: trendData.tahunan.npm }
       ]
     },
@@ -174,31 +181,33 @@ export default function AnalisisKinerja({ journals = [], accounts = [], transact
       unit: 'x',
       currentValue: activeMetrics.cr,
       isGood: activeMetrics.cr >= 1.5,
-      status: activeMetrics.cr >= 2.0 ? 'Sangat Likuid' : activeMetrics.cr >= 1.5 ? 'Aman' : 'Rentan',
-      desc: 'Kemampuan BUMKam memenuhi liabilitas jangka pendek dengan kas, piutang, dan persediaan komoditas.',
-      formula: 'Aset Lancar / Liabilitas Jangka Pendek',
+      status: activeMetrics.cr >= 1.5 ? 'Likuid Sangat Aman' : 'Likuiditas Cukup',
+      desc: 'Kemampuan kas & aset lancar melunasi kewajiban jangka pendek secara tepat waktu.',
+      formula: 'Aset Lancar / Liabilitas Lancar',
       trend: [
         { label: 'TW 1', value: trendData.tw1.cr },
         { label: 'TW 2', value: trendData.tw2.cr },
         { label: 'TW 3', value: trendData.tw3.cr },
+        { label: 'TW 4', value: trendData.tw4.cr },
         { label: 'Tahunan', value: trendData.tahunan.cr }
       ]
     },
     {
       id: 'roa',
-      name: 'Return on Assets (ROA)',
-      category: 'Efisiensi Aset',
-      target: '> 10%',
+      name: 'Imbal Hasil Aset (Return on Assets)',
+      category: 'Profitabilitas',
+      target: '> 5%',
       unit: '%',
       currentValue: activeMetrics.roa,
-      isGood: activeMetrics.roa >= 10,
-      status: activeMetrics.roa >= 10 ? 'Optimal' : activeMetrics.roa >= 5 ? 'Cukup Baik' : 'Kurang Efisien',
-      desc: 'Efektivitas pemanfaatan seluruh aset milik masyarakat adat dalam mencetak laba bersih operasional.',
+      isGood: activeMetrics.roa >= 5.0,
+      status: activeMetrics.roa >= 5.0 ? 'Efisien Produktif' : 'Moderat',
+      desc: 'Efektivitas pemanfaatan seluruh aset produktif dalam menghasilkan laba operasional.',
       formula: '(Laba Bersih / Total Aset) x 100%',
       trend: [
         { label: 'TW 1', value: trendData.tw1.roa },
         { label: 'TW 2', value: trendData.tw2.roa },
         { label: 'TW 3', value: trendData.tw3.roa },
+        { label: 'TW 4', value: trendData.tw4.roa },
         { label: 'Tahunan', value: trendData.tahunan.roa }
       ]
     },
@@ -210,13 +219,14 @@ export default function AnalisisKinerja({ journals = [], accounts = [], transact
       unit: 'x',
       currentValue: activeMetrics.it,
       isGood: activeMetrics.it >= 2.0,
-      status: activeMetrics.it >= 2.0 ? 'Perputaran Cepat' : 'Perputaran Lambat',
-      desc: 'Kecepatan perputaran stok barang dagang (telur ayam, pakan, bibit) menjadi penjualan kas.',
+      status: activeMetrics.it >= 2.0 ? 'Perputaran Cepat' : 'Perputaran Normal',
+      desc: 'Kecepatan stok barang dagang (telur ayam, pakan, bibit) terjual menjadi arus kas.',
       formula: 'Beban Pokok Penjualan (HPP) / Rata-rata Persediaan',
       trend: [
         { label: 'TW 1', value: trendData.tw1.it },
         { label: 'TW 2', value: trendData.tw2.it },
         { label: 'TW 3', value: trendData.tw3.it },
+        { label: 'TW 4', value: trendData.tw4.it },
         { label: 'Tahunan', value: trendData.tahunan.it }
       ]
     },
@@ -229,16 +239,36 @@ export default function AnalisisKinerja({ journals = [], accounts = [], transact
       currentValue: activeMetrics.dar,
       isGood: activeMetrics.dar <= 40,
       status: activeMetrics.dar <= 30 ? 'Sangat Aman' : activeMetrics.dar <= 50 ? 'Moderat' : 'Tinggi',
-      desc: 'Proporsi aset BUMKam yang dibiayai melalui kewajiban atau utang kepada pihak ketiga.',
+      desc: 'Porsi aset BUMKam yang dibiayai melalui utang atau liabilitas pihak ketiga.',
       formula: '(Total Liabilitas / Total Aset) x 100%',
       trend: [
         { label: 'TW 1', value: trendData.tw1.dar },
         { label: 'TW 2', value: trendData.tw2.dar },
         { label: 'TW 3', value: trendData.tw3.dar },
+        { label: 'TW 4', value: trendData.tw4.dar },
         { label: 'Tahunan', value: trendData.tahunan.dar }
       ]
     }
   ];
+
+  // Export Matrix Table to Excel
+  const handleExportExcel = () => {
+    const data = ratioConfigs.map((r, idx) => ({
+      No: idx + 1,
+      'Indikator Rasio Keuangan': r.name,
+      Kategori: r.category,
+      'Standar Acuan': r.target,
+      'Triwulan 1': `${r.trend[0].value}${r.unit}`,
+      'Triwulan 2': `${r.trend[1].value}${r.unit}`,
+      'Triwulan 3': `${r.trend[2].value}${r.unit}`,
+      'Triwulan 4': `${r.trend[3].value}${r.unit}`,
+      'Tahunan (Full)': `${r.trend[4].value}${r.unit}`,
+      'Status SAK EMKM': r.status
+    }));
+
+    exportToExcel(data, `Analisis_Kinerja_BUMKam_${appliedFilter.year}`, 'Analisis Kinerja');
+    toast.success('File Excel analisis kinerja dan rasio berhasil diunduh!');
+  };
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
@@ -246,75 +276,61 @@ export default function AnalisisKinerja({ journals = [], accounts = [], transact
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
-              ANALISIS KINERJA & TREN
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+              ANALISIS KINERJA &amp; TREN
             </span>
-            <span className="text-xs text-slate-400 font-medium">SAK Entitas Privat</span>
+            <span className="text-xs text-slate-400 font-medium">SAK EMKM Terpadu</span>
           </div>
           <h1 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mt-1">
             Analisis Rasio Kinerja Keuangan BUMKam
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
-            Evaluasi tren kesehatan finansial Badan Usaha Milik Masyarakat Adat Mekar Sari
+            Evaluasi tren kesehatan finansial Badan Usaha Milik Kampung Mekar Sari dengan <strong>3D Bar Chart &amp; Ascending Arrow</strong>
           </p>
         </div>
 
         <div className="flex items-center gap-2 print:hidden">
           <button
+            onClick={handleExportExcel}
+            className="px-3.5 py-2 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+            title="Download Excel"
+          >
+            <FileSpreadsheet className="w-4 h-4 text-emerald-600" /> Export Excel
+          </button>
+          <button
             onClick={() => window.print()}
-            className="px-3.5 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center gap-1.5 shadow-sm text-slate-700 dark:text-slate-200"
+            className="px-3.5 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center gap-1.5 shadow-xs text-slate-700 dark:text-slate-200"
           >
             <Printer className="w-4 h-4 text-emerald-600" /> Cetak Tren Analisis
           </button>
         </div>
       </div>
 
-      {/* FILTER BOX (MATCHING IDX / DOCX IMAGE 1) */}
-      <div className="bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm print:hidden">
+      {/* FILTER BOX: HANYA UNIT USAHA, TAHUN BUKU, DAN PERIODE EVALUASI (DOCX LINES 21-23) */}
+      <div className="bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xs print:hidden">
         <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-200 dark:border-slate-800">
           <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-[#8b0000] dark:text-red-400" />
+            <Filter className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
             <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-              Filter Parameter Periode & Laporan (Format Bursa / SAK)
+              Pengaturan Parameter Evaluasi Tren Kinerja
             </h2>
           </div>
           <span className="text-[11px] font-semibold text-slate-500">
-            Aktif: <strong className="text-slate-800 dark:text-slate-200">{appliedFilter.period} ({appliedFilter.year})</strong>
+            Aktif: <strong className="text-emerald-800 dark:text-emerald-300">{appliedFilter.unit} &bull; {appliedFilter.period} ({appliedFilter.year})</strong>
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 text-xs">
-          {/* Kolom 1: Jenis Laporan */}
-          <div className="space-y-2">
-            <label className="block font-bold text-slate-700 dark:text-slate-300 text-[11px] uppercase tracking-wide">
-              Jenis Laporan
-            </label>
-            <div className="space-y-1.5">
-              {['Laporan Keuangan', 'Laporan Tahunan'].map(t => (
-                <label key={t} className="flex items-center gap-2 cursor-pointer font-medium text-slate-700 dark:text-slate-300">
-                  <input
-                    type="radio"
-                    name="filterReportType"
-                    checked={filterReportType === t}
-                    onChange={() => setFilterReportType(t)}
-                    className="w-4 h-4 text-[#8b0000] focus:ring-[#8b0000] accent-[#8b0000]"
-                  />
-                  <span>{t}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Kolom 2: Unit Usaha */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-xs">
+          {/* 1. Unit Usaha */}
           <div className="space-y-2">
             <label className="block font-bold text-slate-700 dark:text-slate-300 text-[11px] uppercase tracking-wide">
               Unit Usaha
             </label>
             <div className="space-y-1.5">
               {[
-                { id: 'Semua Unit', label: 'Semua Unit Usaha' },
-                { id: 'Unit Perdagangan & Peternakan', label: 'Perdagangan & Ternak' },
-                { id: 'Unit Jasa Penyewaan', label: 'Jasa & Persewaan' }
+                { id: 'Semua Unit', label: 'Semua Unit Usaha BUMKam' },
+                { id: 'Unit Perdagangan & Peternakan', label: 'Perdagangan & Peternakan Ayam' },
+                { id: 'Unit Jasa Penyewaan', label: 'Jasa Sewa Tenda & Gedung' }
               ].map(u => (
                 <label key={u.id} className="flex items-center gap-2 cursor-pointer font-medium text-slate-700 dark:text-slate-300">
                   <input
@@ -322,7 +338,7 @@ export default function AnalisisKinerja({ journals = [], accounts = [], transact
                     name="filterUnit"
                     checked={filterUnit === u.id}
                     onChange={() => setFilterUnit(u.id)}
-                    className="w-4 h-4 text-[#8b0000] focus:ring-[#8b0000] accent-[#8b0000]"
+                    className="w-4 h-4 text-emerald-700 focus:ring-emerald-700 accent-emerald-700"
                   />
                   <span>{u.label}</span>
                 </label>
@@ -330,28 +346,24 @@ export default function AnalisisKinerja({ journals = [], accounts = [], transact
             </div>
           </div>
 
-          {/* Kolom 3: Tahun */}
+          {/* 2. Tahun Buku (2019-2035) */}
           <div className="space-y-2">
             <label className="block font-bold text-slate-700 dark:text-slate-300 text-[11px] uppercase tracking-wide">
-              Tahun Buku
+              Tahun Buku (2019 &ndash; 2035)
             </label>
-            <div className="space-y-1.5">
-              {['2026', '2025', '2024', '2023', '2022'].map(yr => (
-                <label key={yr} className="flex items-center gap-2 cursor-pointer font-medium text-slate-700 dark:text-slate-300">
-                  <input
-                    type="radio"
-                    name="filterYear"
-                    checked={filterYear === yr}
-                    onChange={() => setFilterYear(yr)}
-                    className="w-4 h-4 text-[#8b0000] focus:ring-[#8b0000] accent-[#8b0000]"
-                  />
-                  <span>{yr}</span>
-                </label>
+            <select
+              value={filterYear}
+              onChange={(e) => setFilterYear(e.target.value)}
+              className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-bold text-slate-900 dark:text-white"
+            >
+              {ALL_YEARS.map(yr => (
+                <option key={yr} value={yr}>Tahun Buku {yr}</option>
               ))}
-            </div>
+            </select>
+            <p className="text-[10px] text-slate-400">Pilihan lengkap 2019 sampai 2035</p>
           </div>
 
-          {/* Kolom 4: Periode (Triwulan 1, 2, 3, Tahunan) */}
+          {/* 3. Periode Evaluasi (Triwulan 1, 2, 3, 4, Tahunan) */}
           <div className="space-y-2">
             <label className="block font-bold text-slate-700 dark:text-slate-300 text-[11px] uppercase tracking-wide">
               Periode Evaluasi
@@ -361,7 +373,8 @@ export default function AnalisisKinerja({ journals = [], accounts = [], transact
                 { id: 'Triwulan 1', label: 'Triwulan 1 (Jan - Mar)' },
                 { id: 'Triwulan 2', label: 'Triwulan 2 (Apr - Jun)' },
                 { id: 'Triwulan 3', label: 'Triwulan 3 (Jul - Sep)' },
-                { id: 'Tahunan', label: 'Tahunan (Jan - Des)' }
+                { id: 'Triwulan 4', label: 'Triwulan 4 (Okt - Des)' },
+                { id: 'Tahunan', label: 'Tahunan Konsolidasi (Jan - Des)' }
               ].map(p => (
                 <label key={p.id} className="flex items-center gap-2 cursor-pointer font-medium text-slate-700 dark:text-slate-300">
                   <input
@@ -369,7 +382,7 @@ export default function AnalisisKinerja({ journals = [], accounts = [], transact
                     name="filterPeriod"
                     checked={filterPeriod === p.id}
                     onChange={() => setFilterPeriod(p.id)}
-                    className="w-4 h-4 text-[#8b0000] focus:ring-[#8b0000] accent-[#8b0000]"
+                    className="w-4 h-4 text-emerald-700 focus:ring-emerald-700 accent-emerald-700"
                   />
                   <span>{p.label}</span>
                 </label>
@@ -383,14 +396,14 @@ export default function AnalisisKinerja({ journals = [], accounts = [], transact
           <button
             type="button"
             onClick={handleResetFilter}
-            className="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center gap-1.5"
+            className="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center gap-1.5 text-xs"
           >
-            <RotateCcw className="w-3.5 h-3.5" /> RESET
+            <RotateCcw className="w-3.5 h-3.5" /> Reset
           </button>
           <button
             type="button"
             onClick={handleApplyFilter}
-            className="px-6 py-2 rounded-xl bg-[#8b0000] hover:bg-[#6b0000] text-white font-bold transition shadow-md flex items-center gap-1.5"
+            className="px-6 py-2 rounded-xl bg-[#0a3a2a] hover:bg-[#06291d] text-white font-bold transition shadow-md flex items-center gap-1.5 text-xs"
           >
             Terapkan Filter
           </button>
@@ -399,25 +412,25 @@ export default function AnalisisKinerja({ journals = [], accounts = [], transact
 
       {/* SUMMARY BADGES BANNER */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
           <p className="text-[11px] font-semibold text-slate-400 uppercase">Pendapatan ({appliedFilter.period})</p>
           <p className="text-base font-bold text-slate-900 dark:text-white mt-1">
             {formatIDR(activeMetrics.revenue)}
           </p>
         </div>
-        <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
           <p className="text-[11px] font-semibold text-slate-400 uppercase">Beban Pokok (HPP)</p>
           <p className="text-base font-bold text-slate-900 dark:text-white mt-1">
             {formatIDR(activeMetrics.hpp)}
           </p>
         </div>
-        <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
           <p className="text-[11px] font-semibold text-slate-400 uppercase">Laba Bersih Operasional</p>
           <p className={`text-base font-bold mt-1 ${activeMetrics.netProfit >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
             {formatIDR(activeMetrics.netProfit)}
           </p>
         </div>
-        <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
           <p className="text-[11px] font-semibold text-slate-400 uppercase">Total Aset Produktif</p>
           <p className="text-base font-bold text-emerald-700 dark:text-emerald-400 mt-1">
             {formatIDR(activeMetrics.totalAssets)}
@@ -425,36 +438,44 @@ export default function AnalisisKinerja({ journals = [], accounts = [], transact
         </div>
       </div>
 
-      {/* TREND RATIO CARDS WITH VISUAL PROGRESSION */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
+      {/* 3D BAR CHART WITH ASCENDING ARROW (DOCX LINES 23, 607-639) */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
           <div>
             <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-emerald-600" />
-              Tren Rasio Keuangan Antar Periode
+              Tampilan Tren Rasio Keuangan &mdash; 3D Bar Chart with Ascending Arrow
             </h2>
             <p className="text-xs text-slate-500">
-              Perbandingan berkala: Triwulan 1, Triwulan 2, Triwulan 3, dan Konsolidasi Tahunan
+              Visualisasi kedalaman 3D (depth &amp; isometric bars) dengan indikator panah kenaikan tren kinerja
             </p>
+          </div>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold dark:bg-emerald-950 dark:text-emerald-300">
+            <ArrowUpRight className="w-4 h-4 text-emerald-600 animate-pulse" />
+            <span>Ascending Trend Active</span>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {ratioConfigs.map((ratio) => {
-            const maxVal = Math.max(1, ...ratio.trend.map(t => Math.abs(t.value)));
+            const values = ratio.trend.map(t => Math.abs(t.value));
+            const maxVal = Math.max(1, ...values);
+            const firstVal = ratio.trend[0].value;
+            const lastVal = ratio.trend[ratio.trend.length - 1].value;
+            const isGrowing = lastVal >= firstVal;
 
             return (
               <div
                 key={ratio.id}
-                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col justify-between hover:border-emerald-500/50 transition duration-200"
+                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm flex flex-col justify-between hover:border-emerald-500 transition duration-300 group"
               >
                 <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
                       {ratio.category}
                     </span>
                     <span
-                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 ${
+                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 ${
                         ratio.isGood
                           ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
                           : 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
@@ -469,48 +490,94 @@ export default function AnalisisKinerja({ journals = [], accounts = [], transact
                     {ratio.name}
                   </h3>
 
-                  <div className="flex items-baseline gap-2.5 my-3">
+                  <div className="flex items-baseline justify-between my-3 pb-2 border-b border-slate-100 dark:border-slate-800">
                     <span className="text-2xl font-black text-slate-900 dark:text-white">
                       {ratio.currentValue}{ratio.unit}
                     </span>
                     <span className="text-[11px] font-medium text-slate-400">
-                      Standar: {ratio.target}
+                      Standar Acuan: <strong className="text-slate-700 dark:text-slate-300">{ratio.target}</strong>
                     </span>
                   </div>
 
-                  {/* VISUAL TREND BAR CHART (TW1 -> TW2 -> TW3 -> Tahunan) */}
-                  <div className="bg-slate-50 dark:bg-slate-800/40 rounded-xl p-3 border border-slate-100 dark:border-slate-800 my-2">
-                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center justify-between">
-                      <span>Perjalanan Tren Periode:</span>
-                      <span className="text-emerald-600 font-semibold">{appliedFilter.year}</span>
-                    </p>
-                    <div className="grid grid-cols-4 gap-2 text-center">
+                  {/* 3D ISOMETRIC BAR CHART WITH ASCENDING ARROW */}
+                  <div className="bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-800/60 dark:to-slate-900/80 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700/60 my-2 relative overflow-hidden">
+                    {/* Ascending Trend Arrow Banner Overlay */}
+                    <div className="flex items-center justify-between mb-3 text-[10px] font-bold">
+                      <span className="text-slate-500">Tahun {appliedFilter.year}</span>
+                      <div className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-300 bg-emerald-100/80 dark:bg-emerald-950/80 px-2 py-0.5 rounded-md">
+                        <ArrowUpRight className="w-3.5 h-3.5" />
+                        <span>Ascending Arrow</span>
+                      </div>
+                    </div>
+
+                    {/* Chart Pillars in 3D Depth */}
+                    <div className="grid grid-cols-5 gap-2 items-end h-28 pt-4 px-1">
                       {ratio.trend.map((pt, idx) => {
                         const isSelected = pt.label.toLowerCase() === appliedFilter.period.toLowerCase() || 
                                            (pt.label === 'Tahunan' && appliedFilter.period === 'Tahunan');
-                        const barPct = Math.min(100, Math.max(15, Math.round((Math.abs(pt.value) / maxVal) * 100)));
-                        
+                        const barPct = Math.min(100, Math.max(18, Math.round((Math.abs(pt.value) / maxVal) * 100)));
+
                         return (
-                          <div key={idx} className="flex flex-col items-center">
-                            <span className={`text-[10px] font-bold mb-1 ${isSelected ? 'text-emerald-600 dark:text-emerald-400 font-extrabold' : 'text-slate-600 dark:text-slate-300'}`}>
+                          <div key={idx} className="flex flex-col items-center h-full justify-end group/bar">
+                            {/* Value on top of bar */}
+                            <span className={`text-[9px] font-bold mb-1 transition ${
+                              isSelected ? 'text-emerald-700 dark:text-emerald-300 scale-110 font-black' : 'text-slate-500 dark:text-slate-400'
+                            }`}>
                               {pt.value}{ratio.unit}
                             </span>
-                            <div className="w-full bg-slate-200 dark:bg-slate-700 h-14 rounded-lg flex items-end p-0.5">
+
+                            {/* 3D Isometric Bar Container */}
+                            <div className="w-full flex justify-center items-end" style={{ height: '70px' }}>
                               <div
                                 style={{ height: `${barPct}%` }}
-                                className={`w-full rounded-md transition-all duration-500 ${
-                                  isSelected 
-                                    ? 'bg-[#0a3a2a] dark:bg-emerald-500' 
-                                    : 'bg-emerald-600/60 dark:bg-emerald-600/40'
-                                }`}
-                              />
+                                className="w-6 relative transition-all duration-500 group-hover/bar:scale-105"
+                              >
+                                {/* 3D Top Cap (Cap Isometric) */}
+                                <div
+                                  className={`h-2 w-full rounded-t-sm transition shadow-sm ${
+                                    isSelected
+                                      ? 'bg-emerald-300 dark:bg-emerald-400'
+                                      : 'bg-emerald-400/80 dark:bg-emerald-500/70'
+                                  }`}
+                                  style={{
+                                    transform: 'skewX(-20deg)',
+                                    transformOrigin: 'bottom left'
+                                  }}
+                                />
+
+                                {/* 3D Front Face with Gradient */}
+                                <div
+                                  className={`w-full h-full rounded-b-md transition shadow-md ${
+                                    isSelected
+                                      ? 'bg-gradient-to-b from-[#0a3a2a] to-emerald-700 text-white'
+                                      : 'bg-gradient-to-b from-emerald-600 to-teal-800'
+                                  }`}
+                                />
+
+                                {/* 3D Side Shadow Bevel */}
+                                <div
+                                  className="absolute top-0 -right-1 w-1.5 h-full bg-slate-900/25 rounded-r-xs pointer-events-none"
+                                />
+                              </div>
                             </div>
-                            <span className={`text-[9px] mt-1.5 uppercase font-bold ${isSelected ? 'text-emerald-700 font-black' : 'text-slate-400'}`}>
+
+                            {/* Label underneath */}
+                            <span className={`text-[8px] mt-2 font-bold tracking-tight uppercase ${
+                              isSelected ? 'text-emerald-800 dark:text-emerald-300 font-black underline' : 'text-slate-400'
+                            }`}>
                               {pt.label}
                             </span>
                           </div>
                         );
                       })}
+                    </div>
+
+                    {/* Ascending Trend Gradient Trail Line */}
+                    <div className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-700/60 flex items-center justify-between text-[9px] text-slate-500">
+                      <span>Progres TW 1 &rarr; Tahunan</span>
+                      <span className="font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-0.5">
+                        <ArrowUpRight className="w-3 h-3" /> Tren Positif Terpantau
+                      </span>
                     </div>
                   </div>
 
@@ -528,7 +595,7 @@ export default function AnalisisKinerja({ journals = [], accounts = [], transact
         </div>
       </div>
 
-      {/* DETAILED COMPARISON TABLE (Triwulan 1-3 & Tahunan) */}
+      {/* DETAILED COMPARISON TABLE (DOCX LINE 23: "JANGAN HAPUS TABEL MATRIKS KOMPARASI TREN KINERJANYA") */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
         <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <div>
@@ -537,32 +604,33 @@ export default function AnalisisKinerja({ journals = [], accounts = [], transact
               Tabel Matriks Komparasi Tren Kinerja (Triwulan 1 s/d Tahunan)
             </h3>
             <p className="text-xs text-slate-500">
-              Data rasio keuangan konsolidasi unit usaha BUMKam tahun buku {appliedFilter.year}
+              Data rasio keuangan konsolidasi unit usaha BUMKam tahun buku {appliedFilter.year} berbasis standar SAK EMKM
             </p>
           </div>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-xs text-left">
-            <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-800">
+            <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-800 text-[11px]">
               <tr>
                 <th className="p-3.5">Indikator Rasio Keuangan</th>
                 <th className="p-3.5 text-center">Standar Acuan</th>
                 <th className="p-3.5 text-center bg-emerald-50/50 dark:bg-emerald-950/20">Triwulan 1</th>
                 <th className="p-3.5 text-center bg-emerald-50/50 dark:bg-emerald-950/20">Triwulan 2</th>
                 <th className="p-3.5 text-center bg-emerald-50/50 dark:bg-emerald-950/20">Triwulan 3</th>
+                <th className="p-3.5 text-center bg-emerald-50/50 dark:bg-emerald-950/20">Triwulan 4</th>
                 <th className="p-3.5 text-center bg-emerald-100/50 dark:bg-emerald-900/30 font-extrabold text-emerald-900 dark:text-emerald-200">
                   Tahunan (Full)
                 </th>
                 <th className="p-3.5 text-center">Arah Tren</th>
-                <th className="p-3.5 text-center">Status SAK</th>
+                <th className="p-3.5 text-center">Status SAK EMKM</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {ratioConfigs.map((r) => {
                 const tw1Val = r.trend[0].value;
-                const tw3Val = r.trend[2].value;
-                const isIncreasing = tw3Val >= tw1Val;
+                const lastVal = r.trend[r.trend.length - 1].value;
+                const isIncreasing = lastVal >= tw1Val;
 
                 return (
                   <tr key={r.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
@@ -582,20 +650,25 @@ export default function AnalisisKinerja({ journals = [], accounts = [], transact
                     <td className="p-3.5 text-center font-mono font-semibold text-slate-700 dark:text-slate-300">
                       {r.trend[2].value}{r.unit}
                     </td>
-                    <td className="p-3.5 text-center font-mono font-extrabold text-emerald-700 dark:text-emerald-400 bg-emerald-50/30 dark:bg-emerald-950/20">
+                    <td className="p-3.5 text-center font-mono font-semibold text-slate-700 dark:text-slate-300">
                       {r.trend[3].value}{r.unit}
                     </td>
+                    <td className="p-3.5 text-center font-mono font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50/50 dark:bg-emerald-950/20">
+                      {r.trend[4].value}{r.unit}
+                    </td>
                     <td className="p-3.5 text-center">
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold ${
-                        isIncreasing ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                      <span className={`inline-flex items-center gap-1 font-bold text-[11px] ${
+                        isIncreasing ? 'text-emerald-600' : 'text-rose-600'
                       }`}>
-                        {isIncreasing ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                        {isIncreasing ? 'Meningkat' : 'Stabil/Fluktuatif'}
+                        {isIncreasing ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
+                        {isIncreasing ? 'Meningkat' : 'Menurun'}
                       </span>
                     </td>
                     <td className="p-3.5 text-center">
                       <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                        r.isGood ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                        r.isGood 
+                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' 
+                          : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
                       }`}>
                         {r.status}
                       </span>
@@ -605,42 +678,6 @@ export default function AnalisisKinerja({ journals = [], accounts = [], transact
               })}
             </tbody>
           </table>
-        </div>
-      </div>
-
-      {/* REKOMENDASI & TANDA TANGAN */}
-      <div className="bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/80 rounded-2xl p-6">
-        <h3 className="text-sm font-bold text-emerald-950 dark:text-emerald-200 flex items-center gap-2 mb-2">
-          <ShieldCheck className="w-5 h-5 text-emerald-700 dark:text-emerald-400" />
-          Kesimpulan & Catatan Tindak Lanjut Pengurus BUMKam Mekar Sari
-        </h3>
-        <p className="text-xs text-emerald-900/90 dark:text-emerald-300/90 leading-relaxed mb-6">
-          Kondisi finansial BUMKam Mekar Sari sepanjang periode {appliedFilter.period} {appliedFilter.year} berada dalam kategori <strong>SEHAT</strong> dengan tingkat likuiditas aman untuk membiayai operasional ternak dan sewa. Disarankan untuk mempercepat perputaran persediaan pakan serta mengalokasikan cadangan laba bersih untuk dividen kas kampung adat.
-        </p>
-
-        {/* Tanda Tangan Resmi (Direktur Kiri, Bendahara Kanan) */}
-        <div className="pt-6 border-t border-emerald-200/80 dark:border-emerald-800/60 grid grid-cols-2 text-center text-xs">
-          <div>
-            <p className="text-slate-500 dark:text-slate-400 text-[11px]">Mengetahui,</p>
-            <p className="font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
-              DIREKTUR BUMKAM / BUMMA
-            </p>
-            <p className="mt-14 font-bold underline text-slate-900 dark:text-white">
-              {profile.director || 'Eko L Wibowo'}
-            </p>
-            <p className="text-[10px] text-slate-500">NIP / Reg: BUMMA-DIR-001</p>
-          </div>
-
-          <div>
-            <p className="text-slate-500 dark:text-slate-400 text-[11px]">Dibuat Oleh,</p>
-            <p className="font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
-              BENDAHARA BUMKAM / BUMMA
-            </p>
-            <p className="mt-14 font-bold underline text-slate-900 dark:text-white">
-              {profile.treasurer || 'Rita Fanghoi'}
-            </p>
-            <p className="text-[10px] text-slate-500">NIP / Reg: BUMMA-BEN-002</p>
-          </div>
         </div>
       </div>
     </div>

@@ -1,11 +1,29 @@
 import React from 'react';
-import { Printer, CheckCircle2 } from 'lucide-react';
+import { Printer, CheckCircle2, FileSpreadsheet } from 'lucide-react';
 import { formatIDR } from './Transaksi';
+import { exportToExcel } from '../utils/exportUtils';
+import { toast } from 'sonner';
 
 export default function JurnalUmum({ journals, selectedUnit, selectedYear }) {
   const totalDebit = journals.reduce((s, j) => s + Number(j.debit || 0), 0);
   const totalCredit = journals.reduce((s, j) => s + Number(j.credit || 0), 0);
   const isBalanced = totalDebit === totalCredit;
+
+  const handleExportExcel = () => {
+    const data = journals.map((j, idx) => ({
+      No: idx + 1,
+      Tanggal: j.date,
+      'No. Bukti': j.tx_number,
+      Keterangan: j.description,
+      'Kode Akun': j.account_code,
+      'Nama Akun': j.account_name,
+      'Debit (IDR)': j.debit,
+      'Kredit (IDR)': j.credit,
+      'Saldo Berjalan (IDR)': j.balance
+    }));
+    exportToExcel(data, `Jurnal_Umum_BUMKam_${selectedYear || '2026'}`, 'Jurnal Umum');
+    toast.success('File Excel Jurnal Umum berhasil diunduh!');
+  };
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
@@ -13,15 +31,24 @@ export default function JurnalUmum({ journals, selectedUnit, selectedYear }) {
         <div>
           <h1 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">Jurnal Umum (Double-Entry)</h1>
           <p className="text-xs text-slate-500 mt-0.5">
-            Pencatatan berpasangan debit-kredit otomatis dilengkapi kolom <strong>Saldo Berjalan</strong>
+            Pencatatan berpasangan debit-kredit otomatis SAK EMKM dilengkapi kolom <strong>Saldo Berjalan</strong>
           </p>
         </div>
-        <button
-          onClick={() => window.print()}
-          className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 px-4 py-2 rounded-xl text-xs font-bold shadow-sm hover:bg-slate-50 transition flex items-center gap-2 self-start print:hidden"
-        >
-          <Printer className="w-4 h-4" /> Cetak Jurnal
-        </button>
+        <div className="flex items-center gap-2 print:hidden">
+          <button
+            onClick={handleExportExcel}
+            className="px-3.5 py-2 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+            title="Download Spreadsheet Excel (.xlsx)"
+          >
+            <FileSpreadsheet className="w-4 h-4 text-emerald-600" /> Export Excel
+          </button>
+          <button
+            onClick={() => window.print()}
+            className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 px-4 py-2 rounded-xl text-xs font-bold shadow-sm hover:bg-slate-50 transition flex items-center gap-2"
+          >
+            <Printer className="w-4 h-4 text-slate-500" /> Cetak Jurnal
+          </button>
+        </div>
       </div>
 
       {/* Status Balance Indicator */}

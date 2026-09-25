@@ -17,13 +17,13 @@ export default function LandingUnit({
       <div className="bg-gradient-to-r from-[#0a3a2a] to-[#125940] rounded-2xl p-6 md:p-8 text-white shadow-md relative overflow-hidden">
         <div className="relative z-10">
           <div className="inline-flex items-center gap-2 bg-emerald-500/20 text-emerald-200 px-3 py-1 rounded-full text-xs font-semibold mb-3 border border-emerald-400/30">
-            <ShieldCheck className="w-3.5 h-3.5" /> Portal Administrasi &amp; Siklus Akuntansi SAK EP
+            <ShieldCheck className="w-3.5 h-3.5" /> ARVEA &bull; Portal Siklus Akuntansi SAK EMKM
           </div>
           <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
             Selamat Datang di {profile.name}
           </h1>
           <p className="text-emerald-100/90 text-sm md:text-base mt-2 max-w-2xl">
-            {profile.legalName} &mdash; {profile.region}, {profile.location}. Sistem pembukuan digital terpadu dengan standar entitas privat berpasangan (double-entry).
+            {profile.legalName} &mdash; {profile.village || 'Kampung Sabron Sari'}, {profile.region}, {profile.location}. Sistem pembukuan digital terpadu dengan standar SAK EMKM (double-entry).
           </p>
 
           <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -37,7 +37,7 @@ export default function LandingUnit({
               onClick={() => onNavigate('laporan')}
               className="bg-emerald-800/80 hover:bg-emerald-800 text-white px-4 py-2.5 rounded-xl font-bold text-xs transition border border-emerald-600 flex items-center gap-2"
             >
-              <FileText className="w-4 h-4" /> 5 Laporan Keuangan SAK
+              <FileText className="w-4 h-4" /> Laporan Keuangan SAK EMKM
             </button>
           </div>
         </div>
@@ -64,7 +64,7 @@ export default function LandingUnit({
             </label>
             <div className="space-y-2">
               {[
-                { id: 'all', name: 'Semua Unit (Konsolidasi BUMMA)', icon: Building2 },
+                { id: 'all', name: 'Semua Unit (Konsolidasi BUMKam)', icon: Building2 },
                 { id: 'perdagangan', name: 'Unit Perdagangan & Peternakan', icon: Egg },
                 { id: 'jasa', name: 'Unit Jasa Penyewaan', icon: Tent }
               ].map((u) => {
@@ -122,7 +122,7 @@ export default function LandingUnit({
                   <Tent className="w-4 h-4 text-blue-600" /> 2. Sektor Jasa
                 </div>
                 <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
-                  Layanan jasa penyewaan tenda acara, pesta adat, dan penyewaan Gedung Serba Guna BUMMA Mekar Sari.
+                  Layanan jasa penyewaan tenda acara, pesta adat, dan penyewaan Gedung Serba Guna BUMKam Mekar Sari.
                 </p>
               </div>
             </div>

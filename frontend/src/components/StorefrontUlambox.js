@@ -184,7 +184,7 @@ export default function StorefrontUlambox({ onOpenBackoffice, profile = {}, core
       {/* 1. TOP ANNOUNCEMENT BAR */}
       <div className="bg-[#0a3a2a] text-white text-[11px] font-semibold py-2 px-4 text-center flex items-center justify-center gap-2">
         <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-        <span>Landing Page Resmi BUMKam Mekar Sari &bull; Sentani, Kabupaten Jayapura &bull; Mandiri Bersama Masyarakat Adat</span>
+        <span>ARVEA &bull; Financial Management System BUMKam Mekar Sari Kampung Sabron Sari &bull; &ldquo;Satu Nilai, Satu Tujuan, Bertumbuh Bersama&rdquo; &bull; Standar SAK EMKM</span>
       </div>
 
       {/* 2. MAIN HEADER & NAVBAR */}
@@ -194,14 +194,14 @@ export default function StorefrontUlambox({ onOpenBackoffice, profile = {}, core
           {/* Brand Logo */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0a3a2a] to-emerald-700 text-white flex items-center justify-center font-black text-sm shadow-md transition transform hover:scale-105">
-              BM
+              AR
             </div>
             <div>
               <span className="text-xs font-black tracking-widest text-[#0a3a2a] uppercase block leading-none">
-                BUMKAM MEKAR SARI
+                ARVEA &bull; BUMKAM MEKAR SARI
               </span>
               <span className="text-[10px] text-slate-400 font-medium">
-                Sentani &bull; Kabupaten Jayapura
+                Kampung Sabron Sari &bull; Sentani Barat
               </span>
             </div>
           </div>
@@ -214,15 +214,15 @@ export default function StorefrontUlambox({ onOpenBackoffice, profile = {}, core
             <a href="#kontak" className="hover:text-emerald-700 transition">Kontak Kami</a>
           </nav>
 
-          {/* Switcher to SIK-BUMMA (Internal Accounting Portal) */}
+          {/* Switcher to ARVEA (Internal Accounting Portal) */}
           <div className="flex items-center gap-2">
             <button
               onClick={onOpenBackoffice}
               className="px-4 py-2 rounded-xl bg-[#0a3a2a] hover:bg-[#06291d] text-white font-bold text-xs transition flex items-center gap-1.5 shadow-sm transform hover:-translate-y-0.5"
-              title="Masuk ke Sistem Informasi Keuangan BUMKam"
+              title="Masuk ke Sistem Informasi Keuangan BUMKam (ARVEA)"
             >
               <Store className="w-4 h-4 text-emerald-300" />
-              <span>Portal Keuangan (SIK-BUMMA)</span>
+              <span>Portal Keuangan (ARVEA)</span>
               <ChevronRight className="w-3.5 h-3.5 opacity-70" />
             </button>
           </div>
@@ -278,7 +278,7 @@ export default function StorefrontUlambox({ onOpenBackoffice, profile = {}, core
                 <p className="text-[11px] text-emerald-100/80 font-medium mt-0.5">Mitra Peternak Adat</p>
               </div>
               <div>
-                <p className="text-2xl md:text-3xl font-black text-emerald-300">SAK EP</p>
+                <p className="text-2xl md:text-3xl font-black text-emerald-300">SAK EMKM</p>
                 <p className="text-[11px] text-emerald-100/80 font-medium mt-0.5">Tata Kelola Standar</p>
               </div>
             </div>
@@ -635,7 +635,7 @@ export default function StorefrontUlambox({ onOpenBackoffice, profile = {}, core
                 className="px-6 py-3.5 rounded-xl bg-white text-[#0a3a2a] font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg hover:bg-emerald-50 transition transform hover:scale-105"
               >
                 <Store className="w-4 h-4 text-emerald-700" />
-                Portal Keuangan (SIK)
+                Portal ARVEA
               </button>
             </div>
           </div>
@@ -648,15 +648,15 @@ export default function StorefrontUlambox({ onOpenBackoffice, profile = {}, core
           <div className="md:col-span-2 space-y-3">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-black">
-                BM
+                AR
               </div>
-              <span className="font-bold text-sm tracking-wide uppercase">BUMKAM MEKAR SARI</span>
+              <span className="font-bold text-sm tracking-wide uppercase">ARVEA &bull; BUMKAM MEKAR SARI</span>
             </div>
             <p className="text-slate-400 leading-relaxed max-w-md">
-              Badan Usaha Milik Masyarakat Adat / Kampung Mekar Sari. Mengelola peternakan telur ayam lokal, persewaan tenda acara, dan persewaan gedung serbaguna berstandar SAK Entitas Privat.
+              Badan Usaha Milik Kampung (BUMKam) Mekar Sari Kampung Sabron Sari. Mengelola peternakan telur ayam lokal, persewaan tenda acara, dan persewaan gedung serbaguna berstandar SAK EMKM.
             </p>
             <p className="text-emerald-400 font-medium">
-              Sentani &bull; Kabupaten Jayapura, Papua
+              Kampung Sabron Sari &bull; Distrik Sentani Barat &bull; Kabupaten Jayapura, Papua
             </p>
           </div>
 
@@ -672,13 +672,13 @@ export default function StorefrontUlambox({ onOpenBackoffice, profile = {}, core
           <div className="space-y-2">
             <p className="font-bold text-slate-200 uppercase tracking-wider text-[11px]">Portal Pengurus BUMKam</p>
             <p className="text-slate-400 leading-relaxed">
-              Khusus pengurus, bendahara, direktur, dan akuntan BUMKam untuk pembukuan jurnal dan laporan SAK.
+              Khusus pengurus, bendahara, direktur, dan pengawas BUMKam untuk pembukuan jurnal dan laporan SAK EMKM.
             </p>
             <button
               onClick={onOpenBackoffice}
               className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-800 hover:bg-emerald-700 text-white font-bold text-[11px]"
             >
-              <LogIn className="w-3.5 h-3.5" /> Masuk Portal SIK-BUMMA
+              <LogIn className="w-3.5 h-3.5" /> Masuk Portal ARVEA
             </button>
           </div>
         </div>

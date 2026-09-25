@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
+import { Printer, FileSpreadsheet } from 'lucide-react';
 import { formatIDR } from './Transaksi';
+import { exportToExcel } from '../utils/exportUtils';
+import { toast } from 'sonner';
 
 export default function BukuBesar({ journals, accounts }) {
   const [selectedAcc, setSelectedAcc] = useState('1001');
@@ -17,26 +20,55 @@ export default function BukuBesar({ journals, accounts }) {
     return { ...r, currentBal: runBal };
   });
 
+  const handleExportExcel = () => {
+    const data = rowsWithBal.map((r, idx) => ({
+      No: idx + 1,
+      Tanggal: r.date,
+      'No. Bukti': r.tx_number,
+      Keterangan: r.description,
+      'Debit (IDR)': r.debit,
+      'Kredit (IDR)': r.credit,
+      'Saldo Akhir (IDR)': r.currentBal
+    }));
+    exportToExcel(data, `Buku_Besar_Akun_${accInfo?.code}_${accInfo?.name}`, `Akun ${accInfo?.code}`);
+    toast.success(`File Excel Buku Besar [${accInfo?.code}] berhasil diunduh!`);
+  };
+
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">Buku Besar Akun</h1>
-          <p className="text-xs text-slate-500 mt-0.5">Rincian mutasi debit dan kredit tiap perkiraan rekening akuntansi</p>
+          <h1 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">Buku Besar Akun (General Ledger)</h1>
+          <p className="text-xs text-slate-500 mt-0.5">Rincian mutasi debit dan kredit tiap perkiraan rekening akuntansi SAK EMKM</p>
         </div>
-        <div className="flex items-center gap-2">
-          <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Pilih Akun:</label>
-          <select
-            value={selectedAcc}
-            onChange={(e) => setSelectedAcc(e.target.value)}
-            className="p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-slate-200"
+        <div className="flex flex-wrap items-center gap-2 print:hidden">
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Pilih Akun:</label>
+            <select
+              value={selectedAcc}
+              onChange={(e) => setSelectedAcc(e.target.value)}
+              className="p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-slate-200"
+            >
+              {accounts.map(a => (
+                <option key={a.code} value={a.code}>
+                  {a.code} - {a.name} ({a.category})
+                </option>
+              ))}
+            </select>
+          </div>
+          <button
+            onClick={handleExportExcel}
+            className="px-3.5 py-2 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+            title="Download Spreadsheet Excel (.xlsx)"
           >
-            {accounts.map(a => (
-              <option key={a.code} value={a.code}>
-                {a.code} - {a.name} ({a.category})
-              </option>
-            ))}
-          </select>
+            <FileSpreadsheet className="w-4 h-4 text-emerald-600" /> Export Excel
+          </button>
+          <button
+            onClick={() => window.print()}
+            className="px-3.5 py-2 bg-white dark:bg-slate-800 hover:bg-slate-50 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+          >
+            <Printer className="w-4 h-4 text-slate-500" /> Cetak
+          </button>
         </div>
       </div>
 
