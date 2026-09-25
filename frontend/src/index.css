@@ -2,37 +2,175 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Reset & Print */
+/* Reset & Universal Anti-Clipping Print System */
 * { box-sizing: border-box; }
+
 @media print {
   @page {
     size: auto;
-    margin: 12mm 15mm;
+    margin: 8mm 6mm;
   }
-  body {
+
+  html, body, #root {
+    width: 100% !important;
+    height: auto !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
     background: #ffffff !important;
     color: #0f172a !important;
+    overflow: visible !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
-  .print\:hidden { display: none !important; }
-  .print\:block { display: block !important; }
+
+  /* Reset all container clipping, overflow boundaries, and scrollbars */
+  *, *::before, *::after {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  div, main, section, article {
+    overflow: visible !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+    max-width: 100% !important;
+    box-shadow: none !important;
+  }
+
+  /* Remove all browser scrollbars from printed pages */
+  * {
+    scrollbar-width: none !important;
+  }
+  ::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  /* Hide screen-only interactive elements */
+  .print\:hidden,
+  header:not(.print\:block),
+  aside,
+  nav,
+  button:not(.print\:block),
+  .no-print,
+  input:not([type="checkbox"]),
+  select,
+  .sonner-toast,
+  [data-sonner-toaster] {
+    display: none !important;
+  }
+
+  .print\:block {
+    display: block !important;
+  }
+
+  .print\:flex {
+    display: flex !important;
+  }
+
+  .print\:inline-block {
+    display: inline-block !important;
+  }
+
+  /* Main container full width */
   main {
     overflow: visible !important;
     padding: 0 !important;
     margin: 0 !important;
     width: 100% !important;
+    max-width: 100% !important;
   }
+
+  /* Anti-truncation: Never cut off words with ellipsis in print */
+  .truncate,
+  [class*="truncate"],
+  [class*="line-clamp-"],
+  .max-w-xs,
+  .max-w-sm,
+  .max-w-md,
+  .max-w-lg,
+  .max-w-xl,
+  .max-w-2xl,
+  .max-w-4xl,
+  .max-w-6xl {
+    max-width: none !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    -webkit-line-clamp: unset !important;
+  }
+
+  /* Prevent forced nowrap from expanding the table outside the paper width */
+  .whitespace-nowrap {
+    white-space: normal !important;
+    word-break: break-word !important;
+  }
+
+  /* Table auto-fit to 100% width with no clipping */
   table {
     width: 100% !important;
     max-width: 100% !important;
+    min-width: 0 !important;
+    table-layout: auto !important;
     border-collapse: collapse !important;
+    page-break-inside: auto !important;
+    margin: 4px 0 !important;
+    background: #ffffff !important;
   }
+
+  thead {
+    display: table-header-group !important;
+  }
+
+  tfoot {
+    display: table-footer-group !important;
+  }
+
   tr {
     page-break-inside: avoid !important;
+    page-break-after: auto !important;
+    break-inside: avoid !important;
   }
+
+  th, td {
+    padding: 3px 5px !important;
+    font-size: 7.5pt !important;
+    line-height: 1.25 !important;
+    border: 1px solid #cbd5e1 !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    vertical-align: middle !important;
+    color: #0f172a !important;
+  }
+
+  th {
+    background-color: #f1f5f9 !important;
+    font-weight: 700 !important;
+    font-size: 7pt !important;
+    text-transform: uppercase !important;
+  }
+
+  /* Badges print styling */
+  span[class*="rounded"] {
+    border: 1px solid #cbd5e1 !important;
+    padding: 1px 3.5px !important;
+    font-size: 6.5pt !important;
+    background: transparent !important;
+    color: #0f172a !important;
+    display: inline-block !important;
+  }
+
   .page-break-before {
-    page-break-before: always;
+    page-break-before: always !important;
+  }
+
+  .signature-block, .kop-surat {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 }
 

@@ -527,7 +527,16 @@ export default function Transaksi({
 
       {/* VIEW 2: TABEL RIWAYAT TRANSAKSI */}
       {viewMode === 'table' && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden print:overflow-visible print:border-none print:shadow-none">
+          {/* Printable Official Kop Surat Header */}
+          <div className="hidden print:block mb-4 pb-3 border-b-2 border-slate-900 text-center kop-surat">
+            <h2 className="text-base font-black uppercase text-slate-900 tracking-wide">ARVEA &bull; BUMKAM MEKAR SARI</h2>
+            <p className="text-[11px] font-semibold text-slate-700">Financial Management System &bull; Standar SAK EMKM</p>
+            <p className="text-[10px] text-slate-500">Kampung Sabron Sari, Distrik Sentani Barat, Kabupaten Jayapura, Papua</p>
+            <h3 className="text-xs font-black uppercase mt-2 text-slate-900 underline">REKAPITULASI BUKTI TRANSAKSI KEUANGAN</h3>
+            <p className="text-[10px] text-slate-500">Tahun Buku: {selectedYear} &bull; Unit: {selectedUnit === 'all' ? 'Seluruh Unit Konsolidasi' : selectedUnit} &bull; Tanggal Cetak: {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+          </div>
+
           {/* Table Filters */}
           <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 print:hidden">
             <div className="flex items-center gap-2">
@@ -554,20 +563,20 @@ export default function Transaksi({
             </span>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto print:overflow-visible">
             <table className="w-full text-xs text-left">
-              <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-800 text-[11px]">
+              <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-800 text-[11px] print:text-[7pt]">
                 <tr>
-                  <th className="p-3.5">Tanggal</th>
-                  <th className="p-3.5">No. Bukti</th>
-                  <th className="p-3.5">Tipe</th>
-                  <th className="p-3.5 text-center">Metode</th>
-                  <th className="p-3.5">Unit Usaha</th>
-                  <th className="p-3.5">Deskripsi / Komoditas</th>
-                  <th className="p-3.5 text-center">Volume</th>
-                  <th className="p-3.5">Kontak</th>
-                  <th className="p-3.5 text-right">Total (IDR)</th>
-                  <th className="p-3.5">Pembayaran</th>
+                  <th className="p-3.5 print:p-1">Tanggal</th>
+                  <th className="p-3.5 print:p-1">No. Bukti</th>
+                  <th className="p-3.5 print:p-1">Tipe</th>
+                  <th className="p-3.5 print:p-1 text-center">Metode</th>
+                  <th className="p-3.5 print:p-1">Unit Usaha</th>
+                  <th className="p-3.5 print:p-1">Deskripsi / Komoditas</th>
+                  <th className="p-3.5 print:p-1 text-center">Volume</th>
+                  <th className="p-3.5 print:p-1">Kontak</th>
+                  <th className="p-3.5 print:p-1 text-right">Total (IDR)</th>
+                  <th className="p-3.5 print:p-1">Pembayaran</th>
                   <th className="p-3.5 text-center print:hidden">Aksi</th>
                 </tr>
               </thead>
@@ -581,10 +590,10 @@ export default function Transaksi({
                 ) : (
                   filteredTransactions.map((tx) => (
                     <tr key={tx.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
-                      <td className="p-3.5 whitespace-nowrap font-medium text-slate-800 dark:text-slate-200">{tx.date}</td>
-                      <td className="p-3.5 whitespace-nowrap font-bold text-emerald-700 dark:text-emerald-400">{tx.number}</td>
-                      <td className="p-3.5 whitespace-nowrap">
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                      <td className="p-3.5 print:p-1 whitespace-nowrap font-medium text-slate-800 dark:text-slate-200 print:text-[7.5pt]">{tx.date}</td>
+                      <td className="p-3.5 print:p-1 whitespace-nowrap font-bold text-emerald-700 dark:text-emerald-400 print:text-[7.5pt]">{tx.number}</td>
+                      <td className="p-3.5 print:p-1 whitespace-nowrap print:text-[7.5pt]">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase print:text-[6.5pt] ${
                           tx.type === 'penjualan' ? 'bg-emerald-100 text-emerald-800' :
                           tx.type === 'pembelian' ? 'bg-amber-100 text-amber-800' :
                           tx.type === 'kas_masuk' ? 'bg-blue-100 text-blue-800' : 'bg-rose-100 text-rose-800'
@@ -592,8 +601,8 @@ export default function Transaksi({
                           {tx.type}
                         </span>
                       </td>
-                      <td className="p-3.5 text-center whitespace-nowrap">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold ${
+                      <td className="p-3.5 print:p-1 text-center whitespace-nowrap print:text-[7.5pt]">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold print:text-[6.5pt] ${
                           tx.transaction_method === 'Online'
                             ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300'
                             : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
@@ -601,19 +610,19 @@ export default function Transaksi({
                           {tx.transaction_method || 'Offline'}
                         </span>
                       </td>
-                      <td className="p-3.5 whitespace-nowrap capitalize text-slate-500">{tx.unit_usaha}</td>
-                      <td className="p-3.5 max-w-xs truncate text-slate-800 dark:text-slate-200 font-semibold">
+                      <td className="p-3.5 print:p-1 whitespace-nowrap capitalize text-slate-500 print:text-[7.5pt]">{tx.unit_usaha}</td>
+                      <td className="p-3.5 print:p-1 max-w-xs print:max-w-none truncate print:overflow-visible print:whitespace-normal text-slate-800 dark:text-slate-200 font-semibold print:text-[7.5pt]">
                         {tx.product_name ? tx.product_name : tx.description}
                       </td>
-                      <td className="p-3.5 text-center font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
+                      <td className="p-3.5 print:p-1 text-center font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap print:text-[7.5pt]">
                         {tx.quantity || 1} {tx.unit || 'unit'}
                       </td>
-                      <td className="p-3.5 whitespace-nowrap text-slate-600 dark:text-slate-400">{tx.contact_name || '-'}</td>
-                      <td className="p-3.5 whitespace-nowrap text-right font-extrabold text-slate-900 dark:text-white">
+                      <td className="p-3.5 print:p-1 text-slate-600 dark:text-slate-400 print:whitespace-normal print:text-[7.5pt]">{tx.contact_name || '-'}</td>
+                      <td className="p-3.5 print:p-1 whitespace-nowrap text-right font-extrabold text-slate-900 dark:text-white print:text-[7.5pt]">
                         {formatIDR(tx.total)}
                       </td>
-                      <td className="p-3.5 whitespace-nowrap">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+                      <td className="p-3.5 print:p-1 whitespace-nowrap print:text-[7.5pt]">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold print:text-[6.5pt] ${
                           tx.payment_method === 'Tunai' ? 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300' : 'bg-orange-100 text-orange-800'
                         }`}>
                           {tx.payment_method}
@@ -642,6 +651,22 @@ export default function Transaksi({
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Printable Official Signatures Block */}
+          <div className="hidden print:flex justify-between items-center mt-6 pt-4 text-xs signature-block">
+            <div className="text-center">
+              <p className="text-[10px] text-slate-500 font-medium">Mengetahui,</p>
+              <p className="font-bold text-slate-800">Direktur BUMKam</p>
+              <div className="h-12"></div>
+              <p className="font-bold underline text-slate-900">Eko L Wibowo</p>
+            </div>
+            <div className="text-center">
+              <p className="text-[10px] text-slate-500 font-medium">Sentani Barat, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+              <p className="font-bold text-slate-800">Bendahara BUMKam</p>
+              <div className="h-12"></div>
+              <p className="font-bold underline text-slate-900">Rita Fanghoi</p>
+            </div>
           </div>
         </div>
       )}

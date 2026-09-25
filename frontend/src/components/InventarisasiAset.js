@@ -920,36 +920,37 @@ export default function InventarisasiAset({
 
       {/* 5. MAIN ASSETS TABLE (DOCX 1208-1224) */}
       {activeTab === 'list' && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm print:border-none print:shadow-none">
           {/* Printable Official Header */}
-          <div className="hidden print:block p-6 border-b border-slate-300 text-center space-y-1">
-            <h2 className="text-xl font-black uppercase text-slate-900">BUMKAM MEKAR SARI</h2>
-            <h3 className="text-sm font-bold uppercase text-slate-700">LAPORAN INVENTARISASI ASET TETAP &amp; OPERASIONAL</h3>
-            <p className="text-xs text-slate-500">Kampung Sabron Sari, Distrik Sentani Barat, Kabupaten Jayapura &bull; Standar SAK EMKM</p>
-            <p className="text-[11px] text-slate-500">Tahun Buku: {selectedYear} &bull; Tanggal Cetak: {new Date().toLocaleDateString('id-ID')}</p>
+          <div className="hidden print:block mb-4 pb-3 border-b-2 border-slate-900 text-center kop-surat">
+            <h2 className="text-base font-black uppercase text-slate-900 tracking-wide">ARVEA &bull; BUMKAM MEKAR SARI</h2>
+            <p className="text-[11px] font-semibold text-slate-700">Financial Management System &bull; Standar SAK EMKM</p>
+            <p className="text-[10px] text-slate-500">Kampung Sabron Sari, Distrik Sentani Barat, Kabupaten Jayapura, Papua</p>
+            <h3 className="text-xs font-black uppercase mt-2 text-slate-900 underline">LAPORAN INVENTARISASI ASET TETAP &amp; OPERASIONAL</h3>
+            <p className="text-[10px] text-slate-500">Tahun Buku: {selectedYear} &bull; Total Nilai Perolehan: {formatIDR(summaryStats.totalAcqCost)} &bull; Tanggal Cetak: {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto print:overflow-visible">
             <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
-              <thead className="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 uppercase font-bold text-[11px] border-b border-slate-200 dark:border-slate-700">
+              <thead className="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 uppercase font-bold text-[11px] border-b border-slate-200 dark:border-slate-700 print:text-[7pt]">
                 <tr>
-                  <th className="p-3.5">No</th>
-                  <th className="p-3.5">No. Inventaris</th>
-                  <th className="p-3.5">Nama Aset</th>
-                  <th className="p-3.5 text-center">Jenis &amp; Model</th>
-                  <th className="p-3.5 text-center">Qty</th>
-                  <th className="p-3.5 text-right">Nilai / Unit</th>
-                  <th className="p-3.5 text-right">Total Perolehan</th>
-                  <th className="p-3.5 text-right">Nilai Buku</th>
-                  <th className="p-3.5 text-center">Kondisi &amp; Status</th>
-                  <th className="p-3.5">Lokasi &amp; PIC</th>
-                  <th className="p-3.5 text-center print:hidden">Aksi</th>
+                  <th className="p-3.5 print:p-1">No</th>
+                  <th className="p-3.5 print:p-1">No. Inventaris</th>
+                  <th className="p-3.5 print:p-1">Nama Aset</th>
+                  <th className="p-3.5 print:p-1 text-center">Jenis &amp; Model</th>
+                  <th className="p-3.5 print:p-1 text-center">Qty</th>
+                  <th className="p-3.5 print:p-1 text-right">Nilai / Unit</th>
+                  <th className="p-3.5 print:p-1 text-right">Total Perolehan</th>
+                  <th className="p-3.5 print:p-1 text-right">Nilai Buku</th>
+                  <th className="p-3.5 print:p-1 text-center">Kondisi &amp; Status</th>
+                  <th className="p-3.5 print:p-1">Lokasi &amp; PIC</th>
+                  <th className="p-3.5 print:p-1 text-center print:hidden">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {filteredAssets.length === 0 ? (
                   <tr>
-                    <td colSpan="11" className="text-center py-12 text-slate-400">
+                    <td colSpan="11" className="text-center py-12 text-slate-400 print:py-4">
                       Tidak ada data inventarisasi aset yang cocok dengan filter. Klik "+ Tambah Aset" untuk mencatat aset baru.
                     </td>
                   </tr>
@@ -958,24 +959,24 @@ export default function InventarisasiAset({
                     const dep = calculateDepreciation(ast);
                     return (
                       <tr key={ast.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
-                        <td className="p-3.5 text-slate-400 font-mono">{idx + 1}</td>
-                        <td className="p-3.5 font-mono font-bold text-slate-900 dark:text-white whitespace-nowrap">
+                        <td className="p-3.5 print:p-1 text-slate-400 font-mono print:text-[7.5pt]">{idx + 1}</td>
+                        <td className="p-3.5 print:p-1 font-mono font-bold text-slate-900 dark:text-white whitespace-nowrap print:text-[7.5pt]">
                           {ast.inv_number}
                         </td>
-                        <td className="p-3.5">
-                          <p className="font-bold text-slate-900 dark:text-white leading-tight">{ast.product_name}</p>
-                          <p className="text-[10px] text-slate-400 mt-0.5">{ast.product_code} &bull; {ast.category}</p>
+                        <td className="p-3.5 print:p-1">
+                          <p className="font-bold text-slate-900 dark:text-white leading-tight print:text-[7.5pt] print:overflow-visible print:whitespace-normal">{ast.product_name}</p>
+                          <p className="text-[10px] text-slate-400 mt-0.5 print:text-[6.5pt]">{ast.product_code} &bull; {ast.category}</p>
                         </td>
-                        <td className="p-3.5 text-center whitespace-nowrap">
+                        <td className="p-3.5 print:p-1 text-center whitespace-nowrap">
                           <div className="space-y-1">
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold block ${
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold block print:text-[6.5pt] ${
                               ast.asset_type === 'Aset Tetap'
                                 ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300'
                                 : 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300'
                             }`}>
                               {ast.asset_type}
                             </span>
-                            <span className={`px-2 py-0.5 rounded text-[9px] font-extrabold uppercase tracking-wider block ${
+                            <span className={`px-2 py-0.5 rounded text-[9px] font-extrabold uppercase tracking-wider block print:text-[6pt] ${
                               ast.model_type === 'Individual'
                                 ? 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
                                 : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
@@ -984,35 +985,35 @@ export default function InventarisasiAset({
                             </span>
                           </div>
                         </td>
-                        <td className="p-3.5 text-center font-bold text-slate-800 dark:text-slate-200">
+                        <td className="p-3.5 print:p-1 text-center font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap print:text-[7.5pt]">
                           {ast.qty} {ast.unit}
                         </td>
-                        <td className="p-3.5 text-right font-medium whitespace-nowrap">
+                        <td className="p-3.5 print:p-1 text-right font-medium whitespace-nowrap print:text-[7.5pt]">
                           {formatIDR(ast.unit_price)}
                         </td>
-                        <td className="p-3.5 text-right font-bold text-slate-900 dark:text-white whitespace-nowrap">
+                        <td className="p-3.5 print:p-1 text-right font-bold text-slate-900 dark:text-white whitespace-nowrap print:text-[7.5pt]">
                           {formatIDR(ast.total_cost)}
                         </td>
-                        <td className="p-3.5 text-right font-black text-emerald-700 dark:text-emerald-400 whitespace-nowrap">
+                        <td className="p-3.5 print:p-1 text-right font-black text-emerald-700 dark:text-emerald-400 whitespace-nowrap print:text-[7.5pt]">
                           {ast.asset_type === 'Aset Tetap' ? formatIDR(dep.bookValue) : formatIDR(ast.total_cost)}
                         </td>
-                        <td className="p-3.5 text-center whitespace-nowrap">
+                        <td className="p-3.5 print:p-1 text-center whitespace-nowrap">
                           <div className="space-y-1">
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold block ${
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold block print:text-[6.5pt] ${
                               ast.condition === 'Baik'
                                 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
                                 : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
                             }`}>
                               {ast.condition}
                             </span>
-                            <span className="text-[10px] text-slate-500 block font-medium">
+                            <span className="text-[10px] text-slate-500 block font-medium print:text-[6.5pt]">
                               {ast.status}
                             </span>
                           </div>
                         </td>
-                        <td className="p-3.5 text-[11px]">
-                          <p className="font-semibold text-slate-800 dark:text-slate-200">{ast.location}</p>
-                          <p className="text-slate-400 text-[10px]">PIC: {ast.pic || '-'}</p>
+                        <td className="p-3.5 print:p-1 text-[11px]">
+                          <p className="font-semibold text-slate-800 dark:text-slate-200 print:text-[7.5pt] print:overflow-visible print:whitespace-normal">{ast.location}</p>
+                          <p className="text-slate-400 text-[10px] print:text-[6.5pt]">PIC: {ast.pic || '-'}</p>
                         </td>
                         <td className="p-3.5 text-center whitespace-nowrap print:hidden">
                           <div className="flex items-center justify-center gap-1">
@@ -1063,21 +1064,19 @@ export default function InventarisasiAset({
             </table>
           </div>
 
-          {/* Printable Signatures */}
-          <div className="hidden print:grid grid-cols-2 gap-8 p-8 border-t border-slate-300 text-center text-xs">
-            <div>
-              <p className="font-semibold text-slate-500">Mengetahui &amp; Menyetujui,</p>
-              <p className="font-bold text-slate-900 mt-0.5">Direktur BUMKam Mekar Sari</p>
-              <div className="h-16"></div>
-              <p className="font-black text-slate-900 underline">{profile.director || 'Eko L Wibowo'}</p>
-              <p className="text-[10px] text-slate-500">Pimpinan Lembaga</p>
+          {/* Printable Official Signatures Block */}
+          <div className="hidden print:flex justify-between items-center mt-6 pt-4 text-xs signature-block">
+            <div className="text-center">
+              <p className="text-[10px] text-slate-500 font-medium">Mengetahui &amp; Menyetujui,</p>
+              <p className="font-bold text-slate-800">Direktur BUMKam Mekar Sari</p>
+              <div className="h-12"></div>
+              <p className="font-bold underline text-slate-900">{profile.director || 'Eko L Wibowo'}</p>
             </div>
-            <div>
-              <p className="font-semibold text-slate-500">Disusun &amp; Diinventarisasi Oleh,</p>
-              <p className="font-bold text-slate-900 mt-0.5">Bendahara / Pengelola Aset</p>
-              <div className="h-16"></div>
-              <p className="font-black text-slate-900 underline">{profile.treasurer || 'Rita Fanghoi'}</p>
-              <p className="text-[10px] text-slate-500">Bagian Keuangan &amp; Aset</p>
+            <div className="text-center">
+              <p className="text-[10px] text-slate-500 font-medium">Sentani Barat, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+              <p className="font-bold text-slate-800">Bendahara / Pengelola Aset</p>
+              <div className="h-12"></div>
+              <p className="font-bold underline text-slate-900">{profile.treasurer || 'Rita Fanghoi'}</p>
             </div>
           </div>
         </div>

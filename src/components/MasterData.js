@@ -542,42 +542,58 @@ export default function MasterData({
         </div>
       )}
 
+      {/* Printable Official Kop Surat Header */}
+      {tab !== 'landing_showcase' && (
+        <div className="hidden print:block mb-4 pb-3 border-b-2 border-slate-900 text-center kop-surat">
+          <h2 className="text-base font-black uppercase text-slate-900 tracking-wide">ARVEA &bull; BUMKAM MEKAR SARI</h2>
+          <p className="text-[11px] font-semibold text-slate-700">Financial Management System &bull; Standar SAK EMKM</p>
+          <p className="text-[10px] text-slate-500">Kampung Sabron Sari, Distrik Sentani Barat, Kabupaten Jayapura, Papua</p>
+          <h3 className="text-xs font-black uppercase mt-2 text-slate-900 underline">
+            {tab === 'products' && 'MASTER DATA &bull; DAFTAR PRODUK DAN KOMODITAS'}
+            {tab === 'customers' && 'MASTER DATA &bull; DAFTAR PELANGGAN / PEMBELI'}
+            {tab === 'suppliers' && 'MASTER DATA &bull; DAFTAR PEMASOK / MITRA USAHA'}
+            {tab === 'accounts' && 'MASTER DATA &bull; BAGAN AKUN STANDAR SAK EMKM (COA)'}
+          </h3>
+          <p className="text-[10px] text-slate-500">Tanggal Cetak: {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+        </div>
+      )}
+
       {/* TAB 1: DAFTAR PRODUK AKUNTANSI */}
       {tab === 'products' && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm print:border-none print:shadow-none">
+          <div className="overflow-x-auto print:overflow-visible">
             <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
-              <thead className="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 uppercase font-bold text-[11px] border-b border-slate-200 dark:border-slate-700">
+              <thead className="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 uppercase font-bold text-[11px] border-b border-slate-200 dark:border-slate-700 print:text-[7pt]">
                 <tr>
-                  <th className="p-3.5">Kode</th>
-                  <th className="p-3.5">Nama Produk</th>
-                  <th className="p-3.5">Kategori</th>
-                  <th className="p-3.5">Satuan</th>
-                  <th className="p-3.5 text-center">Perlakuan Produk</th>
-                  <th className="p-3.5 text-right">Harga Beli</th>
-                  <th className="p-3.5 text-right">Harga Jual</th>
-                  <th className="p-3.5 text-center">Stok</th>
-                  <th className="p-3.5 text-center print:hidden">Aksi</th>
+                  <th className="p-3.5 print:p-1">Kode</th>
+                  <th className="p-3.5 print:p-1">Nama Produk</th>
+                  <th className="p-3.5 print:p-1">Kategori</th>
+                  <th className="p-3.5 print:p-1">Satuan</th>
+                  <th className="p-3.5 print:p-1 text-center">Perlakuan Produk</th>
+                  <th className="p-3.5 print:p-1 text-right">Harga Beli</th>
+                  <th className="p-3.5 print:p-1 text-right">Harga Jual</th>
+                  <th className="p-3.5 print:p-1 text-center">Stok</th>
+                  <th className="p-3.5 print:p-1 text-center print:hidden">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {filteredProducts.length === 0 ? (
                   <tr>
-                    <td colSpan="9" className="text-center py-10 text-slate-400">
+                    <td colSpan="9" className="text-center py-10 text-slate-400 print:py-4">
                       Tidak ada data produk ditemukan. Klik "+ Tambah Produk" untuk menambahkan.
                     </td>
                   </tr>
                 ) : (
                   filteredProducts.map(p => (
                     <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
-                      <td className="p-3.5 font-mono font-bold text-slate-900 dark:text-white">{p.code}</td>
-                      <td className="p-3.5 font-bold text-slate-800 dark:text-slate-200">{p.name}</td>
-                      <td className="p-3.5">{p.category}</td>
-                      <td className="p-3.5">{p.unit}</td>
-                      <td className="p-3.5 text-center">{renderPerlakuanBadge(p.perlakuan)}</td>
-                      <td className="p-3.5 text-right font-medium">{formatIDR(p.buy_price)}</td>
-                      <td className="p-3.5 text-right font-bold text-emerald-700 dark:text-emerald-400">{formatIDR(p.sell_price)}</td>
-                      <td className="p-3.5 text-center font-bold">{p.stock}</td>
+                      <td className="p-3.5 print:p-1 font-mono font-bold text-slate-900 dark:text-white whitespace-nowrap print:text-[7.5pt]">{p.code}</td>
+                      <td className="p-3.5 print:p-1 font-bold text-slate-800 dark:text-slate-200 print:text-[7.5pt] print:overflow-visible print:whitespace-normal">{p.name}</td>
+                      <td className="p-3.5 print:p-1 print:text-[7.5pt]">{p.category}</td>
+                      <td className="p-3.5 print:p-1 whitespace-nowrap print:text-[7.5pt]">{p.unit}</td>
+                      <td className="p-3.5 print:p-1 text-center whitespace-nowrap">{renderPerlakuanBadge(p.perlakuan)}</td>
+                      <td className="p-3.5 print:p-1 text-right font-medium whitespace-nowrap print:text-[7.5pt]">{formatIDR(p.buy_price)}</td>
+                      <td className="p-3.5 print:p-1 text-right font-bold text-emerald-700 dark:text-emerald-400 whitespace-nowrap print:text-[7.5pt]">{formatIDR(p.sell_price)}</td>
+                      <td className="p-3.5 print:p-1 text-center font-bold whitespace-nowrap print:text-[7.5pt]">{p.stock}</td>
                       <td className="p-3.5 text-center print:hidden">
                         <div className="flex items-center justify-center gap-1.5">
                           <button
@@ -607,30 +623,30 @@ export default function MasterData({
 
       {/* TAB 2: PELANGGAN */}
       {tab === 'customers' && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm print:border-none print:shadow-none">
+          <div className="overflow-x-auto print:overflow-visible">
             <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
-              <thead className="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 uppercase font-bold text-[11px] border-b border-slate-200 dark:border-slate-700">
+              <thead className="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 uppercase font-bold text-[11px] border-b border-slate-200 dark:border-slate-700 print:text-[7pt]">
                 <tr>
-                  <th className="p-3.5">Nama Pelanggan</th>
-                  <th className="p-3.5">Telepon</th>
-                  <th className="p-3.5">Alamat</th>
-                  <th className="p-3.5 text-center print:hidden">Aksi</th>
+                  <th className="p-3.5 print:p-1">Nama Pelanggan</th>
+                  <th className="p-3.5 print:p-1">Telepon</th>
+                  <th className="p-3.5 print:p-1">Alamat</th>
+                  <th className="p-3.5 print:p-1 text-center print:hidden">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {filteredCustomers.length === 0 ? (
                   <tr>
-                    <td colSpan="4" className="text-center py-10 text-slate-400">
+                    <td colSpan="4" className="text-center py-10 text-slate-400 print:py-4">
                       Tidak ada data pelanggan. Klik "+ Tambah Pelanggan" untuk menambahkan.
                     </td>
                   </tr>
                 ) : (
                   filteredCustomers.map(c => (
                     <tr key={c.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
-                      <td className="p-3.5 font-bold text-slate-800 dark:text-slate-200">{c.name}</td>
-                      <td className="p-3.5">{c.phone}</td>
-                      <td className="p-3.5">{c.address}</td>
+                      <td className="p-3.5 print:p-1 font-bold text-slate-800 dark:text-slate-200 print:text-[7.5pt] print:overflow-visible print:whitespace-normal">{c.name}</td>
+                      <td className="p-3.5 print:p-1 whitespace-nowrap print:text-[7.5pt]">{c.phone}</td>
+                      <td className="p-3.5 print:p-1 text-slate-600 dark:text-slate-400 print:text-[7.5pt] print:overflow-visible print:whitespace-normal">{c.address}</td>
                       <td className="p-3.5 text-center print:hidden">
                         <div className="flex items-center justify-center gap-1.5">
                           <button
@@ -660,32 +676,32 @@ export default function MasterData({
 
       {/* TAB 3: PEMASOK / SUPPLIER */}
       {tab === 'suppliers' && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm print:border-none print:shadow-none">
+          <div className="overflow-x-auto print:overflow-visible">
             <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
-              <thead className="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 uppercase font-bold text-[11px] border-b border-slate-200 dark:border-slate-700">
+              <thead className="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 uppercase font-bold text-[11px] border-b border-slate-200 dark:border-slate-700 print:text-[7pt]">
                 <tr>
-                  <th className="p-3.5">Nama Pemasok</th>
-                  <th className="p-3.5">Kontak</th>
-                  <th className="p-3.5">Rekening Bank</th>
-                  <th className="p-3.5">Alamat</th>
-                  <th className="p-3.5 text-center print:hidden">Aksi</th>
+                  <th className="p-3.5 print:p-1">Nama Pemasok</th>
+                  <th className="p-3.5 print:p-1">Kontak</th>
+                  <th className="p-3.5 print:p-1">Rekening Bank</th>
+                  <th className="p-3.5 print:p-1">Alamat</th>
+                  <th className="p-3.5 print:p-1 text-center print:hidden">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {filteredSuppliers.length === 0 ? (
                   <tr>
-                    <td colSpan="5" className="text-center py-10 text-slate-400">
+                    <td colSpan="5" className="text-center py-10 text-slate-400 print:py-4">
                       Tidak ada data pemasok. Klik "+ Tambah Pemasok" untuk menambahkan.
                     </td>
                   </tr>
                 ) : (
                   filteredSuppliers.map(s => (
                     <tr key={s.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
-                      <td className="p-3.5 font-bold text-slate-800 dark:text-slate-200">{s.name}</td>
-                      <td className="p-3.5">{s.contact}</td>
-                      <td className="p-3.5 font-mono">{s.bank}</td>
-                      <td className="p-3.5">{s.address}</td>
+                      <td className="p-3.5 print:p-1 font-bold text-slate-800 dark:text-slate-200 print:text-[7.5pt] print:overflow-visible print:whitespace-normal">{s.name}</td>
+                      <td className="p-3.5 print:p-1 whitespace-nowrap print:text-[7.5pt]">{s.contact}</td>
+                      <td className="p-3.5 print:p-1 font-mono whitespace-nowrap print:text-[7.5pt]">{s.bank}</td>
+                      <td className="p-3.5 print:p-1 text-slate-600 dark:text-slate-400 print:text-[7.5pt] print:overflow-visible print:whitespace-normal">{s.address}</td>
                       <td className="p-3.5 text-center print:hidden">
                         <div className="flex items-center justify-center gap-1.5">
                           <button
@@ -715,33 +731,33 @@ export default function MasterData({
 
       {/* TAB 4: BAGAN AKUN (COA) */}
       {tab === 'accounts' && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm print:border-none print:shadow-none">
+          <div className="overflow-x-auto print:overflow-visible">
             <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
-              <thead className="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 uppercase font-bold text-[11px] border-b border-slate-200 dark:border-slate-700">
+              <thead className="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 uppercase font-bold text-[11px] border-b border-slate-200 dark:border-slate-700 print:text-[7pt]">
                 <tr>
-                  <th className="p-3.5">Kode</th>
-                  <th className="p-3.5">Nama Perkiraan (COA)</th>
-                  <th className="p-3.5">Kategori</th>
-                  <th className="p-3.5 text-center">Saldo Normal</th>
-                  <th className="p-3.5 text-center print:hidden">Aksi</th>
+                  <th className="p-3.5 print:p-1">Kode</th>
+                  <th className="p-3.5 print:p-1">Nama Perkiraan (COA)</th>
+                  <th className="p-3.5 print:p-1">Kategori</th>
+                  <th className="p-3.5 print:p-1 text-center">Saldo Normal</th>
+                  <th className="p-3.5 print:p-1 text-center print:hidden">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {filteredAccounts.length === 0 ? (
                   <tr>
-                    <td colSpan="5" className="text-center py-10 text-slate-400">
+                    <td colSpan="5" className="text-center py-10 text-slate-400 print:py-4">
                       Tidak ada bagan akun ditemukan.
                     </td>
                   </tr>
                 ) : (
                   filteredAccounts.map(a => (
                     <tr key={a.code} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
-                      <td className="p-3.5 font-mono font-bold text-slate-800 dark:text-slate-200">{a.code}</td>
-                      <td className="p-3.5 font-bold text-slate-900 dark:text-white">{a.name}</td>
-                      <td className="p-3.5">{a.category}</td>
-                      <td className="p-3.5 text-center">
-                        <span className={`px-2.5 py-0.5 rounded text-[10px] font-bold ${
+                      <td className="p-3.5 print:p-1 font-mono font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap print:text-[7.5pt]">{a.code}</td>
+                      <td className="p-3.5 print:p-1 font-bold text-slate-900 dark:text-white print:text-[7.5pt] print:overflow-visible print:whitespace-normal">{a.name}</td>
+                      <td className="p-3.5 print:p-1 print:text-[7.5pt]">{a.category}</td>
+                      <td className="p-3.5 print:p-1 text-center whitespace-nowrap">
+                        <span className={`px-2.5 py-0.5 rounded text-[10px] font-bold print:text-[6.5pt] ${
                           a.normal === 'Debit' ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
                         }`}>
                           {a.normal}
@@ -770,6 +786,24 @@ export default function MasterData({
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* Printable Official Signatures Block */}
+      {tab !== 'landing_showcase' && (
+        <div className="hidden print:flex justify-between items-center mt-6 pt-4 text-xs signature-block">
+          <div className="text-center">
+            <p className="text-[10px] text-slate-500 font-medium">Mengetahui,</p>
+            <p className="font-bold text-slate-800">Direktur BUMKam</p>
+            <div className="h-12"></div>
+            <p className="font-bold underline text-slate-900">Eko L Wibowo</p>
+          </div>
+          <div className="text-center">
+            <p className="text-[10px] text-slate-500 font-medium">Sentani Barat, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+            <p className="font-bold text-slate-800">Bendahara BUMKam</p>
+            <div className="h-12"></div>
+            <p className="font-bold underline text-slate-900">Rita Fanghoi</p>
           </div>
         </div>
       )}

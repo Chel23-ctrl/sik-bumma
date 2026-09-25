@@ -486,7 +486,7 @@ export default function App() {
   }
 
   return (
-    <div className={`min-h-screen flex flex-col ${darkMode ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
+    <div className={`min-h-screen flex flex-col ${darkMode ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'} print:bg-white print:text-slate-900 print:min-h-0 print:h-auto print:block`}>
       <Toaster position="top-right" richColors />
 
       {/* TOP HEADER */}
@@ -613,7 +613,7 @@ export default function App() {
         </div>
       </header>
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden print:overflow-visible print:block">
         {/* SIDEBAR */}
         <aside
           className={`${
@@ -715,7 +715,7 @@ export default function App() {
         </aside>
 
         {/* WORKSPACE CONTENT */}
-        <main ref={mainRef} onScroll={handleMainScroll} className="flex-1 overflow-y-auto p-5 md:p-8 relative">
+        <main ref={mainRef} onScroll={handleMainScroll} className="flex-1 overflow-y-auto p-5 md:p-8 relative print:overflow-visible print:p-0 print:m-0 print:block">
           {!allowedMenus.includes(activeMenu) ? (
             <div className="max-w-xl mx-auto my-12 p-8 bg-white dark:bg-slate-900 rounded-3xl border border-rose-200 dark:border-rose-900/50 shadow-xl text-center">
               <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-600 flex items-center justify-center shadow-inner">

@@ -68,28 +68,36 @@ export default function LaporanKeuangan({ journals, accounts, transactions, prof
       reportName = `Laporan_Laba_Rugi_${selectedYear || '2026'}`;
       reportData = [
         { Komponen: 'PENDAPATAN USAHA', 'Nilai (IDR)': '' },
-        { Komponen: 'Pendapatan Penjualan Perdagangan', 'Nilai (IDR)': revTrading },
-        { Komponen: 'Pendapatan Jasa Penyewaan', 'Nilai (IDR)': revServices },
+        { Komponen: 'Pendapatan Penjualan Perdagangan & Peternakan', 'Nilai (IDR)': revTrading },
+        { Komponen: 'Pendapatan Jasa Penyewaan (Tenda & Gedung)', 'Nilai (IDR)': revServices },
         { Komponen: 'TOTAL PENDAPATAN USAHA', 'Nilai (IDR)': totalRevenue },
         { Komponen: '', 'Nilai (IDR)': '' },
         { Komponen: 'BEBAN POKOK PENJUALAN (HPP)', 'Nilai (IDR)': hpp },
-        { Komponen: 'LABA KOTOR', 'Nilai (IDR)': grossProfit },
+        { Komponen: 'LABA KOTOR (GROSS PROFIT)', 'Nilai (IDR)': grossProfit },
         { Komponen: '', 'Nilai (IDR)': '' },
         { Komponen: 'BEBAN OPERASIONAL', 'Nilai (IDR)': '' },
-        { Komponen: 'Beban Gaji Karyawan', 'Nilai (IDR)': expSalary },
-        { Komponen: 'Beban Listrik & Air', 'Nilai (IDR)': expElectricity },
+        { Komponen: 'Beban Gaji Karyawan & Pengurus', 'Nilai (IDR)': expSalary },
+        { Komponen: 'Beban Listrik, Air & Utilitas', 'Nilai (IDR)': expElectricity },
         { Komponen: 'Beban Transportasi & Logistik', 'Nilai (IDR)': expTransport },
-        { Komponen: 'Beban Pemeliharaan & Operasional', 'Nilai (IDR)': expMaintenance },
+        { Komponen: 'Beban Pemeliharaan & Perlengkapan', 'Nilai (IDR)': expMaintenance },
         { Komponen: 'Beban Operasional Lainnya', 'Nilai (IDR)': expOthers },
         { Komponen: 'TOTAL BEBAN OPERASIONAL', 'Nilai (IDR)': totalExpenses },
         { Komponen: '', 'Nilai (IDR)': '' },
-        { Komponen: 'LABA BERSIH PERIODE BERJALAN', 'Nilai (IDR)': netIncome }
+        { Komponen: 'LABA / (RUGI) BERSIH PERIODE BERJALAN', 'Nilai (IDR)': netIncome }
+      ];
+    } else if (activeReport === 'perubahan_ekuitas') {
+      reportName = `Laporan_Perubahan_Ekuitas_${selectedYear || '2026'}`;
+      reportData = [
+        { 'Komponen Ekuitas': 'Modal Awal BUMMA (1 Januari)', 'Nilai (IDR)': initialCapital },
+        { 'Komponen Ekuitas': 'Laba / (Rugi) Bersih Periode Berjalan', 'Nilai (IDR)': netIncome },
+        { 'Komponen Ekuitas': 'Penarikan Prive / Bagi Hasil Usaha Masyarakat', 'Nilai (IDR)': 0 },
+        { 'Komponen Ekuitas': 'MODAL AKHIR BUMMA (31 DESEMBER)', 'Nilai (IDR)': initialCapital + netIncome }
       ];
     } else if (activeReport === 'neraca') {
       reportName = `Posisi_Keuangan_Neraca_${selectedYear || '2026'}`;
       reportData = [
         { Posisi: 'ASET', Akun: '', 'Nilai (IDR)': '' },
-        { Posisi: 'Aset Lancar', Akun: 'Kas', 'Nilai (IDR)': cashVal },
+        { Posisi: 'Aset Lancar', Akun: 'Kas di Tangan', 'Nilai (IDR)': cashVal },
         { Posisi: 'Aset Lancar', Akun: 'Bank Papua', 'Nilai (IDR)': bankVal },
         { Posisi: 'Aset Lancar', Akun: 'Piutang Usaha', 'Nilai (IDR)': receivableVal },
         { Posisi: 'Aset Lancar', Akun: 'Persediaan Barang Dagang', 'Nilai (IDR)': inventoryVal },
@@ -102,14 +110,41 @@ export default function LaporanKeuangan({ journals, accounts, transactions, prof
         { Posisi: 'TOTAL ASET KESELURUHAN', Akun: '', 'Nilai (IDR)': totalAssets },
         { Posisi: '', Akun: '', 'Nilai (IDR)': '' },
         { Posisi: 'LIABILITAS & EKUITAS', Akun: '', 'Nilai (IDR)': '' },
-        { Posisi: 'Liabilitas', Akun: 'Utang Usaha', 'Nilai (IDR)': tradePayables },
-        { Posisi: 'Liabilitas', Akun: 'Utang Lainnya', 'Nilai (IDR)': otherPayables },
+        { Posisi: 'Liabilitas Jangka Pendek', Akun: 'Utang Usaha', 'Nilai (IDR)': tradePayables },
+        { Posisi: 'Liabilitas Jangka Pendek', Akun: 'Utang Lainnya', 'Nilai (IDR)': otherPayables },
         { Posisi: 'TOTAL LIABILITAS', Akun: '', 'Nilai (IDR)': totalLiabilities },
         { Posisi: '', Akun: '', 'Nilai (IDR)': '' },
-        { Posisi: 'Ekuitas', Akun: 'Modal BUMKam', 'Nilai (IDR)': initialCapital },
-        { Posisi: 'Ekuitas', Akun: 'Saldo Laba Ditahan / Berjalan', 'Nilai (IDR)': retainedEarnings },
+        { Posisi: 'Ekuitas', Akun: 'Modal Disetor BUMMA', 'Nilai (IDR)': initialCapital },
+        { Posisi: 'Ekuitas', Akun: 'Saldo Laba Periode Berjalan', 'Nilai (IDR)': retainedEarnings },
         { Posisi: 'TOTAL EKUITAS', Akun: '', 'Nilai (IDR)': totalEquity },
         { Posisi: 'TOTAL LIABILITAS & EKUITAS', Akun: '', 'Nilai (IDR)': totalLiabilitiesAndEquity }
+      ];
+    } else if (activeReport === 'arus_kas') {
+      reportName = `Laporan_Arus_Kas_${selectedYear || '2026'}`;
+      reportData = [
+        { 'Aktivitas Arus Kas': 'ARUS KAS DARI AKTIVITAS OPERASI', 'Nilai (IDR)': '' },
+        { 'Aktivitas Arus Kas': 'Penerimaan Kas dari Penjualan & Jasa', 'Nilai (IDR)': totalRevenue },
+        { 'Aktivitas Arus Kas': 'Pembayaran Kas kepada Pemasok Barang Dagang', 'Nilai (IDR)': -hpp },
+        { 'Aktivitas Arus Kas': 'Pembayaran Kas untuk Beban Operasional & Gaji', 'Nilai (IDR)': -totalExpenses },
+        { 'Aktivitas Arus Kas': 'Arus Kas Bersih dari Aktivitas Operasi', 'Nilai (IDR)': netIncome },
+        { 'Aktivitas Arus Kas': '', 'Nilai (IDR)': '' },
+        { 'Aktivitas Arus Kas': 'ARUS KAS DARI AKTIVITAS INVESTASI', 'Nilai (IDR)': '' },
+        { 'Aktivitas Arus Kas': 'Pembelian Aset Tetap & Peralatan Tenda', 'Nilai (IDR)': 0 },
+        { 'Aktivitas Arus Kas': 'Arus Kas Bersih dari Aktivitas Investasi', 'Nilai (IDR)': 0 },
+        { 'Aktivitas Arus Kas': '', 'Nilai (IDR)': '' },
+        { 'Aktivitas Arus Kas': 'ARUS KAS DARI AKTIVITAS PENDANAAN', 'Nilai (IDR)': '' },
+        { 'Aktivitas Arus Kas': 'Penerimaan Setoran Modal Awal BUMMA', 'Nilai (IDR)': initialCapital },
+        { 'Aktivitas Arus Kas': 'Arus Kas Bersih dari Aktivitas Pendanaan', 'Nilai (IDR)': initialCapital },
+        { 'Aktivitas Arus Kas': '', 'Nilai (IDR)': '' },
+        { 'Aktivitas Arus Kas': 'SALDO KAS DAN BANK AKHIR PERIODE', 'Nilai (IDR)': cashVal + bankVal }
+      ];
+    } else if (activeReport === 'calk') {
+      reportName = `Catatan_Atas_Laporan_Keuangan_CaLK_${selectedYear || '2026'}`;
+      reportData = [
+        { No: 1, 'Topik Pengungkapan': 'Gambaran Umum & Dasar Hukum', 'Penjelasan / Rincian': 'Badan Usaha Milik Masyarakat Adat (BUMMA) Mekar Sari didirikan di wilayah adat Mamta, Kabupaten Jayapura, Papua untuk memberdayakan potensi ekonomi warga adat melalui unit perdagangan peternakan dan jasa penyewaan.' },
+        { No: 2, 'Topik Pengungkapan': 'Dasar Penyusunan Laporan Keuangan', 'Penjelasan / Rincian': 'Laporan keuangan disusun berdasarkan Standar Akuntansi Keuangan Entitas Mikro, Kecil, dan Menengah (SAK EMKM) dengan sistem pembukuan berpasangan (double-entry). Mata uang pelaporan adalah Rupiah (IDR).' },
+        { No: 3, 'Topik Pengungkapan': 'Kebijakan Akuntansi Signifikan', 'Penjelasan / Rincian': 'Kas dan setara kas terdiri dari kas di bendahara dan rekening Bank Papua. Persediaan dinilai dengan metode FIFO. Pendapatan diakui saat penyerahan komoditas atau penyelesaian jasa sewa.' },
+        { No: 4, 'Topik Pengungkapan': 'Peristiwa Setelah Tanggal Neraca', 'Penjelasan / Rincian': 'Tidak ada peristiwa luar biasa setelah tanggal neraca yang membutuhkan penyesuaian khusus dalam laporan keuangan ini.' }
       ];
     } else {
       reportName = `Laporan_Keuangan_SAK_EMKM_${selectedYear || '2026'}`;
@@ -183,9 +218,9 @@ export default function LaporanKeuangan({ journals, accounts, transactions, prof
       </div>
 
       {/* OFFICIAL REPORT CONTAINER (PRINTABLE WITH KOP SURAT & SIGNATURE) */}
-      <div className="bg-white text-slate-900 p-8 md:p-12 rounded-2xl border border-slate-200 shadow-md">
+      <div className="bg-white text-slate-900 p-8 md:p-12 rounded-2xl border border-slate-200 shadow-md print:p-2 print:border-none print:shadow-none print:overflow-visible">
         {/* KOP SURAT RESMI (SESUAI CATATAN DOCX BUTIR 17) */}
-        <div className="text-center border-b-4 border-double border-slate-900 pb-4 mb-6">
+        <div className="text-center border-b-4 border-double border-slate-900 pb-4 mb-6 kop-surat">
           <h2 className="text-lg md:text-xl font-extrabold tracking-wide uppercase text-slate-900">
             {profile.legalName || 'BADAN USAHA MILIK MASYARAKAT ADAT (BUMMA) MEKAR SARI'}
           </h2>
@@ -489,7 +524,7 @@ export default function LaporanKeuangan({ journals, accounts, transactions, prof
         )}
 
         {/* KOLOM TANDA TANGAN RESMI DIREKTUR (KIRI) & BENDAHARA (KANAN) - BUTIR 17 DOCX */}
-        <div className="mt-12 pt-8 border-t border-slate-300">
+        <div className="mt-12 pt-8 border-t border-slate-300 signature-block">
           <p className="text-right text-xs text-slate-600 mb-6">
             {profile.location ? profile.location.split(',')[0] : 'Jayapura'}, {reportDateFormatted}
           </p>

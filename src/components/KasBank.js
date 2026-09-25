@@ -139,53 +139,80 @@ export default function KasBank({ transactions, setTransactions, accounts }) {
       </div>
 
       {/* Table Mutasi Kas */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
-        <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
-          <thead className="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 uppercase font-bold text-[11px] border-b border-slate-200 dark:border-slate-700">
-            <tr>
-              <th className="p-3.5">Tanggal</th>
-              <th className="p-3.5">No. Bukti</th>
-              <th className="p-3.5">Arah Mutasi</th>
-              <th className="p-3.5">Keterangan</th>
-              <th className="p-3.5 text-right">Masuk (Debit)</th>
-              <th className="p-3.5 text-right">Keluar (Kredit)</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-            {cashTransactions.length === 0 ? (
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm print:overflow-visible print:border-none print:shadow-none">
+        {/* Printable Official Kop Surat Header */}
+        <div className="hidden print:block mb-4 pb-3 border-b-2 border-slate-900 text-center kop-surat">
+          <h2 className="text-base font-black uppercase text-slate-900 tracking-wide">ARVEA &bull; BUMKAM MEKAR SARI</h2>
+          <p className="text-[11px] font-semibold text-slate-700">Financial Management System &bull; Standar SAK EMKM</p>
+          <p className="text-[10px] text-slate-500">Kampung Sabron Sari, Distrik Sentani Barat, Kabupaten Jayapura, Papua</p>
+          <h3 className="text-xs font-black uppercase mt-2 text-slate-900 underline">BUKU MUTASI KAS &amp; BANK</h3>
+          <p className="text-[10px] text-slate-500">Total Masuk: {formatIDR(totalIn)} &bull; Total Keluar: {formatIDR(totalOut)} &bull; Saldo Kas Tersedia: {formatIDR(balance)} &bull; Tanggal Cetak: {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+        </div>
+
+        <div className="overflow-x-auto print:overflow-visible">
+          <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
+            <thead className="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 uppercase font-bold text-[11px] border-b border-slate-200 dark:border-slate-700 print:text-[7pt]">
               <tr>
-                <td colSpan="6" className="text-center py-8 text-slate-400">
-                  Belum ada mutasi kas tercatat.
-                </td>
+                <th className="p-3.5 print:p-1">Tanggal</th>
+                <th className="p-3.5 print:p-1">No. Bukti</th>
+                <th className="p-3.5 print:p-1">Arah Mutasi</th>
+                <th className="p-3.5 print:p-1">Keterangan</th>
+                <th className="p-3.5 print:p-1 text-right">Masuk (Debit)</th>
+                <th className="p-3.5 print:p-1 text-right">Keluar (Kredit)</th>
               </tr>
-            ) : (
-              cashTransactions.map(tx => {
-                const isIn = tx.type === 'kas_masuk' || (tx.type === 'penjualan' && tx.payment_method === 'Tunai');
-                return (
-                  <tr key={tx.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
-                    <td className="p-3.5 font-medium">{tx.date}</td>
-                    <td className="p-3.5 font-bold text-emerald-700 dark:text-emerald-400">{tx.number}</td>
-                    <td className="p-3.5">
-                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                        isIn ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
-                      }`}>
-                        {isIn ? <ArrowDownLeft className="w-3 h-3" /> : <ArrowUpRight className="w-3 h-3" />}
-                        {isIn ? 'Kas Masuk' : 'Kas Keluar'}
-                      </span>
-                    </td>
-                    <td className="p-3.5 max-w-sm truncate">{tx.description || tx.product_name}</td>
-                    <td className="p-3.5 text-right font-semibold text-emerald-700 dark:text-emerald-400">
-                      {isIn ? formatIDR(tx.total) : '-'}
-                    </td>
-                    <td className="p-3.5 text-right font-semibold text-rose-700 dark:text-rose-400">
-                      {!isIn ? formatIDR(tx.total) : '-'}
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              {cashTransactions.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="text-center py-8 text-slate-400">
+                    Belum ada mutasi kas tercatat.
+                  </td>
+                </tr>
+              ) : (
+                cashTransactions.map(tx => {
+                  const isIn = tx.type === 'kas_masuk' || (tx.type === 'penjualan' && tx.payment_method === 'Tunai');
+                  return (
+                    <tr key={tx.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                      <td className="p-3.5 print:p-1 whitespace-nowrap font-medium print:text-[7.5pt]">{tx.date}</td>
+                      <td className="p-3.5 print:p-1 whitespace-nowrap font-bold text-emerald-700 dark:text-emerald-400 print:text-[7.5pt]">{tx.number}</td>
+                      <td className="p-3.5 print:p-1 whitespace-nowrap print:text-[7.5pt]">
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold print:text-[6.5pt] ${
+                          isIn ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+                        }`}>
+                          {isIn ? <ArrowDownLeft className="w-3 h-3" /> : <ArrowUpRight className="w-3 h-3" />}
+                          {isIn ? 'Kas Masuk' : 'Kas Keluar'}
+                        </span>
+                      </td>
+                      <td className="p-3.5 print:p-1 max-w-sm print:max-w-none truncate print:overflow-visible print:whitespace-normal font-medium text-slate-800 dark:text-slate-200 print:text-[7.5pt]">{tx.description || tx.product_name}</td>
+                      <td className="p-3.5 print:p-1 whitespace-nowrap text-right font-semibold text-emerald-700 dark:text-emerald-400 print:text-[7.5pt]">
+                        {isIn ? formatIDR(tx.total) : '-'}
+                      </td>
+                      <td className="p-3.5 print:p-1 whitespace-nowrap text-right font-semibold text-rose-700 dark:text-rose-400 print:text-[7.5pt]">
+                        {!isIn ? formatIDR(tx.total) : '-'}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Printable Official Signatures Block */}
+        <div className="hidden print:flex justify-between items-center mt-6 pt-4 text-xs signature-block">
+          <div className="text-center">
+            <p className="text-[10px] text-slate-500 font-medium">Mengetahui,</p>
+            <p className="font-bold text-slate-800">Direktur BUMKam</p>
+            <div className="h-12"></div>
+            <p className="font-bold underline text-slate-900">Eko L Wibowo</p>
+          </div>
+          <div className="text-center">
+            <p className="text-[10px] text-slate-500 font-medium">Sentani Barat, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+            <p className="font-bold text-slate-800">Bendahara BUMKam</p>
+            <div className="h-12"></div>
+            <p className="font-bold underline text-slate-900">Rita Fanghoi</p>
+          </div>
+        </div>
       </div>
 
       {/* Modal Input Kas */}

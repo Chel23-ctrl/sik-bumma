@@ -595,35 +595,44 @@ export default function AnalisisKinerja({ journals = [], accounts = [], transact
         </div>
       </div>
 
+      {/* Printable Official Kop Surat Header */}
+      <div className="hidden print:block mb-4 pb-3 border-b-2 border-slate-900 text-center kop-surat">
+        <h2 className="text-base font-black uppercase text-slate-900 tracking-wide">ARVEA &bull; BUMKAM MEKAR SARI</h2>
+        <p className="text-[11px] font-semibold text-slate-700">Financial Management System &bull; Standar SAK EMKM</p>
+        <p className="text-[10px] text-slate-500">Kampung Sabron Sari, Distrik Sentani Barat, Kabupaten Jayapura, Papua</p>
+        <h3 className="text-xs font-black uppercase mt-2 text-slate-900 underline">ANALISIS KINERJA KEUANGAN &amp; MATRIKS KOMPARASI TREN</h3>
+        <p className="text-[10px] text-slate-500">Tahun Buku: {appliedFilter.year} &bull; Unit Usaha: {appliedFilter.unit} &bull; Periode: {appliedFilter.period} &bull; Tanggal Cetak: {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+      </div>
+
       {/* DETAILED COMPARISON TABLE (DOCX LINE 23: "JANGAN HAPUS TABEL MATRIKS KOMPARASI TREN KINERJANYA") */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-        <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm print:border-none print:shadow-none">
+        <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between print:p-2">
           <div>
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2 print:text-xs">
               <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
               Tabel Matriks Komparasi Tren Kinerja (Triwulan 1 s/d Tahunan)
             </h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 print:text-[8pt]">
               Data rasio keuangan konsolidasi unit usaha BUMKam tahun buku {appliedFilter.year} berbasis standar SAK EMKM
             </p>
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto print:overflow-visible">
           <table className="w-full text-xs text-left">
-            <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-800 text-[11px]">
+            <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-800 text-[11px] print:text-[7pt]">
               <tr>
-                <th className="p-3.5">Indikator Rasio Keuangan</th>
-                <th className="p-3.5 text-center">Standar Acuan</th>
-                <th className="p-3.5 text-center bg-emerald-50/50 dark:bg-emerald-950/20">Triwulan 1</th>
-                <th className="p-3.5 text-center bg-emerald-50/50 dark:bg-emerald-950/20">Triwulan 2</th>
-                <th className="p-3.5 text-center bg-emerald-50/50 dark:bg-emerald-950/20">Triwulan 3</th>
-                <th className="p-3.5 text-center bg-emerald-50/50 dark:bg-emerald-950/20">Triwulan 4</th>
-                <th className="p-3.5 text-center bg-emerald-100/50 dark:bg-emerald-900/30 font-extrabold text-emerald-900 dark:text-emerald-200">
+                <th className="p-3.5 print:p-1">Indikator Rasio Keuangan</th>
+                <th className="p-3.5 print:p-1 text-center">Standar Acuan</th>
+                <th className="p-3.5 print:p-1 text-center bg-emerald-50/50 dark:bg-emerald-950/20">Triwulan 1</th>
+                <th className="p-3.5 print:p-1 text-center bg-emerald-50/50 dark:bg-emerald-950/20">Triwulan 2</th>
+                <th className="p-3.5 print:p-1 text-center bg-emerald-50/50 dark:bg-emerald-950/20">Triwulan 3</th>
+                <th className="p-3.5 print:p-1 text-center bg-emerald-50/50 dark:bg-emerald-950/20">Triwulan 4</th>
+                <th className="p-3.5 print:p-1 text-center bg-emerald-100/50 dark:bg-emerald-900/30 font-extrabold text-emerald-900 dark:text-emerald-200">
                   Tahunan (Full)
                 </th>
-                <th className="p-3.5 text-center">Arah Tren</th>
-                <th className="p-3.5 text-center">Status SAK EMKM</th>
+                <th className="p-3.5 print:p-1 text-center">Arah Tren</th>
+                <th className="p-3.5 print:p-1 text-center">Status SAK EMKM</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -634,38 +643,38 @@ export default function AnalisisKinerja({ journals = [], accounts = [], transact
 
                 return (
                   <tr key={r.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
-                    <td className="p-3.5">
-                      <p className="font-bold text-slate-800 dark:text-slate-200">{r.name}</p>
-                      <span className="text-[10px] text-slate-400">{r.category}</span>
+                    <td className="p-3.5 print:p-1">
+                      <p className="font-bold text-slate-800 dark:text-slate-200 print:text-[7.5pt] print:overflow-visible print:whitespace-normal">{r.name}</p>
+                      <span className="text-[10px] text-slate-400 print:text-[6.5pt]">{r.category}</span>
                     </td>
-                    <td className="p-3.5 text-center font-mono font-medium text-slate-500">
+                    <td className="p-3.5 print:p-1 text-center font-mono font-medium text-slate-500 whitespace-nowrap print:text-[7.5pt]">
                       {r.target}
                     </td>
-                    <td className="p-3.5 text-center font-mono font-semibold text-slate-700 dark:text-slate-300">
+                    <td className="p-3.5 print:p-1 text-center font-mono font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap print:text-[7.5pt]">
                       {r.trend[0].value}{r.unit}
                     </td>
-                    <td className="p-3.5 text-center font-mono font-semibold text-slate-700 dark:text-slate-300">
+                    <td className="p-3.5 print:p-1 text-center font-mono font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap print:text-[7.5pt]">
                       {r.trend[1].value}{r.unit}
                     </td>
-                    <td className="p-3.5 text-center font-mono font-semibold text-slate-700 dark:text-slate-300">
+                    <td className="p-3.5 print:p-1 text-center font-mono font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap print:text-[7.5pt]">
                       {r.trend[2].value}{r.unit}
                     </td>
-                    <td className="p-3.5 text-center font-mono font-semibold text-slate-700 dark:text-slate-300">
+                    <td className="p-3.5 print:p-1 text-center font-mono font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap print:text-[7.5pt]">
                       {r.trend[3].value}{r.unit}
                     </td>
-                    <td className="p-3.5 text-center font-mono font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50/50 dark:bg-emerald-950/20">
+                    <td className="p-3.5 print:p-1 text-center font-mono font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50/50 dark:bg-emerald-950/20 whitespace-nowrap print:text-[7.5pt]">
                       {r.trend[4].value}{r.unit}
                     </td>
-                    <td className="p-3.5 text-center">
-                      <span className={`inline-flex items-center gap-1 font-bold text-[11px] ${
+                    <td className="p-3.5 print:p-1 text-center whitespace-nowrap">
+                      <span className={`inline-flex items-center gap-1 font-bold text-[11px] print:text-[7pt] ${
                         isIncreasing ? 'text-emerald-600' : 'text-rose-600'
                       }`}>
                         {isIncreasing ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
                         {isIncreasing ? 'Meningkat' : 'Menurun'}
                       </span>
                     </td>
-                    <td className="p-3.5 text-center">
-                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                    <td className="p-3.5 print:p-1 text-center whitespace-nowrap">
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold print:text-[6.5pt] ${
                         r.isGood 
                           ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' 
                           : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
@@ -678,6 +687,22 @@ export default function AnalisisKinerja({ journals = [], accounts = [], transact
               })}
             </tbody>
           </table>
+        </div>
+
+        {/* Printable Official Signatures Block */}
+        <div className="hidden print:flex justify-between items-center mt-6 pt-4 text-xs signature-block">
+          <div className="text-center">
+            <p className="text-[10px] text-slate-500 font-medium">Mengetahui,</p>
+            <p className="font-bold text-slate-800">Direktur BUMKam</p>
+            <div className="h-12"></div>
+            <p className="font-bold underline text-slate-900">Eko L Wibowo</p>
+          </div>
+          <div className="text-center">
+            <p className="text-[10px] text-slate-500 font-medium">Sentani Barat, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+            <p className="font-bold text-slate-800">Bendahara BUMKam</p>
+            <div className="h-12"></div>
+            <p className="font-bold underline text-slate-900">Rita Fanghoi</p>
+          </div>
         </div>
       </div>
     </div>

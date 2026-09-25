@@ -68,18 +68,27 @@ export default function JurnalUmum({ journals, selectedUnit, selectedYear }) {
       </div>
 
       {/* Table Jurnal dengan Kolom SALDO */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm print:overflow-visible print:border-none print:shadow-none">
+        {/* Printable Official Kop Surat Header */}
+        <div className="hidden print:block mb-4 pb-3 border-b-2 border-slate-900 text-center kop-surat">
+          <h2 className="text-base font-black uppercase text-slate-900 tracking-wide">ARVEA &bull; BUMKAM MEKAR SARI</h2>
+          <p className="text-[11px] font-semibold text-slate-700">Financial Management System &bull; Standar SAK EMKM</p>
+          <p className="text-[10px] text-slate-500">Kampung Sabron Sari, Distrik Sentani Barat, Kabupaten Jayapura, Papua</p>
+          <h3 className="text-xs font-black uppercase mt-2 text-slate-900 underline">JURNAL UMUM (DOUBLE-ENTRY)</h3>
+          <p className="text-[10px] text-slate-500">Tahun Buku: {selectedYear} &bull; Unit: {selectedUnit === 'all' ? 'Semua Unit Konsolidasi' : selectedUnit} &bull; Total Debit/Kredit: {formatIDR(totalDebit)} / {formatIDR(totalCredit)} &bull; Tanggal Cetak: {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+        </div>
+
+        <div className="overflow-x-auto print:overflow-visible">
           <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
-            <thead className="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 uppercase font-bold text-[11px] border-b border-slate-200 dark:border-slate-700">
+            <thead className="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 uppercase font-bold text-[11px] border-b border-slate-200 dark:border-slate-700 print:text-[7pt]">
               <tr>
-                <th className="p-3.5">Tanggal</th>
-                <th className="p-3.5">No. Bukti</th>
-                <th className="p-3.5">Keterangan</th>
-                <th className="p-3.5">Kode &amp; Nama Akun</th>
-                <th className="p-3.5 text-right">Debit (IDR)</th>
-                <th className="p-3.5 text-right">Kredit (IDR)</th>
-                <th className="p-3.5 text-right bg-emerald-50/50 dark:bg-emerald-950/30">Saldo Berjalan (IDR)</th>
+                <th className="p-3.5 print:p-1">Tanggal</th>
+                <th className="p-3.5 print:p-1">No. Bukti</th>
+                <th className="p-3.5 print:p-1">Keterangan</th>
+                <th className="p-3.5 print:p-1">Kode &amp; Nama Akun</th>
+                <th className="p-3.5 print:p-1 text-right">Debit (IDR)</th>
+                <th className="p-3.5 print:p-1 text-right">Kredit (IDR)</th>
+                <th className="p-3.5 print:p-1 text-right bg-emerald-50/50 dark:bg-emerald-950/30">Saldo Berjalan (IDR)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -92,22 +101,22 @@ export default function JurnalUmum({ journals, selectedUnit, selectedYear }) {
               ) : (
                 journals.map((j) => (
                   <tr key={j.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
-                    <td className="p-3.5 whitespace-nowrap font-medium text-slate-800 dark:text-slate-200">{j.date}</td>
-                    <td className="p-3.5 whitespace-nowrap font-bold text-emerald-700 dark:text-emerald-400">{j.tx_number}</td>
-                    <td className="p-3.5 max-w-xs truncate text-slate-700 dark:text-slate-300">{j.description}</td>
-                    <td className="p-3.5 whitespace-nowrap font-semibold">
+                    <td className="p-3.5 print:p-1 whitespace-nowrap font-medium text-slate-800 dark:text-slate-200 print:text-[7.5pt]">{j.date}</td>
+                    <td className="p-3.5 print:p-1 whitespace-nowrap font-bold text-emerald-700 dark:text-emerald-400 print:text-[7.5pt]">{j.tx_number}</td>
+                    <td className="p-3.5 print:p-1 max-w-xs print:max-w-none truncate print:overflow-visible print:whitespace-normal text-slate-700 dark:text-slate-300 print:text-[7.5pt]">{j.description}</td>
+                    <td className="p-3.5 print:p-1 font-semibold print:text-[7.5pt]">
                       <span className="text-slate-400 mr-1.5 font-mono">[{j.account_code}]</span>
                       <span className={j.credit > 0 ? 'pl-4 text-slate-700 dark:text-slate-300' : 'text-slate-900 dark:text-white'}>
                         {j.account_name}
                       </span>
                     </td>
-                    <td className="p-3.5 whitespace-nowrap text-right font-medium text-slate-800 dark:text-slate-200">
+                    <td className="p-3.5 print:p-1 whitespace-nowrap text-right font-medium text-slate-800 dark:text-slate-200 print:text-[7.5pt]">
                       {j.debit > 0 ? formatIDR(j.debit) : '-'}
                     </td>
-                    <td className="p-3.5 whitespace-nowrap text-right font-medium text-slate-800 dark:text-slate-200">
+                    <td className="p-3.5 print:p-1 whitespace-nowrap text-right font-medium text-slate-800 dark:text-slate-200 print:text-[7.5pt]">
                       {j.credit > 0 ? formatIDR(j.credit) : '-'}
                     </td>
-                    <td className="p-3.5 whitespace-nowrap text-right font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50/30 dark:bg-emerald-950/20">
+                    <td className="p-3.5 print:p-1 whitespace-nowrap text-right font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50/30 dark:bg-emerald-950/20 print:text-[7.5pt]">
                       {formatIDR(j.balance)}
                     </td>
                   </tr>
@@ -115,16 +124,32 @@ export default function JurnalUmum({ journals, selectedUnit, selectedYear }) {
               )}
             </tbody>
             {journals.length > 0 && (
-              <tfoot className="bg-slate-50 dark:bg-slate-800 font-extrabold text-slate-900 dark:text-white border-t-2 border-slate-300 dark:border-slate-700">
+              <tfoot className="bg-slate-50 dark:bg-slate-800 font-extrabold text-slate-900 dark:text-white border-t-2 border-slate-300 dark:border-slate-700 print:text-[7pt]">
                 <tr>
-                  <td colSpan="4" className="p-3.5 text-right uppercase">Total :</td>
-                  <td className="p-3.5 text-right text-emerald-700 dark:text-emerald-400">{formatIDR(totalDebit)}</td>
-                  <td className="p-3.5 text-right text-emerald-700 dark:text-emerald-400">{formatIDR(totalCredit)}</td>
-                  <td className="p-3.5 text-right text-emerald-800 dark:text-emerald-300">{formatIDR(totalDebit - totalCredit)}</td>
+                  <td colSpan="4" className="p-3.5 print:p-1 text-right uppercase">Total :</td>
+                  <td className="p-3.5 print:p-1 text-right text-emerald-700 dark:text-emerald-400">{formatIDR(totalDebit)}</td>
+                  <td className="p-3.5 print:p-1 text-right text-emerald-700 dark:text-emerald-400">{formatIDR(totalCredit)}</td>
+                  <td className="p-3.5 print:p-1 text-right text-emerald-800 dark:text-emerald-300">{formatIDR(totalDebit - totalCredit)}</td>
                 </tr>
               </tfoot>
             )}
           </table>
+        </div>
+
+        {/* Printable Official Signatures Block */}
+        <div className="hidden print:flex justify-between items-center mt-6 pt-4 text-xs signature-block">
+          <div className="text-center">
+            <p className="text-[10px] text-slate-500 font-medium">Mengetahui,</p>
+            <p className="font-bold text-slate-800">Direktur BUMKam</p>
+            <div className="h-12"></div>
+            <p className="font-bold underline text-slate-900">Eko L Wibowo</p>
+          </div>
+          <div className="text-center">
+            <p className="text-[10px] text-slate-500 font-medium">Sentani Barat, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+            <p className="font-bold text-slate-800">Bendahara BUMKam</p>
+            <div className="h-12"></div>
+            <p className="font-bold underline text-slate-900">Rita Fanghoi</p>
+          </div>
         </div>
       </div>
     </div>

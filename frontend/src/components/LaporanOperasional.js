@@ -102,144 +102,182 @@ export default function LaporanOperasional({ transactions, products }) {
         ))}
       </div>
 
+      {/* Printable Official Kop Surat Header */}
+      <div className="hidden print:block mb-4 pb-3 border-b-2 border-slate-900 text-center kop-surat">
+        <h2 className="text-base font-black uppercase text-slate-900 tracking-wide">ARVEA &bull; BUMKAM MEKAR SARI</h2>
+        <p className="text-[11px] font-semibold text-slate-700">Financial Management System &bull; Standar SAK EMKM</p>
+        <p className="text-[10px] text-slate-500">Kampung Sabron Sari, Distrik Sentani Barat, Kabupaten Jayapura, Papua</p>
+        <h3 className="text-xs font-black uppercase mt-2 text-slate-900 underline">
+          {tab === 'penjualan' && 'REKAPITULASI PENJUALAN OPERASIONAL'}
+          {tab === 'pembelian' && 'REKAPITULASI PENGADAAN & PEMBELIAN LOGISTIK'}
+          {tab === 'kas' && 'REKAPITULASI MUTASI KAS OPERASIONAL'}
+          {tab === 'persediaan' && 'LAPORAN STATUS & VALUASI PERSEDIAAN KOMODITAS'}
+        </h3>
+        <p className="text-[10px] text-slate-500">Tanggal Cetak: {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+      </div>
+
       {/* 1. Rekap Penjualan */}
       {tab === 'penjualan' && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
-          <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
-            <thead className="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 uppercase font-bold text-[11px] border-b border-slate-200 dark:border-slate-700">
-              <tr>
-                <th className="p-3.5">Tanggal</th>
-                <th className="p-3.5">No. Faktur</th>
-                <th className="p-3.5">Pelanggan</th>
-                <th className="p-3.5">Komoditas / Layanan</th>
-                <th className="p-3.5 text-right">Volume</th>
-                <th className="p-3.5 text-right">Harga</th>
-                <th className="p-3.5 text-right">Total (IDR)</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {salesRows.length === 0 ? (
-                <tr><td colSpan="7" className="text-center py-8 text-slate-400">Belum ada transaksi penjualan operasional.</td></tr>
-              ) : (
-                salesRows.map(s => (
-                  <tr key={s.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                    <td className="p-3.5 font-medium">{s.date}</td>
-                    <td className="p-3.5 font-bold text-emerald-700 dark:text-emerald-400">{s.number}</td>
-                    <td className="p-3.5">{s.contact_name}</td>
-                    <td className="p-3.5">{s.product_name}</td>
-                    <td className="p-3.5 text-right">{s.quantity}</td>
-                    <td className="p-3.5 text-right">{formatIDR(s.price)}</td>
-                    <td className="p-3.5 text-right font-bold text-slate-900 dark:text-white">{formatIDR(s.total)}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm print:border-none print:shadow-none">
+          <div className="overflow-x-auto print:overflow-visible">
+            <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
+              <thead className="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 uppercase font-bold text-[11px] border-b border-slate-200 dark:border-slate-700 print:text-[7pt]">
+                <tr>
+                  <th className="p-3.5 print:p-1">Tanggal</th>
+                  <th className="p-3.5 print:p-1">No. Faktur</th>
+                  <th className="p-3.5 print:p-1">Pelanggan</th>
+                  <th className="p-3.5 print:p-1">Komoditas / Layanan</th>
+                  <th className="p-3.5 print:p-1 text-right">Volume</th>
+                  <th className="p-3.5 print:p-1 text-right">Harga</th>
+                  <th className="p-3.5 print:p-1 text-right">Total (IDR)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {salesRows.length === 0 ? (
+                  <tr><td colSpan="7" className="text-center py-8 text-slate-400 print:py-4">Belum ada transaksi penjualan operasional.</td></tr>
+                ) : (
+                  salesRows.map(s => (
+                    <tr key={s.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                      <td className="p-3.5 print:p-1 font-medium whitespace-nowrap print:text-[7.5pt]">{s.date}</td>
+                      <td className="p-3.5 print:p-1 font-bold text-emerald-700 dark:text-emerald-400 whitespace-nowrap print:text-[7.5pt]">{s.number}</td>
+                      <td className="p-3.5 print:p-1 print:text-[7.5pt] print:overflow-visible print:whitespace-normal">{s.contact_name}</td>
+                      <td className="p-3.5 print:p-1 print:text-[7.5pt] print:overflow-visible print:whitespace-normal">{s.product_name}</td>
+                      <td className="p-3.5 print:p-1 text-right whitespace-nowrap print:text-[7.5pt]">{s.quantity}</td>
+                      <td className="p-3.5 print:p-1 text-right whitespace-nowrap print:text-[7.5pt]">{formatIDR(s.price)}</td>
+                      <td className="p-3.5 print:p-1 text-right font-bold text-slate-900 dark:text-white whitespace-nowrap print:text-[7.5pt]">{formatIDR(s.total)}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
       {/* 2. Rekap Pembelian */}
       {tab === 'pembelian' && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
-          <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
-            <thead className="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 uppercase font-bold text-[11px] border-b border-slate-200 dark:border-slate-700">
-              <tr>
-                <th className="p-3.5">Tanggal</th>
-                <th className="p-3.5">No. PO</th>
-                <th className="p-3.5">Pemasok</th>
-                <th className="p-3.5">Item Barang</th>
-                <th className="p-3.5 text-right">Volume</th>
-                <th className="p-3.5 text-right">Harga Beli</th>
-                <th className="p-3.5 text-right">Total (IDR)</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {purchaseRows.length === 0 ? (
-                <tr><td colSpan="7" className="text-center py-8 text-slate-400">Belum ada transaksi pengadaan/pembelian.</td></tr>
-              ) : (
-                purchaseRows.map(p => (
-                  <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                    <td className="p-3.5 font-medium">{p.date}</td>
-                    <td className="p-3.5 font-bold text-amber-700 dark:text-amber-400">{p.number}</td>
-                    <td className="p-3.5">{p.contact_name}</td>
-                    <td className="p-3.5">{p.product_name}</td>
-                    <td className="p-3.5 text-right">{p.quantity}</td>
-                    <td className="p-3.5 text-right">{formatIDR(p.price)}</td>
-                    <td className="p-3.5 text-right font-bold text-slate-900 dark:text-white">{formatIDR(p.total)}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm print:border-none print:shadow-none">
+          <div className="overflow-x-auto print:overflow-visible">
+            <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
+              <thead className="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 uppercase font-bold text-[11px] border-b border-slate-200 dark:border-slate-700 print:text-[7pt]">
+                <tr>
+                  <th className="p-3.5 print:p-1">Tanggal</th>
+                  <th className="p-3.5 print:p-1">No. PO</th>
+                  <th className="p-3.5 print:p-1">Pemasok</th>
+                  <th className="p-3.5 print:p-1">Item Barang</th>
+                  <th className="p-3.5 print:p-1 text-right">Volume</th>
+                  <th className="p-3.5 print:p-1 text-right">Harga Beli</th>
+                  <th className="p-3.5 print:p-1 text-right">Total (IDR)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {purchaseRows.length === 0 ? (
+                  <tr><td colSpan="7" className="text-center py-8 text-slate-400 print:py-4">Belum ada transaksi pengadaan/pembelian.</td></tr>
+                ) : (
+                  purchaseRows.map(p => (
+                    <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                      <td className="p-3.5 print:p-1 font-medium whitespace-nowrap print:text-[7.5pt]">{p.date}</td>
+                      <td className="p-3.5 print:p-1 font-bold text-amber-700 dark:text-amber-400 whitespace-nowrap print:text-[7.5pt]">{p.number}</td>
+                      <td className="p-3.5 print:p-1 print:text-[7.5pt] print:overflow-visible print:whitespace-normal">{p.contact_name}</td>
+                      <td className="p-3.5 print:p-1 print:text-[7.5pt] print:overflow-visible print:whitespace-normal">{p.product_name}</td>
+                      <td className="p-3.5 print:p-1 text-right whitespace-nowrap print:text-[7.5pt]">{p.quantity}</td>
+                      <td className="p-3.5 print:p-1 text-right whitespace-nowrap print:text-[7.5pt]">{formatIDR(p.price)}</td>
+                      <td className="p-3.5 print:p-1 text-right font-bold text-slate-900 dark:text-white whitespace-nowrap print:text-[7.5pt]">{formatIDR(p.total)}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
       {/* 3. Mutasi Kas */}
       {tab === 'kas' && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
-          <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
-            <thead className="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 uppercase font-bold text-[11px] border-b border-slate-200 dark:border-slate-700">
-              <tr>
-                <th className="p-3.5">Tanggal</th>
-                <th className="p-3.5">No. Bukti</th>
-                <th className="p-3.5">Kategori</th>
-                <th className="p-3.5">Keterangan</th>
-                <th className="p-3.5 text-right">Nominal (IDR)</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {cashRows.length === 0 ? (
-                <tr><td colSpan="5" className="text-center py-8 text-slate-400">Belum ada mutasi kas tercatat.</td></tr>
-              ) : (
-                cashRows.map(c => (
-                  <tr key={c.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                    <td className="p-3.5 font-medium">{c.date}</td>
-                    <td className="p-3.5 font-bold text-blue-700 dark:text-blue-400">{c.number}</td>
-                    <td className="p-3.5 capitalize">{c.type.replace('_', ' ')}</td>
-                    <td className="p-3.5">{c.description}</td>
-                    <td className="p-3.5 text-right font-bold text-slate-900 dark:text-white">{formatIDR(c.total)}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm print:border-none print:shadow-none">
+          <div className="overflow-x-auto print:overflow-visible">
+            <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
+              <thead className="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 uppercase font-bold text-[11px] border-b border-slate-200 dark:border-slate-700 print:text-[7pt]">
+                <tr>
+                  <th className="p-3.5 print:p-1">Tanggal</th>
+                  <th className="p-3.5 print:p-1">No. Bukti</th>
+                  <th className="p-3.5 print:p-1">Kategori</th>
+                  <th className="p-3.5 print:p-1">Keterangan</th>
+                  <th className="p-3.5 print:p-1 text-right">Nominal (IDR)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {cashRows.length === 0 ? (
+                  <tr><td colSpan="5" className="text-center py-8 text-slate-400 print:py-4">Belum ada mutasi kas tercatat.</td></tr>
+                ) : (
+                  cashRows.map(c => (
+                    <tr key={c.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                      <td className="p-3.5 print:p-1 font-medium whitespace-nowrap print:text-[7.5pt]">{c.date}</td>
+                      <td className="p-3.5 print:p-1 font-bold text-blue-700 dark:text-blue-400 whitespace-nowrap print:text-[7.5pt]">{c.number}</td>
+                      <td className="p-3.5 print:p-1 capitalize print:text-[7.5pt]">{c.type.replace('_', ' ')}</td>
+                      <td className="p-3.5 print:p-1 print:text-[7.5pt] print:overflow-visible print:whitespace-normal">{c.description}</td>
+                      <td className="p-3.5 print:p-1 text-right font-bold text-slate-900 dark:text-white whitespace-nowrap print:text-[7.5pt]">{formatIDR(c.total)}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
       {/* 4. Status Persediaan */}
       {tab === 'persediaan' && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
-          <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
-            <thead className="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 uppercase font-bold text-[11px] border-b border-slate-200 dark:border-slate-700">
-              <tr>
-                <th className="p-3.5">Kode</th>
-                <th className="p-3.5">Komoditas Produk</th>
-                <th className="p-3.5">Unit Usaha</th>
-                <th className="p-3.5 text-center">Sisa Stok</th>
-                <th className="p-3.5 text-right">Harga Pokok (HPP)</th>
-                <th className="p-3.5 text-right">Total Nilai Stok (Aset)</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {products.map(p => {
-                const val = (p.stock || 0) * (p.buy_price || 0);
-                return (
-                  <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                    <td className="p-3.5 font-mono font-semibold">{p.code}</td>
-                    <td className="p-3.5 font-bold text-slate-900 dark:text-white">{p.name}</td>
-                    <td className="p-3.5 capitalize">{p.unit_usaha}</td>
-                    <td className="p-3.5 text-center font-bold text-emerald-700 dark:text-emerald-400">
-                      {p.stock} {p.unit}
-                    </td>
-                    <td className="p-3.5 text-right">{formatIDR(p.buy_price)}</td>
-                    <td className="p-3.5 text-right font-extrabold text-slate-900 dark:text-white">{formatIDR(val)}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm print:border-none print:shadow-none">
+          <div className="overflow-x-auto print:overflow-visible">
+            <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
+              <thead className="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 uppercase font-bold text-[11px] border-b border-slate-200 dark:border-slate-700 print:text-[7pt]">
+                <tr>
+                  <th className="p-3.5 print:p-1">Kode</th>
+                  <th className="p-3.5 print:p-1">Komoditas Produk</th>
+                  <th className="p-3.5 print:p-1">Unit Usaha</th>
+                  <th className="p-3.5 print:p-1 text-center">Sisa Stok</th>
+                  <th className="p-3.5 print:p-1 text-right">Harga Pokok (HPP)</th>
+                  <th className="p-3.5 print:p-1 text-right">Total Nilai Stok (Aset)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {products.map(p => {
+                  const val = (p.stock || 0) * (p.buy_price || 0);
+                  return (
+                    <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                      <td className="p-3.5 print:p-1 font-mono font-semibold whitespace-nowrap print:text-[7.5pt]">{p.code}</td>
+                      <td className="p-3.5 print:p-1 font-bold text-slate-900 dark:text-white print:text-[7.5pt] print:overflow-visible print:whitespace-normal">{p.name}</td>
+                      <td className="p-3.5 print:p-1 capitalize print:text-[7.5pt]">{p.unit_usaha}</td>
+                      <td className="p-3.5 print:p-1 text-center font-bold text-emerald-700 dark:text-emerald-400 whitespace-nowrap print:text-[7.5pt]">
+                        {p.stock} {p.unit}
+                      </td>
+                      <td className="p-3.5 print:p-1 text-right whitespace-nowrap print:text-[7.5pt]">{formatIDR(p.buy_price)}</td>
+                      <td className="p-3.5 print:p-1 text-right font-extrabold text-slate-900 dark:text-white whitespace-nowrap print:text-[7.5pt]">{formatIDR(val)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
+
+      {/* Printable Official Signatures Block */}
+      <div className="hidden print:flex justify-between items-center mt-6 pt-4 text-xs signature-block">
+        <div className="text-center">
+          <p className="text-[10px] text-slate-500 font-medium">Mengetahui,</p>
+          <p className="font-bold text-slate-800">Direktur BUMKam</p>
+          <div className="h-12"></div>
+          <p className="font-bold underline text-slate-900">Eko L Wibowo</p>
+        </div>
+        <div className="text-center">
+          <p className="text-[10px] text-slate-500 font-medium">Sentani Barat, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+          <p className="font-bold text-slate-800">Bendahara BUMKam</p>
+          <div className="h-12"></div>
+          <p className="font-bold underline text-slate-900">Rita Fanghoi</p>
+        </div>
+      </div>
     </div>
   );
 }

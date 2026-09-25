@@ -291,27 +291,36 @@ export default function Penggajian({
         </div>
       </div>
 
+      {/* Printable Official Kop Surat Header */}
+      <div className="hidden print:block mb-4 pb-3 border-b-2 border-slate-900 text-center kop-surat">
+        <h2 className="text-base font-black uppercase text-slate-900 tracking-wide">ARVEA &bull; BUMKAM MEKAR SARI</h2>
+        <p className="text-[11px] font-semibold text-slate-700">Financial Management System &bull; Standar SAK EMKM</p>
+        <p className="text-[10px] text-slate-500">Kampung Sabron Sari, Distrik Sentani Barat, Kabupaten Jayapura, Papua</p>
+        <h3 className="text-xs font-black uppercase mt-2 text-slate-900 underline">DAFTAR REKAPITULASI PENGGAJIAN &amp; UPAH KERJA</h3>
+        <p className="text-[10px] text-slate-500">Tahun Buku: {selectedYear} &bull; Total Beban Gaji/Upah: {formatIDR(totalPayroll)} &bull; Tanggal Cetak: {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+      </div>
+
       {/* Table with Edit and Hapus */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm print:border-none print:shadow-none">
+        <div className="overflow-x-auto print:overflow-visible">
           <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
-            <thead className="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 uppercase font-bold text-[11px] border-b border-slate-200 dark:border-slate-700">
+            <thead className="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 uppercase font-bold text-[11px] border-b border-slate-200 dark:border-slate-700 print:text-[7pt]">
               <tr>
-                <th className="p-3.5">NIK</th>
-                <th className="p-3.5">Nama Tenaga Kerja</th>
-                <th className="p-3.5 text-center">Klasifikasi</th>
-                <th className="p-3.5">Jabatan / Peran</th>
-                <th className="p-3.5">Unit Penempatan</th>
-                <th className="p-3.5 text-right">Gaji / Upah Pokok</th>
-                <th className="p-3.5 text-right">Tunjangan</th>
-                <th className="p-3.5 text-right">Total Diterima</th>
-                <th className="p-3.5 text-center print:hidden">Aksi (Slip / Edit / Hapus / Posting)</th>
+                <th className="p-3.5 print:p-1">NIK</th>
+                <th className="p-3.5 print:p-1">Nama Tenaga Kerja</th>
+                <th className="p-3.5 print:p-1 text-center">Klasifikasi</th>
+                <th className="p-3.5 print:p-1">Jabatan / Peran</th>
+                <th className="p-3.5 print:p-1">Unit Penempatan</th>
+                <th className="p-3.5 print:p-1 text-right">Gaji / Upah Pokok</th>
+                <th className="p-3.5 print:p-1 text-right">Tunjangan</th>
+                <th className="p-3.5 print:p-1 text-right">Total Diterima</th>
+                <th className="p-3.5 print:p-1 text-center print:hidden">Aksi (Slip / Edit / Hapus / Posting)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {filteredEmployees.length === 0 ? (
                 <tr>
-                  <td colSpan="9" className="text-center py-10 text-slate-400">
+                  <td colSpan="9" className="text-center py-10 text-slate-400 print:py-4">
                     Belum ada data tenaga kerja. Klik "+ Tambah Tenaga Kerja" untuk menginput data.
                   </td>
                 </tr>
@@ -324,10 +333,10 @@ export default function Penggajian({
 
                   return (
                     <tr key={emp.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
-                      <td className="p-3.5 font-mono text-slate-500">{emp.nik}</td>
-                      <td className="p-3.5 font-bold text-slate-900 dark:text-white">{emp.name}</td>
-                      <td className="p-3.5 text-center">
-                        <span className={`px-2.5 py-1 rounded-md text-[10px] font-extrabold ${
+                      <td className="p-3.5 print:p-1 font-mono text-slate-500 whitespace-nowrap print:text-[7.5pt]">{emp.nik}</td>
+                      <td className="p-3.5 print:p-1 font-bold text-slate-900 dark:text-white print:text-[7.5pt] print:overflow-visible print:whitespace-normal">{emp.name}</td>
+                      <td className="p-3.5 print:p-1 text-center whitespace-nowrap">
+                        <span className={`px-2.5 py-1 rounded-md text-[10px] font-extrabold print:text-[6.5pt] ${
                           isTetap 
                             ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800' 
                             : 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 border border-purple-200 dark:border-purple-800'
@@ -335,11 +344,11 @@ export default function Penggajian({
                           {isTetap ? 'Karyawan Tetap (Gaji)' : 'Tenaga Kerja Lepas (Upah)'}
                         </span>
                       </td>
-                      <td className="p-3.5 font-medium">{emp.position}</td>
-                      <td className="p-3.5 text-slate-500">{emp.unit}</td>
-                      <td className="p-3.5 text-right font-medium">{formatIDR(sal)}</td>
-                      <td className="p-3.5 text-right font-medium text-slate-500">{formatIDR(allow)}</td>
-                      <td className="p-3.5 text-right font-black text-emerald-700 dark:text-emerald-400">{formatIDR(total)}</td>
+                      <td className="p-3.5 print:p-1 font-medium print:text-[7.5pt] print:overflow-visible print:whitespace-normal">{emp.position}</td>
+                      <td className="p-3.5 print:p-1 text-slate-500 print:text-[7.5pt] print:overflow-visible print:whitespace-normal">{emp.unit}</td>
+                      <td className="p-3.5 print:p-1 text-right font-medium whitespace-nowrap print:text-[7.5pt]">{formatIDR(sal)}</td>
+                      <td className="p-3.5 print:p-1 text-right font-medium text-slate-500 whitespace-nowrap print:text-[7.5pt]">{formatIDR(allow)}</td>
+                      <td className="p-3.5 print:p-1 text-right font-black text-emerald-700 dark:text-emerald-400 whitespace-nowrap print:text-[7.5pt]">{formatIDR(total)}</td>
                       <td className="p-3.5 text-center print:hidden">
                         <div className="flex items-center justify-center gap-1.5">
                           <button
@@ -378,6 +387,22 @@ export default function Penggajian({
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Printable Official Signatures Block */}
+        <div className="hidden print:flex justify-between items-center mt-6 pt-4 text-xs signature-block">
+          <div className="text-center">
+            <p className="text-[10px] text-slate-500 font-medium">Mengetahui,</p>
+            <p className="font-bold text-slate-800">Direktur BUMKam</p>
+            <div className="h-12"></div>
+            <p className="font-bold underline text-slate-900">Eko L Wibowo</p>
+          </div>
+          <div className="text-center">
+            <p className="text-[10px] text-slate-500 font-medium">Sentani Barat, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+            <p className="font-bold text-slate-800">Bendahara BUMKam</p>
+            <div className="h-12"></div>
+            <p className="font-bold underline text-slate-900">Rita Fanghoi</p>
+          </div>
         </div>
       </div>
 
@@ -523,8 +548,8 @@ export default function Penggajian({
 
       {/* MODAL CETAK SLIP GAJI / SLIP UPAH DENGAN TANDA TANGAN RESMI */}
       {selectedEmp && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 dark:border-slate-800 text-xs">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 print:fixed print:inset-0 print:bg-white print:z-[9999] print:p-6 print:flex print:items-center print:justify-center">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 dark:border-slate-800 text-xs print:border-none print:shadow-none print:p-0 print:max-w-xl">
             <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800 print:hidden">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                 Pratinjau {selectedEmp.worker_type === 'Karyawan Tetap' ? 'Slip Gaji Karyawan Tetap' : 'Slip Upah Tenaga Kerja Lepas'}
@@ -533,7 +558,7 @@ export default function Penggajian({
             </div>
 
             {/* SLIP CONTAINER (PRINTABLE) */}
-            <div className="mt-4 p-5 sm:p-6 border-2 border-slate-300 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900/60 space-y-4">
+            <div className="mt-4 p-5 sm:p-6 border-2 border-slate-300 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900/60 space-y-4 print:border-2 print:border-slate-900 print:bg-white print:p-6">
               {/* Header Slip */}
               <div className="text-center pb-3 border-b-2 border-slate-300 dark:border-slate-700">
                 <h3 className="font-black text-sm uppercase tracking-wider text-slate-900 dark:text-white">BUMKAM MEKAR SARI</h3>
