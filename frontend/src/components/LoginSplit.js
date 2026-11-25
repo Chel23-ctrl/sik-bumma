@@ -178,7 +178,7 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
     <div className="min-h-screen flex flex-col md:flex-row bg-gradient-to-br from-[#F2EFFA] via-[#E8E2F6] to-[#DCD4F0] text-[#1E1B2E]">
       {/* Left Side: Lilac Brand Hero Panel (#9A90CC) with 2 Stacked Landscape Team Photos (Top & Bottom) */}
       <div
-        className="md:w-5/12 lg:w-1/2 text-white p-6 sm:p-8 md:p-12 lg:p-14 flex flex-col justify-between relative overflow-hidden bg-[#8377BC]"
+        className="md:w-5/12 lg:w-1/2 text-white px-6 sm:px-8 md:px-10 lg:px-12 pt-4 sm:pt-5 md:pt-6 pb-5 sm:pb-6 md:pb-7 flex flex-col justify-between relative overflow-hidden bg-[#8377BC]"
         style={{
           background: 'linear-gradient(145deg, #5F539C 0%, #8377BC 48%, #9A90CC 100%)'
         }}
@@ -239,36 +239,40 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
         />
         <div className="absolute inset-0 z-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
 
-        {/* Top Brand Logo ARVÉA */}
-        <div className="relative z-10 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <ArveaLogo
-              variant="horizontal"
-              theme="light"
-              size="md"
-              subtitle="Financial Management System BUMKam Mekar Sari"
-            />
-            <span className="hidden sm:inline-block px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-xs border border-white/30 text-[10px] font-extrabold text-white">
-              SAK EMKM
-            </span>
+        {/* Top Brand Logo ARVÉA + Slogan (dinaikkan rapi di area atas dinding agar seluruh wajah tim tidak tertutup) */}
+        <div className="relative z-10 flex flex-col gap-2">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <ArveaLogo
+                variant="horizontal"
+                theme="light"
+                size="sm"
+                subtitle="Financial Management System BUMKam Mekar Sari"
+              />
+              <span className="hidden sm:inline-block px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-xs border border-white/30 text-[10px] font-extrabold text-white">
+                SAK EMKM
+              </span>
+            </div>
+          </div>
+
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#4B3F82]/45 border border-white/40 text-white text-[11px] font-semibold tracking-[0.05em] backdrop-blur-md shadow-sm arvea-slogan-light">
+              <Sparkles className="w-3 h-3 text-amber-200 shrink-0" /> &ldquo;Satu Nilai, Satu Tujuan, Bertumbuh Bersama&rdquo;
+            </div>
           </div>
         </div>
 
-        {/* Main Hero Pitch */}
-        <div className="relative z-10 my-8 max-w-xl">
-          <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#4B3F82]/45 border border-white/40 text-white text-xs font-semibold tracking-[0.05em] mb-4 backdrop-blur-md shadow-sm arvea-slogan-light">
-            <Sparkles className="w-3.5 h-3.5 text-amber-200 shrink-0" /> &ldquo;Satu Nilai, Satu Tujuan, Bertumbuh Bersama&rdquo;
-          </div>
-
-          <h2 className="text-2xl md:text-3xl lg:text-4xl font-black tracking-tight text-white leading-tight mb-4 drop-shadow-sm">
+        {/* Main Hero Pitch (diberi ruang lega di atas agar area wajah foto pertama tetap terlihat jelas) */}
+        <div className="relative z-10 mt-16 sm:mt-20 md:mt-24 mb-4 max-w-xl">
+          <h2 className="text-xl md:text-2xl lg:text-3xl font-black tracking-tight text-white leading-tight mb-3 drop-shadow-sm">
             Kelola akuntansi &amp; aset BUMKam dengan akuntabel dan transparan.
           </h2>
-          <p className="text-white/95 text-xs md:text-sm leading-relaxed mb-6 drop-shadow-xs">
+          <p className="text-white/95 text-xs md:text-[13px] leading-relaxed mb-5 drop-shadow-xs">
             Standar pelaporan keuangan berbasis <strong>SAK EMKM</strong> terpadu, inventarisasi aset tetap &amp; operasional, jurnal penyesuaian, penggajian karyawan, dan pembukuan berpasangan digital.
           </p>
 
           {/* 3 Animated Sector Feature Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-5">
             <div className="bg-[#4B3F82]/35 backdrop-blur-md border border-white/30 rounded-2xl p-3 hover:bg-[#4B3F82]/45 transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden animate-float shadow-sm">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-base">🥚</span>
