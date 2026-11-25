@@ -58,6 +58,8 @@ DEFAULT_ACCOUNTS = [
     {'id': 'acc_1591', 'code': '1591', 'name': 'Akumulasi Penyusutan', 'category': 'Aset Tetap', 'type': 'asset', 'normal': 'Kredit'},
     {'id': 'acc_2001', 'code': '2001', 'name': 'Utang Usaha', 'category': 'Liabilitas', 'type': 'liability', 'normal': 'Kredit'},
     {'id': 'acc_2101', 'code': '2101', 'name': 'Utang Lainnya', 'category': 'Liabilitas', 'type': 'liability', 'normal': 'Kredit'},
+    {'id': 'acc_2102', 'code': '2102', 'name': 'Beban yang Masih Harus Dibayar', 'category': 'Liabilitas', 'type': 'liability', 'normal': 'Kredit'},
+    {'id': 'acc_2201', 'code': '2201', 'name': 'Pendapatan Diterima di Muka', 'category': 'Liabilitas', 'type': 'liability', 'normal': 'Kredit'},
     {'id': 'acc_3001', 'code': '3001', 'name': 'Modal BUMMA', 'category': 'Ekuitas', 'type': 'equity', 'normal': 'Kredit'},
     {'id': 'acc_3101', 'code': '3101', 'name': 'Saldo Laba Ditahan', 'category': 'Ekuitas', 'type': 'equity', 'normal': 'Kredit'},
     {'id': 'acc_4001', 'code': '4001', 'name': 'Pendapatan Penjualan Perdagangan', 'category': 'Pendapatan', 'type': 'revenue', 'normal': 'Kredit'},
@@ -67,6 +69,7 @@ DEFAULT_ACCOUNTS = [
     {'id': 'acc_5102', 'code': '5102', 'name': 'Beban Listrik & Air', 'category': 'Beban Operasional', 'type': 'expense', 'normal': 'Debit'},
     {'id': 'acc_5103', 'code': '5103', 'name': 'Beban Transportasi & Logistik', 'category': 'Beban Operasional', 'type': 'expense', 'normal': 'Debit'},
     {'id': 'acc_5104', 'code': '5104', 'name': 'Beban Pemeliharaan & Operasional', 'category': 'Beban Operasional', 'type': 'expense', 'normal': 'Debit'},
+    {'id': 'acc_5105', 'code': '5105', 'name': 'Beban Penyusutan Aset Tetap', 'category': 'Beban Operasional', 'type': 'expense', 'normal': 'Debit'},
     {'id': 'acc_5199', 'code': '5199', 'name': 'Beban Operasional Lainnya', 'category': 'Beban Operasional', 'type': 'expense', 'normal': 'Debit'}
 ]
 
@@ -257,6 +260,24 @@ async def seed_data():
         await db.employees.insert_many(DEFAULT_EMPLOYEES)
     if await db.assets.count_documents({}) == 0:
         await db.assets.insert_many(DEFAULT_ASSETS)
+    if await db.adjusting_journals.count_documents({}) == 0:
+        for aje in DEFAULT_ADJUSTING_JOURNALS:
+            header = {k: v for k, v in aje.items() if k != 'lines'}
+            await db.adjusting_journals.insert_one(header)
+            line_docs = [
+                {
+                    'id': uid('ajel'),
+                    'adjusting_journal_id': aje['id'],
+                    'unit_usaha': aje['unit_usaha'],
+                    'line_no': idx + 1,
+                    **line
+                }
+                for idx, line in enumerate(aje['lines'])
+            ]
+            if line_docs:
+                await db.adjusting_journal_lines.insert_many(line_docs)
+            if aje.get('status') == 'Posted':
+                await sync_aje_to_ledger(aje)
     if await db.profile.count_documents({}) == 0:
         await db.profile.insert_one(DEFAULT_PROFILE)
 
@@ -511,6 +532,345 @@ async def delete_asset(asset_id: str, user=Depends(current_user)):
     result = await db.assets.delete_one({'id': asset_id})
     if result.deleted_count == 0:
         raise HTTPException(404, 'Data aset tidak ditemukan.')
+    return {'ok': True}
+
+VALID_AJE_UNITS = {'perdagangan', 'jasa', 'kantor'}
+
+DEFAULT_ADJUSTING_JOURNALS = [
+    {
+        'id': 'aje_seed_1',
+        'reference_no': 'AJE-202611-001',
+        'entry_date': '2026-11-30',
+        'unit_usaha': 'perdagangan',
+        'category': 'Beban Penyusutan Aset Tetap',
+        'description': 'Penyesuaian beban penyusutan Mesin Penetas Telur Otomatis 500 Butir periode November 2026',
+        'total_debit': 116667,
+        'total_credit': 116667,
+        'status': 'Posted',
+        'created_by': 'Administrator ARVEA',
+        'created_at': '2026-11-30T08:00:00+00:00',
+        'lines': [
+            {
+                'account_code': '5105',
+                'account_name': 'Beban Penyusutan Aset Tetap',
+                'debit': 116667,
+                'credit': 0,
+                'line_memo': 'Penyusutan bulanan mesin penetas telur ((7.500.000 - 500.000) / 5 thn / 12 bln)'
+            },
+            {
+                'account_code': '1591',
+                'account_name': 'Akumulasi Penyusutan',
+                'debit': 0,
+                'credit': 116667,
+                'line_memo': 'Akumulasi penyusutan peralatan peternakan November 2026'
+            }
+        ]
+    },
+    {
+        'id': 'aje_seed_2',
+        'reference_no': 'AJE-202611-002',
+        'entry_date': '2026-11-30',
+        'unit_usaha': 'jasa',
+        'category': 'Pendapatan Diterima di Muka (Unit Jasa)',
+        'description': 'Pengakuan pendapatan sewa Gedung Serbaguna yang telah selesai digunakan bulan November 2026',
+        'total_debit': 2000000,
+        'total_credit': 2000000,
+        'status': 'Posted',
+        'created_by': 'Rita Fanghoi',
+        'created_at': '2026-11-30T09:00:00+00:00',
+        'lines': [
+            {
+                'account_code': '2201',
+                'account_name': 'Pendapatan Diterima di Muka',
+                'debit': 2000000,
+                'credit': 0,
+                'line_memo': 'Reklasifikasi uang muka sewa gedung yang telah terealisasi'
+            },
+            {
+                'account_code': '4002',
+                'account_name': 'Pendapatan Jasa Penyewaan',
+                'debit': 0,
+                'credit': 2000000,
+                'line_memo': 'Pengakuan pendapatan jasa penyewaan gedung serbaguna'
+            }
+        ]
+    },
+    {
+        'id': 'aje_seed_3',
+        'reference_no': 'AJE-202611-003',
+        'entry_date': '2026-11-30',
+        'unit_usaha': 'kantor',
+        'category': 'Beban yang Masih Harus Dibayar (Accrued Expense)',
+        'description': 'Akrual tagihan listrik & operasional kantor pengelola BUMKam bulan November 2026',
+        'total_debit': 350000,
+        'total_credit': 350000,
+        'status': 'Draft',
+        'created_by': 'Rita Fanghoi',
+        'created_at': '2026-11-30T10:00:00+00:00',
+        'lines': [
+            {
+                'account_code': '5102',
+                'account_name': 'Beban Listrik & Air',
+                'debit': 350000,
+                'credit': 0,
+                'line_memo': 'Beban listrik kantor BUMKam November 2026 belum dibayar'
+            },
+            {
+                'account_code': '2102',
+                'account_name': 'Beban yang Masih Harus Dibayar',
+                'debit': 0,
+                'credit': 350000,
+                'line_memo': 'Utang beban listrik kantor pengelola jatuh tempo Desember 2026'
+            }
+        ]
+    }
+]
+
+def normalize_aje_unit(raw_unit: Optional[str]) -> str:
+    val = (raw_unit or '').strip().lower()
+    if val in ('perdagangan', 'unit perdagangan'):
+        return 'perdagangan'
+    if val in ('jasa', 'unit jasa'):
+        return 'jasa'
+    if val in ('kantor', 'umum', 'kantor pengelola', 'kantor pengelola / umum'):
+        return 'kantor'
+    return ''
+
+def validate_aje_payload(data: dict[str, Any]) -> tuple[str, list[dict[str, Any]], int, int]:
+    unit_usaha = normalize_aje_unit(data.get('unit_usaha'))
+    if unit_usaha not in VALID_AJE_UNITS:
+        raise HTTPException(400, 'Unit Usaha wajib dipilih (perdagangan, jasa, atau kantor).')
+
+    raw_lines = data.get('lines') or []
+    if not isinstance(raw_lines, list) or len(raw_lines) < 2:
+        raise HTTPException(400, 'Jurnal penyesuaian minimal harus memiliki 2 baris akun (Debit dan Kredit).')
+
+    clean_lines = []
+    total_debit = 0
+    total_credit = 0
+    for idx, line in enumerate(raw_lines):
+        acc_code = str(line.get('account_code', '')).strip()
+        acc_name = str(line.get('account_name', '')).strip()
+        debit = rupiah(line.get('debit', 0))
+        credit = rupiah(line.get('credit', 0))
+
+        if not acc_code:
+            raise HTTPException(400, f'Baris ke-{idx + 1}: Akun COA wajib dipilih.')
+        if debit < 0 or credit < 0:
+            raise HTTPException(400, f'Baris ke-{idx + 1}: Nominal Debit/Kredit tidak boleh negatif.')
+        if debit == 0 and credit == 0:
+            raise HTTPException(400, f'Baris ke-{idx + 1}: Isi nominal Debit atau Kredit lebih dari Rp 0.')
+        if debit > 0 and credit > 0:
+            raise HTTPException(400, f'Baris ke-{idx + 1}: Satu baris hanya boleh mengisi Debit atau Kredit saja.')
+
+        total_debit += debit
+        total_credit += credit
+        clean_lines.append({
+            'account_code': acc_code,
+            'account_name': acc_name or acc_code,
+            'debit': debit,
+            'credit': credit,
+            'line_memo': str(line.get('line_memo', '')).strip()
+        })
+
+    if total_debit <= 0 or total_debit != total_credit:
+        raise HTTPException(
+            400,
+            f'Jurnal tidak seimbang (Unbalanced): Total Debit ({total_debit}) != Total Kredit ({total_credit}).'
+        )
+
+    return unit_usaha, clean_lines, total_debit, total_credit
+
+async def sync_aje_to_ledger(aje_doc: dict[str, Any]):
+    await db.journals.delete_many({'source_aje_id': aje_doc['id']})
+    if aje_doc.get('status') != 'Posted':
+        return
+    jrn_entry = {
+        'id': uid('jrn'),
+        'source_aje_id': aje_doc['id'],
+        'source_type': 'adjusting',
+        'number': aje_doc['reference_no'],
+        'reference': aje_doc['reference_no'],
+        'date': aje_doc['entry_date'],
+        'unit_usaha': aje_doc['unit_usaha'],
+        'description': f"[AJE] {aje_doc['description']}",
+        'lines': [
+            {
+                'account_code': l['account_code'],
+                'account_name': l['account_name'],
+                'debit': l['debit'],
+                'credit': l['credit']
+            }
+            for l in aje_doc.get('lines', [])
+        ],
+        'created_at': now()
+    }
+    await db.journals.insert_one(jrn_entry)
+
+async def hydrate_aje_list(headers: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    result = []
+    for h in headers:
+        lines = await db.adjusting_journal_lines.find(
+            {'adjusting_journal_id': h['id']}, {'_id': 0}
+        ).sort('line_no', 1).to_list(200)
+        result.append({**h, 'lines': lines})
+    return result
+
+@api.get('/adjusting-journals')
+async def list_adjusting_journals(
+    unit: str = 'all',
+    month: str = 'all',
+    year: str = 'all',
+    status: str = 'all',
+    search: str = ''
+):
+    await seed_data()
+    headers = await db.adjusting_journals.find({}, {'_id': 0}).sort('entry_date', -1).to_list(1000)
+    all_items = await hydrate_aje_list(headers)
+
+    summary = {
+        'all': {'count': len(all_items), 'posted': sum(1 for x in all_items if x.get('status') == 'Posted'), 'total': sum(rupiah(x.get('total_debit', 0)) for x in all_items)},
+        'perdagangan': {'count': sum(1 for x in all_items if x.get('unit_usaha') == 'perdagangan'), 'total': sum(rupiah(x.get('total_debit', 0)) for x in all_items if x.get('unit_usaha') == 'perdagangan')},
+        'jasa': {'count': sum(1 for x in all_items if x.get('unit_usaha') == 'jasa'), 'total': sum(rupiah(x.get('total_debit', 0)) for x in all_items if x.get('unit_usaha') == 'jasa')},
+        'kantor': {'count': sum(1 for x in all_items if x.get('unit_usaha') == 'kantor'), 'total': sum(rupiah(x.get('total_debit', 0)) for x in all_items if x.get('unit_usaha') == 'kantor')}
+    }
+
+    filtered = all_items
+    unit_f = normalize_aje_unit(unit) if unit != 'all' else 'all'
+    if unit_f in VALID_AJE_UNITS:
+        filtered = [x for x in filtered if x.get('unit_usaha') == unit_f]
+    if year and year not in ('all', 'Semua Tahun'):
+        filtered = [x for x in filtered if str(x.get('entry_date', '')).startswith(str(year))]
+    if month and month != 'all':
+        m_pad = str(month).zfill(2)
+        filtered = [x for x in filtered if str(x.get('entry_date', ''))[5:7] == m_pad]
+    if status and status != 'all':
+        filtered = [x for x in filtered if x.get('status') == status]
+    if search.strip():
+        q = search.strip().lower()
+        filtered = [
+            x for x in filtered
+            if q in str(x.get('reference_no', '')).lower()
+            or q in str(x.get('description', '')).lower()
+            or q in str(x.get('category', '')).lower()
+            or any(q in str(l.get('account_name', '')).lower() or q in str(l.get('account_code', '')).lower() for l in x.get('lines', []))
+        ]
+
+    return {'items': filtered, 'summary': summary}
+
+@api.post('/adjusting-journals')
+async def create_adjusting_journal(body: RecordBody, user=Depends(current_user)):
+    await seed_data()
+    data = dict(body.data or {})
+    unit_usaha, clean_lines, total_debit, total_credit = validate_aje_payload(data)
+
+    entry_date = str(data.get('entry_date') or now()[:10])
+    ym = entry_date[:7].replace('-', '')
+    existing_cnt = await db.adjusting_journals.count_documents({'reference_no': {'$regex': f'^AJE-{ym}-'}})
+    reference_no = str(data.get('reference_no') or f'AJE-{ym}-{existing_cnt + 1:03d}').strip()
+    status_val = 'Posted' if data.get('status') == 'Posted' else 'Draft'
+
+    aje_id = uid('aje')
+    header = {
+        'id': aje_id,
+        'reference_no': reference_no,
+        'entry_date': entry_date,
+        'unit_usaha': unit_usaha,
+        'category': str(data.get('category') or 'Penyesuaian Lainnya').strip(),
+        'description': str(data.get('description') or '').strip(),
+        'total_debit': total_debit,
+        'total_credit': total_credit,
+        'status': status_val,
+        'posted_at': now() if status_val == 'Posted' else None,
+        'created_by': user.get('name', 'Administrator'),
+        'created_at': now(),
+        'updated_at': now()
+    }
+    await db.adjusting_journals.insert_one(header)
+
+    line_docs = [
+        {
+            'id': uid('ajel'),
+            'adjusting_journal_id': aje_id,
+            'unit_usaha': unit_usaha,
+            'line_no': idx + 1,
+            **line
+        }
+        for idx, line in enumerate(clean_lines)
+    ]
+    await db.adjusting_journal_lines.insert_many(line_docs)
+
+    full_doc = {**public(header), 'lines': [public(l) for l in line_docs]}
+    await sync_aje_to_ledger(full_doc)
+    return full_doc
+
+@api.put('/adjusting-journals/{aje_id}')
+async def update_adjusting_journal(aje_id: str, body: RecordBody, user=Depends(current_user)):
+    await seed_data()
+    existing = await db.adjusting_journals.find_one({'id': aje_id}, {'_id': 0})
+    if not existing:
+        raise HTTPException(404, 'Jurnal penyesuaian tidak ditemukan.')
+
+    data = dict(body.data or {})
+    unit_usaha, clean_lines, total_debit, total_credit = validate_aje_payload(data)
+    status_val = 'Posted' if data.get('status') == 'Posted' else 'Draft'
+
+    updated_header = {
+        'reference_no': str(data.get('reference_no') or existing['reference_no']).strip(),
+        'entry_date': str(data.get('entry_date') or existing['entry_date']),
+        'unit_usaha': unit_usaha,
+        'category': str(data.get('category') or existing.get('category', '')).strip(),
+        'description': str(data.get('description') or '').strip(),
+        'total_debit': total_debit,
+        'total_credit': total_credit,
+        'status': status_val,
+        'posted_at': now() if status_val == 'Posted' else None,
+        'updated_at': now()
+    }
+    await db.adjusting_journals.update_one({'id': aje_id}, {'$set': updated_header})
+    await db.adjusting_journal_lines.delete_many({'adjusting_journal_id': aje_id})
+
+    line_docs = [
+        {
+            'id': uid('ajel'),
+            'adjusting_journal_id': aje_id,
+            'unit_usaha': unit_usaha,
+            'line_no': idx + 1,
+            **line
+        }
+        for idx, line in enumerate(clean_lines)
+    ]
+    await db.adjusting_journal_lines.insert_many(line_docs)
+
+    full_doc = {**existing, **updated_header, 'lines': [public(l) for l in line_docs]}
+    await sync_aje_to_ledger(full_doc)
+    return full_doc
+
+@api.post('/adjusting-journals/{aje_id}/post')
+async def post_adjusting_journal(aje_id: str, user=Depends(current_user)):
+    await seed_data()
+    existing = await db.adjusting_journals.find_one({'id': aje_id}, {'_id': 0})
+    if not existing:
+        raise HTTPException(404, 'Jurnal penyesuaian tidak ditemukan.')
+    lines = await db.adjusting_journal_lines.find({'adjusting_journal_id': aje_id}, {'_id': 0}).sort('line_no', 1).to_list(200)
+    validate_aje_payload({**existing, 'lines': lines})
+
+    await db.adjusting_journals.update_one(
+        {'id': aje_id},
+        {'$set': {'status': 'Posted', 'posted_at': now(), 'updated_at': now()}}
+    )
+    full_doc = {**existing, 'status': 'Posted', 'posted_at': now(), 'lines': lines}
+    await sync_aje_to_ledger(full_doc)
+    return full_doc
+
+@api.delete('/adjusting-journals/{aje_id}')
+async def delete_adjusting_journal(aje_id: str, user=Depends(current_user)):
+    await seed_data()
+    res = await db.adjusting_journals.delete_one({'id': aje_id})
+    if res.deleted_count == 0:
+        raise HTTPException(404, 'Jurnal penyesuaian tidak ditemukan.')
+    await db.adjusting_journal_lines.delete_many({'adjusting_journal_id': aje_id})
+    await db.journals.delete_many({'source_aje_id': aje_id})
     return {'ok': True}
 
 # Master Data Generic CRUD

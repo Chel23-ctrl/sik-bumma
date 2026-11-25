@@ -22,7 +22,8 @@ import {
   Lock,
   Unlock,
   Users,
-  Boxes
+  Boxes,
+  FileEdit
 } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
 
@@ -32,6 +33,7 @@ import DashboardView from './components/DashboardView';
 import Transaksi from './components/Transaksi';
 import KasBank from './components/KasBank';
 import JurnalUmum from './components/JurnalUmum';
+import JurnalPenyesuaian, { INITIAL_ADJUSTING_JOURNALS } from './components/JurnalPenyesuaian';
 import BukuBesar from './components/BukuBesar';
 import NeracaSaldo from './components/NeracaSaldo';
 import LaporanKeuangan from './components/LaporanKeuangan';
@@ -70,6 +72,8 @@ const INITIAL_ACCOUNTS = [
   { id: 'acc_1591', code: '1591', name: 'Akumulasi Penyusutan', category: 'Aset Tetap', type: 'asset', normal: 'Kredit' },
   { id: 'acc_2001', code: '2001', name: 'Utang Usaha', category: 'Liabilitas', type: 'liability', normal: 'Kredit' },
   { id: 'acc_2101', code: '2101', name: 'Utang Lainnya', category: 'Liabilitas', type: 'liability', normal: 'Kredit' },
+  { id: 'acc_2102', code: '2102', name: 'Beban yang Masih Harus Dibayar', category: 'Liabilitas', type: 'liability', normal: 'Kredit' },
+  { id: 'acc_2201', code: '2201', name: 'Pendapatan Diterima di Muka', category: 'Liabilitas', type: 'liability', normal: 'Kredit' },
   { id: 'acc_3001', code: '3001', name: 'Modal BUMKam', category: 'Ekuitas', type: 'equity', normal: 'Kredit' },
   { id: 'acc_3101', code: '3101', name: 'Saldo Laba Ditahan', category: 'Ekuitas', type: 'equity', normal: 'Kredit' },
   { id: 'acc_4001', code: '4001', name: 'Pendapatan Penjualan Perdagangan', category: 'Pendapatan', type: 'revenue', normal: 'Kredit' },
@@ -79,6 +83,7 @@ const INITIAL_ACCOUNTS = [
   { id: 'acc_5102', code: '5102', name: 'Beban Listrik & Air', category: 'Beban Operasional', type: 'expense', normal: 'Debit' },
   { id: 'acc_5103', code: '5103', name: 'Beban Transportasi & Logistik', category: 'Beban Operasional', type: 'expense', normal: 'Debit' },
   { id: 'acc_5104', code: '5104', name: 'Beban Pemeliharaan & Operasional', category: 'Beban Operasional', type: 'expense', normal: 'Debit' },
+  { id: 'acc_5105', code: '5105', name: 'Beban Penyusutan Aset Tetap', category: 'Beban Operasional', type: 'expense', normal: 'Debit' },
   { id: 'acc_5199', code: '5199', name: 'Beban Operasional Lainnya', category: 'Beban Operasional', type: 'expense', normal: 'Debit' }
 ];
 
@@ -136,7 +141,7 @@ const INITIAL_PROFILE = {
 export const ROLE_PERMISSIONS = {
   'Administrator': [
     'dashboard', 'profil', 'master', 'aset', 'landing_unit', 'transaksi', 
-    'kas_bank', 'jurnal', 'buku_besar', 'neraca_saldo', 'laporan', 
+    'kas_bank', 'jurnal', 'jurnal_penyesuaian', 'buku_besar', 'neraca_saldo', 'laporan', 
     'analisis', 'operasional', 'penggajian'
   ],
   'Ketua BUMKam': [
@@ -149,18 +154,18 @@ export const ROLE_PERMISSIONS = {
   ],
   'Bendahara': [
     'dashboard', 'master', 'aset', 'landing_unit', 'transaksi', 
-    'kas_bank', 'jurnal', 'buku_besar', 'neraca_saldo', 'laporan', 
+    'kas_bank', 'jurnal', 'jurnal_penyesuaian', 'buku_besar', 'neraca_saldo', 'laporan', 
     'analisis', 'operasional', 'penggajian'
   ],
   'Auditor': [
-    'dashboard', 'landing_unit', 'jurnal', 'buku_besar', 'neraca_saldo'
+    'dashboard', 'landing_unit', 'jurnal', 'jurnal_penyesuaian', 'buku_besar', 'neraca_saldo'
   ],
   'Umum': [
     'dashboard', 'profil', 'landing_unit', 'laporan', 'analisis'
   ],
   // Fallbacks for previous sessions
-  'Akuntansi': ['dashboard', 'master', 'aset', 'landing_unit', 'transaksi', 'kas_bank', 'jurnal', 'buku_besar', 'neraca_saldo', 'laporan', 'analisis'],
-  'Keuangan': ['dashboard', 'landing_unit', 'transaksi', 'kas_bank', 'neraca_saldo', 'laporan', 'analisis', 'penggajian'],
+  'Akuntansi': ['dashboard', 'master', 'aset', 'landing_unit', 'transaksi', 'kas_bank', 'jurnal', 'jurnal_penyesuaian', 'buku_besar', 'neraca_saldo', 'laporan', 'analisis'],
+  'Keuangan': ['dashboard', 'landing_unit', 'transaksi', 'kas_bank', 'jurnal_penyesuaian', 'neraca_saldo', 'laporan', 'analisis', 'penggajian'],
   'Manajer': ['dashboard', 'profil', 'master', 'aset', 'landing_unit', 'transaksi', 'kas_bank', 'laporan', 'analisis', 'operasional', 'penggajian']
 };
 
@@ -231,7 +236,7 @@ export default function App() {
     if (!rbacStrict) {
       return [
         'dashboard', 'profil', 'master', 'aset', 'landing_unit', 'transaksi', 
-        'kas_bank', 'jurnal', 'buku_besar', 'neraca_saldo', 'laporan', 
+        'kas_bank', 'jurnal', 'jurnal_penyesuaian', 'buku_besar', 'neraca_saldo', 'laporan', 
         'analisis', 'operasional', 'penggajian'
       ];
     }
@@ -269,7 +274,22 @@ export default function App() {
 
   // App Data
   const [transactions, setTransactions] = useState(() => getStorage('transactions', []));
-  const [accounts, setAccounts] = useState(() => getStorage('accounts', INITIAL_ACCOUNTS));
+  const [adjustingJournals, setAdjustingJournals] = useState(() =>
+    getStorage('adjusting_journals', INITIAL_ADJUSTING_JOURNALS)
+  );
+  const [accounts, setAccounts] = useState(() => {
+    const stored = getStorage('accounts', INITIAL_ACCOUNTS);
+    if (Array.isArray(stored) && stored.length > 0) {
+      const merged = [...stored];
+      INITIAL_ACCOUNTS.forEach(acc => {
+        if (!merged.some(a => a.code === acc.code)) {
+          merged.push(acc);
+        }
+      });
+      return merged.sort((a, b) => String(a.code).localeCompare(String(b.code)));
+    }
+    return INITIAL_ACCOUNTS;
+  });
   const [products, setProducts] = useState(() => {
     const stored = getStorage('products', INITIAL_PRODUCTS);
     if (Array.isArray(stored) && stored.length > 0) {
@@ -334,6 +354,7 @@ export default function App() {
   useEffect(() => { setStorage('dark_mode', darkMode); }, [darkMode]);
   useEffect(() => { setStorage('user', user); }, [user]);
   useEffect(() => { setStorage('transactions', transactions); }, [transactions]);
+  useEffect(() => { setStorage('adjusting_journals', adjustingJournals); }, [adjustingJournals]);
   useEffect(() => { setStorage('accounts', accounts); }, [accounts]);
   useEffect(() => { setStorage('products', products); }, [products]);
   useEffect(() => { setStorage('core_products', coreProducts); }, [coreProducts]);
@@ -360,13 +381,13 @@ export default function App() {
     }, 300);
   };
 
-  // Double-Entry Journals
+  // Double-Entry Journals (Transaksi Operasional + Jurnal Penyesuaian berstatus Posted)
   const journals = useMemo(() => {
-    let runningBalance = 0;
-    const entries = [];
+    const rawEntries = [];
+    const filterByYear = selectedYear !== 'all' && selectedYear !== 'Semua Tahun';
 
     const filteredTx = transactions.filter(tx => {
-      if (selectedYear !== 'all') {
+      if (filterByYear) {
         const txYear = (tx.date || '').slice(0, 4);
         if (txYear && txYear !== selectedYear) return false;
       }
@@ -402,25 +423,58 @@ export default function App() {
         lines.push({ account_code: '1001', account_name: 'Kas', debit: 0, credit: total });
       }
 
-      lines.forEach((l) => {
-        runningBalance += (l.debit - l.credit);
-        entries.push({
-          id: tx.id + '_' + l.account_code,
+      lines.forEach((l, idx) => {
+        rawEntries.push({
+          id: `${tx.id}_${l.account_code}_${idx}`,
           date: tx.date,
           tx_number: tx.number,
           description: tx.description || `${tx.type.toUpperCase()} - ${tx.product_name || tx.contact_name || ''}`,
           unit_usaha: tx.unit_usaha,
+          source_type: 'general',
           account_code: l.account_code,
           account_name: l.account_name,
           debit: l.debit,
-          credit: l.credit,
-          balance: runningBalance
+          credit: l.credit
         });
       });
     });
 
-    return entries;
-  }, [transactions, selectedYear, selectedUnit]);
+    // Include Posted Adjusting Journal Entries (Jurnal Penyesuaian)
+    const postedAJE = adjustingJournals.filter(aje => {
+      if (aje.status !== 'Posted') return false;
+      if (filterByYear) {
+        const ajeYear = (aje.entry_date || '').slice(0, 4);
+        if (ajeYear && ajeYear !== selectedYear) return false;
+      }
+      if (selectedUnit !== 'all' && aje.unit_usaha !== selectedUnit) return false;
+      return true;
+    });
+
+    postedAJE.forEach(aje => {
+      (aje.lines || []).forEach((l, idx) => {
+        rawEntries.push({
+          id: `${aje.id}_${l.account_code}_${idx}`,
+          date: aje.entry_date,
+          tx_number: aje.reference_no,
+          description: `[Penyesuaian] ${l.line_memo || aje.description}`,
+          unit_usaha: aje.unit_usaha,
+          source_type: 'adjusting',
+          account_code: l.account_code,
+          account_name: l.account_name,
+          debit: Number(l.debit || 0),
+          credit: Number(l.credit || 0)
+        });
+      });
+    });
+
+    // Sort chronologically and compute running balance
+    rawEntries.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+    let runningBalance = 0;
+    return rawEntries.map(item => {
+      runningBalance += (item.debit - item.credit);
+      return { ...item, balance: runningBalance };
+    });
+  }, [transactions, adjustingJournals, selectedYear, selectedUnit]);
 
   // KPI Computations
   const stats = useMemo(() => {
@@ -478,6 +532,7 @@ export default function App() {
     transaksi: 'Transaksi (Jual & Beli)',
     kas_bank: 'Kas & Bank',
     jurnal: 'Jurnal Umum',
+    jurnal_penyesuaian: 'Jurnal Penyesuaian',
     buku_besar: 'Buku Besar',
     neraca_saldo: 'Neraca Saldo',
     laporan: 'Laporan Keuangan',
@@ -649,6 +704,7 @@ export default function App() {
               <option value="all">Semua Unit</option>
               <option value="perdagangan">Unit Perdagangan</option>
               <option value="jasa">Unit Jasa</option>
+              <option value="kantor">Kantor Pengelola</option>
             </select>
           </div>
 
@@ -725,6 +781,7 @@ export default function App() {
                 { id: 'transaksi', label: 'Transaksi', icon: Receipt, badge: transactions.length ? String(transactions.length) : null },
                 { id: 'kas_bank', label: 'Kas & Bank', icon: Wallet },
                 { id: 'jurnal', label: 'Jurnal Umum', icon: BookOpen },
+                { id: 'jurnal_penyesuaian', label: 'Jurnal Penyesuaian', icon: FileEdit, badge: adjustingJournals.length ? String(adjustingJournals.length) : null },
                 { id: 'buku_besar', label: 'Buku Besar', icon: Layers },
                 { id: 'neraca_saldo', label: 'Neraca Saldo', icon: Scale },
                 { id: 'laporan', label: 'Laporan Keuangan', icon: FileText, highlight: true },
@@ -891,6 +948,18 @@ export default function App() {
           {activeMenu === 'jurnal' && (
             <JurnalUmum
               journals={journals}
+              selectedUnit={selectedUnit}
+              selectedYear={selectedYear}
+            />
+          )}
+
+          {activeMenu === 'jurnal_penyesuaian' && (
+            <JurnalPenyesuaian
+              adjustingJournals={adjustingJournals}
+              setAdjustingJournals={setAdjustingJournals}
+              accounts={accounts}
+              profile={profile}
+              user={user}
               selectedUnit={selectedUnit}
               selectedYear={selectedYear}
             />

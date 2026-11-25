@@ -34,6 +34,10 @@ export default function NeracaSaldo({ journals, accounts }) {
 
   const totalDeb = accountBalances.reduce((s, a) => s + a.debitBal, 0);
   const totalCred = accountBalances.reduce((s, a) => s + a.creditBal, 0);
+  const postedAjeCount = useMemo(
+    () => new Set(journals.filter(j => j.source_type === 'adjusting').map(j => j.tx_number)).size,
+    [journals]
+  );
 
   const handleExportExcel = () => {
     const data = accountBalances.map((a, idx) => ({
@@ -44,16 +48,25 @@ export default function NeracaSaldo({ journals, accounts }) {
       'Saldo Debit (IDR)': a.debitBal,
       'Saldo Kredit (IDR)': a.creditBal
     }));
-    exportToExcel(data, 'Neraca_Saldo_BUMKam', 'Neraca Saldo');
-    toast.success('File Excel Neraca Saldo berhasil diunduh!');
+    exportToExcel(data, 'Neraca_Saldo_Setelah_Penyesuaian_BUMKam', 'Neraca Saldo');
+    toast.success('File Excel Neraca Saldo Setelah Penyesuaian berhasil diunduh!');
   };
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">Neraca Saldo (Trial Balance)</h1>
-          <p className="text-xs text-slate-500 mt-0.5">Daftar saldo penutup setiap perkiraan buku besar sebelum penyesuaian SAK EMKM</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">
+              Neraca Saldo Setelah Penyesuaian (Adjusted Trial Balance)
+            </h1>
+            {postedAjeCount > 0 && (
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                +{postedAjeCount} Jurnal Penyesuaian Posted
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-slate-500 mt-0.5">Daftar saldo buku besar konsolidasi/unit setelah seluruh Jurnal Penyesuaian berstatus Posted masuk secara otomatis (SAK EMKM)</p>
         </div>
         <div className="flex items-center gap-2 print:hidden">
           <button

@@ -27,8 +27,9 @@ export default function LaporanKeuangan({ journals, accounts, transactions, prof
   const expElectricity = accBal('5102');
   const expTransport = accBal('5103');
   const expMaintenance = accBal('5104');
+  const expDepreciation = accBal('5105');
   const expOthers = accBal('5199');
-  const totalExpenses = expSalary + expElectricity + expTransport + expMaintenance + expOthers;
+  const totalExpenses = expSalary + expElectricity + expTransport + expMaintenance + expDepreciation + expOthers;
 
   const netIncome = grossProfit - totalExpenses;
 
@@ -46,7 +47,9 @@ export default function LaporanKeuangan({ journals, accounts, transactions, prof
 
   const tradePayables = accBal('2001');
   const otherPayables = accBal('2101');
-  const totalLiabilities = tradePayables + otherPayables;
+  const accruedExpenses = accBal('2102');
+  const unearnedRevenue = accBal('2201');
+  const totalLiabilities = tradePayables + otherPayables + accruedExpenses + unearnedRevenue;
 
   const initialCapital = accBal('3001');
   const retainedEarnings = accBal('3101') + netIncome;
@@ -80,6 +83,7 @@ export default function LaporanKeuangan({ journals, accounts, transactions, prof
         { Komponen: 'Beban Listrik, Air & Utilitas', 'Nilai (IDR)': expElectricity },
         { Komponen: 'Beban Transportasi & Logistik', 'Nilai (IDR)': expTransport },
         { Komponen: 'Beban Pemeliharaan & Perlengkapan', 'Nilai (IDR)': expMaintenance },
+        { Komponen: 'Beban Penyusutan Aset Tetap', 'Nilai (IDR)': expDepreciation },
         { Komponen: 'Beban Operasional Lainnya', 'Nilai (IDR)': expOthers },
         { Komponen: 'TOTAL BEBAN OPERASIONAL', 'Nilai (IDR)': totalExpenses },
         { Komponen: '', 'Nilai (IDR)': '' },
@@ -112,6 +116,8 @@ export default function LaporanKeuangan({ journals, accounts, transactions, prof
         { Posisi: 'LIABILITAS & EKUITAS', Akun: '', 'Nilai (IDR)': '' },
         { Posisi: 'Liabilitas Jangka Pendek', Akun: 'Utang Usaha', 'Nilai (IDR)': tradePayables },
         { Posisi: 'Liabilitas Jangka Pendek', Akun: 'Utang Lainnya', 'Nilai (IDR)': otherPayables },
+        { Posisi: 'Liabilitas Jangka Pendek', Akun: 'Beban yang Masih Harus Dibayar', 'Nilai (IDR)': accruedExpenses },
+        { Posisi: 'Liabilitas Jangka Pendek', Akun: 'Pendapatan Diterima di Muka', 'Nilai (IDR)': unearnedRevenue },
         { Posisi: 'TOTAL LIABILITAS', Akun: '', 'Nilai (IDR)': totalLiabilities },
         { Posisi: '', Akun: '', 'Nilai (IDR)': '' },
         { Posisi: 'Ekuitas', Akun: 'Modal Disetor BUMMA', 'Nilai (IDR)': initialCapital },
@@ -301,6 +307,10 @@ export default function LaporanKeuangan({ journals, accounts, transactions, prof
                     <span className="font-medium">{formatIDR(expMaintenance)}</span>
                   </div>
                   <div className="flex justify-between">
+                    <span>Beban Penyusutan Aset Tetap</span>
+                    <span className="font-medium">{formatIDR(expDepreciation)}</span>
+                  </div>
+                  <div className="flex justify-between">
                     <span>Beban Operasional Lainnya</span>
                     <span className="font-medium">{formatIDR(expOthers)}</span>
                   </div>
@@ -403,6 +413,8 @@ export default function LaporanKeuangan({ journals, accounts, transactions, prof
                   <div className="space-y-1.5 pl-3">
                     <div className="flex justify-between"><span>Utang Usaha</span><span>{formatIDR(tradePayables)}</span></div>
                     <div className="flex justify-between"><span>Utang Lainnya</span><span>{formatIDR(otherPayables)}</span></div>
+                    <div className="flex justify-between"><span>Beban yang Masih Harus Dibayar</span><span>{formatIDR(accruedExpenses)}</span></div>
+                    <div className="flex justify-between"><span>Pendapatan Diterima di Muka</span><span>{formatIDR(unearnedRevenue)}</span></div>
                     <div className="flex justify-between font-bold border-t border-slate-200 pt-1">
                       <span>Total Liabilitas</span><span>{formatIDR(totalLiabilities)}</span>
                     </div>
