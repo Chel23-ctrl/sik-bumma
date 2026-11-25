@@ -403,7 +403,7 @@ export default function AnalisisKinerja({ journals = [], accounts = [], transact
           <button
             type="button"
             onClick={handleApplyFilter}
-            className="px-6 py-2 rounded-xl bg-[#0a3a2a] hover:bg-[#06291d] text-white font-bold transition shadow-md flex items-center gap-1.5 text-xs"
+            className="px-6 py-2 rounded-xl bg-[#64589F] hover:bg-[#4E4380] text-white font-bold transition shadow-md flex items-center gap-1.5 text-xs"
           >
             Terapkan Filter
           </button>
@@ -549,7 +549,7 @@ export default function AnalisisKinerja({ journals = [], accounts = [], transact
                                 <div
                                   className={`w-full h-full rounded-b-md transition shadow-md ${
                                     isSelected
-                                      ? 'bg-gradient-to-b from-[#0a3a2a] to-emerald-700 text-white'
+                                      ? 'bg-gradient-to-b from-[#64589F] to-emerald-700 text-white'
                                       : 'bg-gradient-to-b from-emerald-600 to-teal-800'
                                   }`}
                                 />

@@ -336,7 +336,7 @@ export default function Transaksi({
 
           <button
             onClick={handleOpenAdd}
-            className="bg-[#0a3a2a] text-white px-4 py-2 rounded-xl text-xs font-bold shadow hover:bg-[#06291d] transition flex items-center gap-1.5"
+            className="bg-[#64589F] text-white px-4 py-2 rounded-xl text-xs font-bold shadow hover:bg-[#4E4380] transition flex items-center gap-1.5"
           >
             <Plus className="w-4 h-4" /> + Catat Transaksi Baru
           </button>
@@ -368,7 +368,7 @@ export default function Transaksi({
                     onClick={() => setPosCategory(cat)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
                       posCategory === cat
-                        ? 'bg-[#0a3a2a] text-white'
+                        ? 'bg-[#64589F] text-white'
                         : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
                     }`}
                   >
@@ -515,7 +515,7 @@ export default function Transaksi({
                 type="button"
                 onClick={handleProcessPos}
                 disabled={posCart.length === 0}
-                className="w-full py-2.5 rounded-xl bg-[#0a3a2a] hover:bg-[#06291d] disabled:opacity-50 text-white font-bold text-xs shadow transition flex items-center justify-center gap-2"
+                className="w-full py-2.5 rounded-xl bg-[#64589F] hover:bg-[#4E4380] disabled:opacity-50 text-white font-bold text-xs shadow transition flex items-center justify-center gap-2"
               >
                 <CheckCircle2 className="w-4 h-4 text-emerald-300" />
                 Bayar &amp; Posting ke Jurnal
@@ -726,11 +726,11 @@ export default function Transaksi({
                       onClick={() => setFormData({ ...formData, transaction_method: m })}
                       className={`py-2 rounded-lg font-bold border text-xs transition ${
                         formData.transaction_method === m
-                          ? 'bg-[#0a3a2a] text-white border-[#0a3a2a] shadow-xs'
+                          ? 'bg-[#64589F] text-white border-[#64589F] shadow-xs'
                           : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300'
                       }`}
                     >
-                      {m === 'Offline' ? '🏬 Offline (Langsung / Fisik)' : '🌐 Online (Toko Digital / WA)'}
+                      {m === 'Offline' ? 'ðŸ¬ Offline (Langsung / Fisik)' : 'ðŸŒ Online (Toko Digital / WA)'}
                     </button>
                   ))}
                 </div>
@@ -881,7 +881,7 @@ export default function Transaksi({
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 rounded-xl bg-[#0a3a2a] text-white font-bold hover:bg-[#06291d]"
+                  className="flex-1 py-2.5 rounded-xl bg-[#64589F] text-white font-bold hover:bg-[#4E4380]"
                 >
                   {editingId ? 'Simpan Perubahan' : 'Simpan Transaksi'}
                 </button>

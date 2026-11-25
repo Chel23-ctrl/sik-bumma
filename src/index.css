@@ -2,6 +2,26 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ARVÉA Lilac Theme Variables (#9A90CC) */
+:root {
+  --arvea-lilac: #9A90CC;
+  --arvea-lilac-light: #EDE9F7;
+  --arvea-lilac-soft: #E3DCF4;
+  --arvea-lilac-mid: #7C6FB8;
+  --arvea-lilac-deep: #64589F;
+  --arvea-lilac-dark: #4E4380;
+  --arvea-ink: #1E1B2E;
+}
+
+html,
+body {
+  background-color: #E7E1F6;
+  background-image: linear-gradient(160deg, #F3F0FA 0%, #E7E1F6 52%, #DDD5F2 100%);
+  background-attachment: fixed;
+  color: var(--arvea-ink);
+  min-height: 100%;
+}
+
 /* Reset & Universal Anti-Clipping Print System */
 * { box-sizing: border-box; }
 

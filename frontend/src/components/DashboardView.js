@@ -21,8 +21,8 @@ export default function DashboardView({ stats, transactions, user, profile, onNa
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Header Title */}
       <div>
-        <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest block mb-1">
-          RINGKASAN KEUANGAN &bull; ARVEA SAK EMKM
+        <span className="text-[11px] font-bold text-[#64589F] dark:text-[#C4B9E5] uppercase tracking-widest block mb-1">
+          RINGKASAN KEUANGAN &bull; ARVÉA SAK EMKM
         </span>
         <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
           Selamat datang, {userName} <span className="text-2xl">👋</span>

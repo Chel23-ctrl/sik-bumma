@@ -1,19 +1,13 @@
 import React, { useEffect, useState } from 'react';
+import ArveaLogo from './ArveaLogo';
 
 /**
- * Fullscreen Splash / Loading Screen bergaya CoreTaxify dengan identitas visual ARVEA.
- *
- * Props:
- * - isLoading (boolean): Mengontrol visibilitas loading screen.
- * - show (boolean): Alias opsional untuk isLoading.
- * - message (string): Teks status kecil opsional di bawah progress bar (mis. "Memuat data...").
- * - brandName (string): Nama brand utama di tengah layar (default: "ARVEA").
+ * Fullscreen Splash / Loading Screen bergaya CoreTaxify dengan identitas visual Lilac (#9A90CC) ARVÉA.
  */
 export default function LoadingScreen({
   isLoading,
   show,
-  message = '',
-  brandName = 'ARVEA'
+  message = ''
 }) {
   const active = Boolean(isLoading ?? show);
   const [shouldRender, setShouldRender] = useState(active);
@@ -25,7 +19,6 @@ export default function LoadingScreen({
 
     if (active) {
       setShouldRender(true);
-      // Trigger smooth fade-in on next animation frame
       rafId = requestAnimationFrame(() => {
         rafId = requestAnimationFrame(() => {
           setVisible(true);
@@ -33,7 +26,6 @@ export default function LoadingScreen({
       });
     } else {
       setVisible(false);
-      // Wait for opacity transition before unmounting
       timerId = setTimeout(() => {
         setShouldRender(false);
       }, 450);
@@ -45,7 +37,6 @@ export default function LoadingScreen({
     };
   }, [active]);
 
-  // Prevent background scrolling while overlay is active
   useEffect(() => {
     if (!active) return;
     const prevOverflow = document.body.style.overflow;
@@ -67,10 +58,10 @@ export default function LoadingScreen({
       }`}
       style={{
         background:
-          'linear-gradient(135deg, #e7f1ec 0%, #f5faf7 46%, #fbfdfb 68%, #e9f3ee 100%)'
+          'linear-gradient(135deg, #E8E3F6 0%, #F5F2FB 46%, #FBF9FE 68%, #E4DDF4 100%)'
       }}
     >
-      {/* Sculpted Minimalist Architectural Curves (CoreTaxify-inspired in soft green off-white) */}
+      {/* Sculpted Minimalist Architectural Curves in Soft Lilac (#9A90CC) */}
       <svg
         className="absolute inset-0 w-full h-full pointer-events-none"
         viewBox="0 0 1440 900"
@@ -78,100 +69,93 @@ export default function LoadingScreen({
         aria-hidden="true"
       >
         <defs>
-          {/* Left sculpted panel gradient */}
-          <linearGradient id="arveaLeftSlope" x1="0%" y1="0%" x2="85%" y2="100%">
-            <stop offset="0%" stopColor="#d7e8df" stopOpacity="0.82" />
-            <stop offset="55%" stopColor="#e8f3ed" stopOpacity="0.68" />
-            <stop offset="100%" stopColor="#f3f9f6" stopOpacity="0.35" />
+          <linearGradient id="arveaLeftSlopeLilac" x1="0%" y1="0%" x2="85%" y2="100%">
+            <stop offset="0%" stopColor="#D7CEEE" stopOpacity="0.85" />
+            <stop offset="55%" stopColor="#EAE4F8" stopOpacity="0.68" />
+            <stop offset="100%" stopColor="#F5F2FB" stopOpacity="0.35" />
           </linearGradient>
 
-          {/* Subtle ridge highlight */}
-          <linearGradient id="arveaRidgeLight" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.95" />
-            <stop offset="50%" stopColor="#ffffff" stopOpacity="0.7" />
-            <stop offset="100%" stopColor="#d1fae5" stopOpacity="0.2" />
+          <linearGradient id="arveaRidgeLightLilac" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.95" />
+            <stop offset="50%" stopColor="#FFFFFF" stopOpacity="0.72" />
+            <stop offset="100%" stopColor="#DDD6F0" stopOpacity="0.25" />
           </linearGradient>
 
-          {/* Bottom-right translucent curved ribbon */}
-          <linearGradient id="arveaBottomArc" x1="0%" y1="100%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#0a3a2a" stopOpacity="0.14" />
-            <stop offset="50%" stopColor="#10b981" stopOpacity="0.1" />
-            <stop offset="100%" stopColor="#ffffff" stopOpacity="0.65" />
+          <linearGradient id="arveaBottomArcLilac" x1="0%" y1="100%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#9A90CC" stopOpacity="0.28" />
+            <stop offset="50%" stopColor="#7C6FB8" stopOpacity="0.14" />
+            <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.65" />
           </linearGradient>
 
-          {/* Soft shadow filter for architectural depth */}
-          <filter id="arveaSoftShadow" x="-10%" y="-10%" width="120%" height="120%">
-            <feDropShadow dx="6" dy="10" stdDeviation="14" floodColor="#0a3a2a" floodOpacity="0.08" />
+          <filter id="arveaSoftShadowLilac" x="-10%" y="-10%" width="120%" height="120%">
+            <feDropShadow dx="6" dy="10" stdDeviation="14" floodColor="#4E4380" floodOpacity="0.1" />
           </filter>
         </defs>
 
-        {/* Sweeping left-to-bottom diagonal curve */}
         <path
           d="M 0,0 L 145,0 C 375,245 555,580 1070,900 L 0,900 Z"
-          fill="url(#arveaLeftSlope)"
+          fill="url(#arveaLeftSlopeLilac)"
         />
-
-        {/* Raised ridge highlight along the curve */}
         <path
           d="M 145,0 C 375,245 555,580 1070,900"
           fill="none"
-          stroke="url(#arveaRidgeLight)"
+          stroke="url(#arveaRidgeLightLilac)"
           strokeWidth="4"
-          filter="url(#arveaSoftShadow)"
+          filter="url(#arveaSoftShadowLilac)"
         />
         <path
           d="M 149,0 C 379,245 559,580 1074,900"
           fill="none"
-          stroke="#0a3a2a"
-          strokeOpacity="0.045"
+          stroke="#4E4380"
+          strokeOpacity="0.06"
           strokeWidth="2"
         />
 
-        {/* Bottom-right glossy curved accent */}
         <path
           d="M 1035,900 C 1105,745 1265,670 1440,665 L 1440,900 Z"
-          fill="url(#arveaBottomArc)"
+          fill="url(#arveaBottomArcLilac)"
         />
         <path
           d="M 1035,900 C 1105,745 1265,670 1440,665"
           fill="none"
-          stroke="#ffffff"
-          strokeOpacity="0.85"
+          stroke="#FFFFFF"
+          strokeOpacity="0.88"
           strokeWidth="3"
         />
         <path
           d="M 1068,900 C 1132,768 1278,702 1440,698"
           fill="none"
-          stroke="#0f766e"
-          strokeOpacity="0.09"
+          stroke="#64589F"
+          strokeOpacity="0.12"
           strokeWidth="2"
         />
       </svg>
 
-      {/* Embossed Circular "AR" Watermark on the Right (CoreTaxify-style architectural relief) */}
+      {/* Embossed Circular Watermark on the Right */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute -right-24 sm:-right-20 md:-right-16 top-1/2 -translate-y-[58%] w-[320px] h-[320px] sm:w-[440px] sm:h-[440px] md:w-[540px] md:h-[540px] rounded-full flex items-center justify-center"
         style={{
-          background: 'linear-gradient(145deg, #f8fcf9 0%, #eaf3ee 100%)',
+          background: 'linear-gradient(145deg, #F8F6FD 0%, #EAE4F7 100%)',
           boxShadow:
-            '-14px -14px 32px rgba(255, 255, 255, 0.9), 18px 22px 42px rgba(10, 58, 42, 0.085), inset 6px 6px 14px rgba(255, 255, 255, 0.85)'
+            '-14px -14px 32px rgba(255, 255, 255, 0.92), 18px 22px 42px rgba(78, 67, 128, 0.1), inset 6px 6px 14px rgba(255, 255, 255, 0.85)'
         }}
       >
         <div
           className="w-[82%] h-[82%] rounded-full flex items-center justify-center"
           style={{
-            background: 'linear-gradient(145deg, #eef6f1 0%, #f9fcfa 100%)',
+            background: 'linear-gradient(145deg, #EFEBF9 0%, #FAF8FE 100%)',
             boxShadow:
-              'inset 10px 12px 24px rgba(10, 58, 42, 0.065), inset -10px -10px 24px rgba(255, 255, 255, 0.92)'
+              'inset 10px 12px 24px rgba(78, 67, 128, 0.08), inset -10px -10px 24px rgba(255, 255, 255, 0.92)'
           }}
         >
           <span
             className="font-black tracking-tighter text-[120px] sm:text-[165px] md:text-[210px] leading-none pr-6"
             style={{
-              color: '#eef6f2',
+              fontFamily: "'Playfair Display', Georgia, serif",
+              color: '#EEEAF9',
               textShadow:
-                '-4px -4px 10px rgba(255, 255, 255, 0.95), 6px 8px 16px rgba(10, 58, 42, 0.09)'
+                '-4px -4px 10px rgba(255, 255, 255, 0.96), 6px 8px 16px rgba(78, 67, 128, 0.12)'
             }}
           >
             AR
@@ -179,45 +163,34 @@ export default function LoadingScreen({
         </div>
       </div>
 
-      {/* Subtle Ambient Brand Glow */}
+      {/* Subtle Ambient Lilac Glow */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute w-72 h-72 rounded-full blur-3xl opacity-45"
         style={{
           background:
-            'radial-gradient(circle, rgba(16, 185, 129, 0.14) 0%, rgba(245, 158, 11, 0.06) 55%, transparent 75%)'
+            'radial-gradient(circle, rgba(154, 144, 204, 0.24) 0%, rgba(124, 111, 184, 0.1) 55%, transparent 75%)'
         }}
       />
 
-      {/* Hero Center: Brand Wordmark + Thin Indeterminate Shimmer Progress Bar */}
+      {/* Hero Center: New ARVÉA Diamond Logo + Thin Indeterminate Lilac Shimmer Progress Bar */}
       <div className="relative z-10 flex flex-col items-center justify-center px-6 text-center animate-arvea-logo">
-        {/* Wordmark */}
-        <div className="flex items-center gap-2.5">
-          <span
-            className="text-4xl sm:text-5xl font-black tracking-[0.06em] bg-clip-text text-transparent"
-            style={{
-              backgroundImage:
-                'linear-gradient(90deg, #064e3b 0%, #0a3a2a 24%, #059669 58%, #10b981 78%, #d97706 100%)'
-            }}
-          >
-            {brandName}
-          </span>
-        </div>
+        <ArveaLogo variant="stacked" theme="lilac" size="lg" />
 
-        {/* Thin Indeterminate Gradient Loading Bar */}
-        <div className="mt-3.5 w-44 sm:w-52 h-[3px] rounded-full bg-[#0a3a2a]/10 overflow-hidden relative">
+        {/* Thin Indeterminate Lilac Loading Bar */}
+        <div className="mt-4 w-48 sm:w-56 h-[3px] rounded-full bg-[#64589F]/15 overflow-hidden relative">
           <div
             className="absolute inset-y-0 left-0 w-1/2 rounded-full animate-arvea-progress"
             style={{
               backgroundImage:
-                'linear-gradient(90deg, transparent 0%, #0a3a2a 20%, #10b981 55%, #f59e0b 82%, transparent 100%)'
+                'linear-gradient(90deg, transparent 0%, #524788 22%, #9A90CC 55%, #C4B9E5 82%, transparent 100%)'
             }}
           />
         </div>
 
         {/* Optional Status Message */}
         {message && (
-          <p className="mt-3.5 text-[11px] sm:text-xs font-semibold tracking-wide text-[#0a3a2a]/65 transition-opacity duration-300">
+          <p className="mt-3.5 text-[11px] sm:text-xs font-semibold tracking-wide text-[#4E4380]/75 transition-opacity duration-300">
             {message}
           </p>
         )}

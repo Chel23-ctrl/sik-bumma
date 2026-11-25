@@ -22,6 +22,7 @@ import {
 import { formatIDR } from './Transaksi';
 import SectorBackground from './SectorBackground';
 import ScrollToTopButton from './ScrollToTopButton';
+import ArveaLogo from './ArveaLogo';
 
 // 3 Official Core Services & Products with Multiple High-Res Images
 export const DEFAULT_CORE_PRODUCTS = [
@@ -54,7 +55,7 @@ export const DEFAULT_CORE_PRODUCTS = [
       'Mendukung kemandirian pangan masyarakat adat'
     ],
     whatsappMsg: 'Halo BUMKam Mekar Sari, saya ingin informasi pemesanan Telur Ayam Lokal',
-    floatingBadge: '🥚 60+ Rak Telur Baru Dipanen Pagi Ini'
+    floatingBadge: 'ðŸ¥š 60+ Rak Telur Baru Dipanen Pagi Ini'
   },
   {
     id: 'core_2',
@@ -85,7 +86,7 @@ export const DEFAULT_CORE_PRODUCTS = [
       'Dapat dikombinasikan dengan meja & kursi acara'
     ],
     whatsappMsg: 'Halo BUMKam Mekar Sari, saya ingin konsultasi jadwal Penyewaan Tenda Acara',
-    floatingBadge: '⛺ Tim Siap Antar & Pasang di Lokasi'
+    floatingBadge: 'â›º Tim Siap Antar & Pasang di Lokasi'
   },
   {
     id: 'core_3',
@@ -116,7 +117,7 @@ export const DEFAULT_CORE_PRODUCTS = [
       'Kebersihan dan keamanan gedung terjaga oleh pengurus'
     ],
     whatsappMsg: 'Halo BUMKam Mekar Sari, saya ingin cek ketersediaan Gedung Serbaguna',
-    floatingBadge: '🏛️ Fasilitas Sound System & Panggung Lengkap'
+    floatingBadge: 'ðŸ›ï¸ Fasilitas Sound System & Panggung Lengkap'
   }
 ];
 
@@ -179,61 +180,60 @@ export default function StorefrontUlambox({ onOpenBackoffice, profile = {}, core
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col selection:bg-emerald-500 selection:text-white">
+    <div className="min-h-screen bg-gradient-to-b from-[#F4F1FA] via-[#EDE8F7] to-[#E6E0F4] text-[#1E1B2E] flex flex-col selection:bg-[#9A90CC] selection:text-white">
       
       {/* 1. TOP ANNOUNCEMENT BAR */}
-      <div className="bg-[#0a3a2a] text-white text-[11px] font-semibold py-2 px-4 text-center flex items-center justify-center gap-2">
-        <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-        <span>ARVEA &bull; Financial Management System BUMKam Mekar Sari Kampung Sabron Sari &bull; &ldquo;Satu Nilai, Satu Tujuan, Bertumbuh Bersama&rdquo; &bull; Standar SAK EMKM</span>
+      <div className="bg-[#524788] text-white text-[11px] font-semibold py-2 px-4 text-center flex items-center justify-center gap-2">
+        <Sparkles className="w-3.5 h-3.5 text-amber-200 animate-pulse" />
+        <span>ARVÃ‰A &bull; Financial Management System BUMKam Mekar Sari Kampung Sabron Sari &bull; &ldquo;Satu Nilai, Satu Tujuan, Bertumbuh Bersama&rdquo; &bull; Standar SAK EMKM</span>
       </div>
 
       {/* 2. MAIN HEADER & NAVBAR */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200 shadow-xs">
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-[#9A90CC]/30 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           
-          {/* Brand Logo */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0a3a2a] to-emerald-700 text-white flex items-center justify-center font-black text-sm shadow-md transition transform hover:scale-105">
-              AR
-            </div>
-            <div>
-              <span className="text-xs font-black tracking-widest text-[#0a3a2a] uppercase block leading-none">
-                ARVEA &bull; BUMKAM MEKAR SARI
-              </span>
-              <span className="text-[10px] text-slate-400 font-medium">
-                Kampung Sabron Sari &bull; Sentani Barat
-              </span>
-            </div>
-          </div>
+          {/* Brand Logo ARVÃ‰A */}
+          <ArveaLogo
+            variant="horizontal"
+            theme="lilac"
+            size="sm"
+            subtitle="BUMKam Mekar Sari â€¢ Kampung Sabron Sari"
+          />
 
           {/* Nav Links */}
-          <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-600">
-            <a href="#beranda" className="hover:text-emerald-700 transition">Beranda</a>
-            <a href="#komoditas" className="hover:text-emerald-700 transition">Komoditas &amp; Layanan</a>
-            <a href="#impact" className="hover:text-emerald-700 transition">BUMKam Impact</a>
-            <a href="#kontak" className="hover:text-emerald-700 transition">Kontak Kami</a>
+          <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-700">
+            <a href="#beranda" className="hover:text-[#64589F] transition">Beranda</a>
+            <a href="#komoditas" className="hover:text-[#64589F] transition">Komoditas &amp; Layanan</a>
+            <a href="#impact" className="hover:text-[#64589F] transition">BUMKam Impact</a>
+            <a href="#kontak" className="hover:text-[#64589F] transition">Kontak Kami</a>
           </nav>
 
-          {/* Switcher to ARVEA (Internal Accounting Portal) */}
+          {/* Switcher to ARVÃ‰A (Internal Accounting Portal) */}
           <div className="flex items-center gap-2">
             <button
               onClick={onOpenBackoffice}
-              className="px-4 py-2 rounded-xl bg-[#0a3a2a] hover:bg-[#06291d] text-white font-bold text-xs transition flex items-center gap-1.5 shadow-sm transform hover:-translate-y-0.5"
-              title="Masuk ke Sistem Informasi Keuangan BUMKam (ARVEA)"
+              className="px-4 py-2 rounded-xl bg-[#64589F] hover:bg-[#4E4380] text-white font-bold text-xs transition flex items-center gap-1.5 shadow-sm transform hover:-translate-y-0.5"
+              title="Masuk ke Sistem Informasi Keuangan BUMKam (ARVÃ‰A)"
             >
-              <Store className="w-4 h-4 text-emerald-300" />
-              <span>Portal Keuangan (ARVEA)</span>
-              <ChevronRight className="w-3.5 h-3.5 opacity-70" />
+              <Store className="w-4 h-4 text-[#DDD6F0]" />
+              <span>Portal Keuangan (ARVÃ‰A)</span>
+              <ChevronRight className="w-3.5 h-3.5 opacity-80" />
             </button>
           </div>
         </div>
       </header>
 
       {/* 3. HERO BANNER WITH ANIMATED VISUAL CENTERPIECE */}
-      <section id="beranda" className="bg-gradient-to-r from-[#0a3a2a] via-[#0c4a36] to-emerald-800 text-white relative overflow-hidden py-14 md:py-24 px-4 sm:px-6 lg:px-8">
+      <section
+        id="beranda"
+        className="text-white relative overflow-hidden py-14 md:py-24 px-4 sm:px-6 lg:px-8"
+        style={{
+          background: 'linear-gradient(135deg, #564A8E 0%, #7C6FB8 50%, #9A90CC 100%)'
+        }}
+      >
         {/* Animated Glow Blobs */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none animate-pulse-glow" />
-        <div className="absolute bottom-10 right-10 w-80 h-80 bg-amber-400/10 rounded-full blur-3xl pointer-events-none animate-pulse-glow" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-white/15 rounded-full blur-3xl pointer-events-none animate-pulse-glow" />
+        <div className="absolute bottom-10 right-10 w-80 h-80 bg-[#DDD6F0]/20 rounded-full blur-3xl pointer-events-none animate-pulse-glow" style={{ animationDelay: '2s' }} />
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
         
         {/* Transparent Sector Background Animations */}
@@ -243,21 +243,21 @@ export default function StorefrontUlambox({ onOpenBackoffice, profile = {}, core
           
           {/* Left Hero Text (7 Cols) */}
           <div className="lg:col-span-7 text-center lg:text-left">
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-extrabold uppercase tracking-wider mb-4">
-              <Award className="w-3.5 h-3.5 text-amber-400" /> Badan Usaha Milik Kampung Adat
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white/20 border border-white/30 text-white text-xs font-extrabold uppercase tracking-wider mb-4">
+              <Award className="w-3.5 h-3.5 text-amber-200" /> Badan Usaha Milik Kampung Adat
             </span>
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight leading-tight mb-5">
               Komoditas Peternakan &amp; Layanan Mandiri BUMKam Mekar Sari.
             </h1>
-            <p className="text-emerald-100/90 text-sm sm:text-base leading-relaxed mb-7 font-normal max-w-2xl">
+            <p className="text-white/90 text-sm sm:text-base leading-relaxed mb-7 font-normal max-w-2xl">
               Menggerakkan ekonomi lokal masyarakat adat Jayapura melalui peternakan telur ayam berkualitas, penyediaan sarana tenda pesta representatif, dan fasilitas gedung serbaguna terpadu.
             </p>
             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3.5">
               <a
                 href="#komoditas"
-                className="px-6 py-3.5 rounded-xl bg-white text-[#0a3a2a] font-extrabold text-xs shadow-xl hover:bg-emerald-50 transition transform hover:-translate-y-0.5 flex items-center gap-2"
+                className="px-6 py-3.5 rounded-xl bg-white text-[#4E4380] font-extrabold text-xs shadow-xl hover:bg-[#F4F1FA] transition transform hover:-translate-y-0.5 flex items-center gap-2"
               >
-                Lihat Komoditas &amp; Layanan <ChevronRight className="w-4 h-4 text-emerald-700" />
+                Lihat Komoditas &amp; Layanan <ChevronRight className="w-4 h-4 text-[#64589F]" />
               </a>
               <a
                 href="#kontak"
@@ -316,7 +316,7 @@ export default function StorefrontUlambox({ onOpenBackoffice, profile = {}, core
               {/* Floating Animated Badge 1 (Top Right) */}
               <div className="absolute -top-4 -right-3 sm:-right-4 bg-white text-slate-900 px-3.5 py-2.5 rounded-2xl shadow-xl border border-emerald-100 flex items-center gap-2.5 animate-float z-20">
                 <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold">
-                  ⭐
+                  â­
                 </div>
                 <div className="text-left">
                   <p className="text-[10px] font-extrabold text-slate-400 uppercase leading-none">Rating Pelayanan</p>
@@ -325,9 +325,9 @@ export default function StorefrontUlambox({ onOpenBackoffice, profile = {}, core
               </div>
 
               {/* Floating Animated Badge 2 (Bottom Left) */}
-              <div className="absolute -bottom-5 -left-3 sm:-left-5 bg-[#0a3a2a] text-white px-3.5 py-2.5 rounded-2xl shadow-xl border border-emerald-500/30 flex items-center gap-2.5 animate-float-delayed z-20">
+              <div className="absolute -bottom-5 -left-3 sm:-left-5 bg-[#64589F] text-white px-3.5 py-2.5 rounded-2xl shadow-xl border border-emerald-500/30 flex items-center gap-2.5 animate-float-delayed z-20">
                 <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center font-bold">
-                  🥚
+                  ðŸ¥š
                 </div>
                 <div className="text-left">
                   <p className="text-[10px] font-extrabold text-emerald-300 uppercase leading-none">Stok Hari Ini</p>
@@ -449,7 +449,7 @@ export default function StorefrontUlambox({ onOpenBackoffice, profile = {}, core
 
                     {/* Top Badges */}
                     <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none">
-                      <span className="px-3 py-1 rounded-full text-[10px] font-extrabold bg-[#0a3a2a]/90 backdrop-blur text-white shadow-md border border-white/20">
+                      <span className="px-3 py-1 rounded-full text-[10px] font-extrabold bg-[#64589F]/90 backdrop-blur text-white shadow-md border border-white/20">
                         #{pIdx + 1} &bull; {prod.category}
                       </span>
                       <button
@@ -546,7 +546,7 @@ export default function StorefrontUlambox({ onOpenBackoffice, profile = {}, core
                     href={`https://wa.me/6281240001122?text=${encodeURIComponent(prod.whatsappMsg)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full py-3.5 rounded-xl bg-[#0a3a2a] hover:bg-[#06291d] text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-sm transform hover:scale-[1.02]"
+                    className="w-full py-3.5 rounded-xl bg-[#64589F] hover:bg-[#4E4380] text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-sm transform hover:scale-[1.02]"
                   >
                     <MessageCircle className="w-4 h-4 text-emerald-400" />
                     Hubungi Layanan &amp; Pemesanan
@@ -591,7 +591,7 @@ export default function StorefrontUlambox({ onOpenBackoffice, profile = {}, core
               </div>
               <button
                 onClick={() => setLightboxImg(null)}
-                className="px-4 py-2 bg-[#0a3a2a] text-white font-bold text-xs rounded-xl hover:bg-[#06291d]"
+                className="px-4 py-2 bg-[#64589F] text-white font-bold text-xs rounded-xl hover:bg-[#4E4380]"
               >
                 Tutup
               </button>
@@ -632,10 +632,10 @@ export default function StorefrontUlambox({ onOpenBackoffice, profile = {}, core
               </a>
               <button
                 onClick={onOpenBackoffice}
-                className="px-6 py-3.5 rounded-xl bg-white text-[#0a3a2a] font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg hover:bg-emerald-50 transition transform hover:scale-105"
+                className="px-6 py-3.5 rounded-xl bg-white text-[#4E4380] font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg hover:bg-[#F4F1FA] transition transform hover:scale-105"
               >
-                <Store className="w-4 h-4 text-emerald-700" />
-                Portal ARVEA
+                <Store className="w-4 h-4 text-[#64589F]" />
+                Portal ARVÃ‰A
               </button>
             </div>
           </div>
@@ -643,42 +643,42 @@ export default function StorefrontUlambox({ onOpenBackoffice, profile = {}, core
       </section>
 
       {/* 8. FOOTER RESMI */}
-      <footer className="bg-slate-900 text-white pt-12 pb-8 border-t border-slate-800">
+      <footer className="bg-[#2D254D] text-white pt-12 pb-8 border-t border-[#9A90CC]/25">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 text-xs">
           <div className="md:col-span-2 space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-black">
-                AR
-              </div>
-              <span className="font-bold text-sm tracking-wide uppercase">ARVEA &bull; BUMKAM MEKAR SARI</span>
-            </div>
-            <p className="text-slate-400 leading-relaxed max-w-md">
+            <ArveaLogo
+              variant="horizontal"
+              theme="light"
+              size="sm"
+              subtitle="BUMKam Mekar Sari â€¢ Kampung Sabron Sari"
+            />
+            <p className="text-white/75 leading-relaxed max-w-md">
               Badan Usaha Milik Kampung (BUMKam) Mekar Sari Kampung Sabron Sari. Mengelola peternakan telur ayam lokal, persewaan tenda acara, dan persewaan gedung serbaguna berstandar SAK EMKM.
             </p>
-            <p className="text-emerald-400 font-medium">
+            <p className="text-[#C4B9E5] font-medium">
               Kampung Sabron Sari &bull; Distrik Sentani Barat &bull; Kabupaten Jayapura, Papua
             </p>
           </div>
 
           <div className="space-y-2">
-            <p className="font-bold text-slate-200 uppercase tracking-wider text-[11px]">Kontak &amp; Operasional</p>
-            <ul className="space-y-1.5 text-slate-400">
-              <li className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5 text-emerald-400" /> WhatsApp: 0812-4000-1122</li>
-              <li className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-emerald-400" /> Buka: Senin - Sabtu (08:00 - 17:00 WIT)</li>
-              <li className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-emerald-400" /> Sentani, Kab. Jayapura</li>
+            <p className="font-bold text-white uppercase tracking-wider text-[11px]">Kontak &amp; Operasional</p>
+            <ul className="space-y-1.5 text-white/75">
+              <li className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5 text-[#C4B9E5]" /> WhatsApp: 0812-4000-1122</li>
+              <li className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-[#C4B9E5]" /> Buka: Senin - Sabtu (08:00 - 17:00 WIT)</li>
+              <li className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-[#C4B9E5]" /> Sentani, Kab. Jayapura</li>
             </ul>
           </div>
 
           <div className="space-y-2">
-            <p className="font-bold text-slate-200 uppercase tracking-wider text-[11px]">Portal Pengurus BUMKam</p>
-            <p className="text-slate-400 leading-relaxed">
+            <p className="font-bold text-white uppercase tracking-wider text-[11px]">Portal Pengurus BUMKam</p>
+            <p className="text-white/75 leading-relaxed">
               Khusus pengurus, bendahara, direktur, dan pengawas BUMKam untuk pembukuan jurnal dan laporan SAK EMKM.
             </p>
             <button
               onClick={onOpenBackoffice}
-              className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-800 hover:bg-emerald-700 text-white font-bold text-[11px]"
+              className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#64589F] hover:bg-[#7C6FB8] text-white font-bold text-[11px]"
             >
-              <LogIn className="w-3.5 h-3.5" /> Masuk Portal ARVEA
+              <LogIn className="w-3.5 h-3.5" /> Masuk Portal ARVÃ‰A
             </button>
           </div>
         </div>

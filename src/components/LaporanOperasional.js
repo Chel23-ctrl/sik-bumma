@@ -94,7 +94,7 @@ export default function LaporanOperasional({ transactions, products }) {
             key={t.id}
             onClick={() => setTab(t.id)}
             className={`px-3.5 py-2 rounded-xl font-bold transition whitespace-nowrap ${
-              tab === t.id ? 'bg-[#0a3a2a] text-white shadow' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50'
+              tab === t.id ? 'bg-[#64589F] text-white shadow' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50'
             }`}
           >
             {t.label}

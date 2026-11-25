@@ -193,7 +193,7 @@ export default function LaporanKeuangan({ journals, accounts, transactions, prof
           </button>
           <button
             onClick={() => window.print()}
-            className="bg-[#0a3a2a] text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow hover:bg-[#06291d] transition flex items-center gap-2 self-start"
+            className="bg-[#64589F] text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow hover:bg-[#4E4380] transition flex items-center gap-2 self-start"
           >
             <Printer className="w-4 h-4" /> Cetak Laporan Resmi (PDF)
           </button>
@@ -214,7 +214,7 @@ export default function LaporanKeuangan({ journals, accounts, transactions, prof
             onClick={() => setActiveReport(tab.id)}
             className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition ${
               activeReport === tab.id
-                ? 'bg-[#0a3a2a] text-white shadow'
+                ? 'bg-[#64589F] text-white shadow'
                 : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50'
             }`}
           >

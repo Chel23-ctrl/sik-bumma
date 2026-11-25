@@ -11,6 +11,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
+import ArveaLogo from './ArveaLogo';
 
 const DEFAULT_BLOCKED_PASSWORDS = ['bummamekarsari2026!', 'bumma123!', 'admin123', 'arvea2026!', 'arvea123'];
 
@@ -81,19 +82,27 @@ export default function FirstTimePasswordGuard({
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a3a2a] via-[#0d4a36] to-[#06291d] p-4 sm:p-6">
-      <div className="max-w-lg w-full bg-white rounded-3xl shadow-2xl border border-emerald-200/40 overflow-hidden">
+    <div
+      className="min-h-screen flex items-center justify-center p-4 sm:p-6"
+      style={{
+        background: 'linear-gradient(145deg, #5A4F96 0%, #8377BC 50%, #9A90CC 100%)'
+      }}
+    >
+      <div className="max-w-lg w-full bg-white rounded-3xl shadow-2xl border border-[#9A90CC]/40 overflow-hidden">
         {/* Top Security Banner */}
-        <div className="bg-gradient-to-r from-amber-50 to-emerald-50 border-b border-amber-200/80 px-6 py-5">
+        <div className="bg-gradient-to-r from-[#F4F1FA] to-[#EAE5F7] border-b border-[#9A90CC]/35 px-6 py-5">
+          <div className="flex items-center justify-between mb-3">
+            <ArveaLogo variant="horizontal" theme="lilac" size="sm" />
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-black uppercase tracking-wider border border-amber-200">
+              Proteksi Login Perdana
+            </span>
+          </div>
           <div className="flex items-start gap-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-amber-100 border border-amber-300 text-amber-700 flex items-center justify-center shrink-0 shadow-xs">
+            <div className="w-11 h-11 rounded-2xl bg-[#9A90CC]/20 border border-[#9A90CC]/40 text-[#524788] flex items-center justify-center shrink-0 shadow-xs">
               <ShieldAlert className="w-6 h-6" />
             </div>
             <div>
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-200/70 text-amber-900 text-[10px] font-black uppercase tracking-wider">
-                Proteksi Login Perdana &bull; ARVEA
-              </span>
-              <h1 className="text-lg sm:text-xl font-black text-slate-900 mt-1">
+              <h1 className="text-lg sm:text-xl font-black text-[#1E1B2E]">
                 Wajib Ubah Kredensial Awal
               </h1>
               <p className="text-xs text-slate-600 mt-1 leading-relaxed">
@@ -198,9 +207,9 @@ export default function FirstTimePasswordGuard({
             <button
               type="submit"
               disabled={!canSubmit}
-              className="w-full py-3 px-4 rounded-xl bg-[#0a3a2a] hover:bg-[#06291d] disabled:opacity-45 disabled:cursor-not-allowed text-white font-bold shadow-md transition flex items-center justify-center gap-2 text-xs"
+              className="w-full py-3 px-4 rounded-xl bg-[#64589F] hover:bg-[#4E4380] disabled:opacity-45 disabled:cursor-not-allowed text-white font-bold shadow-md transition flex items-center justify-center gap-2 text-xs"
             >
-              <KeyRound className="w-4 h-4 text-emerald-300" />
+              <KeyRound className="w-4 h-4 text-white/90" />
               {isSubmitting ? 'Menyimpan Kredensial...' : 'Simpan Kredensial & Masuk ke Dashboard'}
             </button>
 

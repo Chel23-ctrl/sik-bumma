@@ -64,7 +64,7 @@ export default function ScrollToTopButton({ targetRef = null }) {
   return (
     <button
       onClick={handleScrollToTop}
-      className={`fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full bg-[#0a3a2a] hover:bg-[#06291d] text-white border-2 border-emerald-400/60 flex items-center justify-center transition-all duration-300 transform hover:-translate-y-1 hover:scale-110 active:scale-95 group focus:outline-none focus:ring-4 focus:ring-emerald-500/30 cursor-pointer print:hidden ${
+      className={`fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full bg-[#64589F] hover:bg-[#4E4380] text-white border-2 border-emerald-400/60 flex items-center justify-center transition-all duration-300 transform hover:-translate-y-1 hover:scale-110 active:scale-95 group focus:outline-none focus:ring-4 focus:ring-emerald-500/30 cursor-pointer print:hidden ${
         isScrolled 
           ? 'opacity-100 shadow-2xl scale-100 ring-2 ring-emerald-400/40 animate-pulse-subtle' 
           : 'opacity-85 hover:opacity-100 scale-95 shadow-xl'

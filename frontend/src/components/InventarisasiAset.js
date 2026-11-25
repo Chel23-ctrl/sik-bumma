@@ -937,7 +937,7 @@ export default function InventarisasiAset({
 
           <button
             onClick={handleOpenAdd}
-            className="px-4 py-2 bg-[#0a3a2a] hover:bg-[#06291d] text-white rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5"
+            className="px-4 py-2 bg-[#64589F] hover:bg-[#4E4380] text-white rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5"
           >
             <Plus className="w-4 h-4" /> + Tambah Aset
           </button>
@@ -1077,7 +1077,7 @@ export default function InventarisasiAset({
             onClick={() => setActiveTab('list')}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
               activeTab === 'list'
-                ? 'bg-[#0a3a2a] text-white shadow-sm'
+                ? 'bg-[#64589F] text-white shadow-sm'
                 : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 border border-slate-200 dark:border-slate-700'
             }`}
           >
@@ -1089,7 +1089,7 @@ export default function InventarisasiAset({
             onClick={() => setActiveTab('logs')}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
               activeTab === 'logs'
-                ? 'bg-[#0a3a2a] text-white shadow-sm'
+                ? 'bg-[#64589F] text-white shadow-sm'
                 : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 border border-slate-200 dark:border-slate-700'
             }`}
           >
@@ -1112,7 +1112,7 @@ export default function InventarisasiAset({
               onClick={() => setUnitTab('all')}
               className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
                 unitTab === 'all'
-                  ? 'bg-[#0a3a2a] text-white shadow-xs'
+                  ? 'bg-[#64589F] text-white shadow-xs'
                   : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >
@@ -1612,7 +1612,7 @@ export default function InventarisasiAset({
                 </select>
                 {availableMasterProducts.length === 0 && (
                   <p className="text-[11px] text-amber-700 dark:text-amber-300 mt-1.5">
-                    ⚠️ Belum ada produk dengan Perlakuan Produk "{formData.asset_type}" di Master Data. Silakan tambahkan atau ubah perlakuan produk di menu Master Data terlebih dahulu.
+                    âš ï¸ Belum ada produk dengan Perlakuan Produk "{formData.asset_type}" di Master Data. Silakan tambahkan atau ubah perlakuan produk di menu Master Data terlebih dahulu.
                   </p>
                 )}
               </div>
@@ -1941,9 +1941,9 @@ export default function InventarisasiAset({
                     onChange={(e) => setFormData({ ...formData, condition: e.target.value })}
                     className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 font-semibold"
                   >
-                    <option value="Baik">🟢 Baik</option>
-                    <option value="Rusak Ringan">🟡 Rusak Ringan</option>
-                    <option value="Rusak Berat">🔴 Rusak Berat</option>
+                    <option value="Baik">ðŸŸ¢ Baik</option>
+                    <option value="Rusak Ringan">ðŸŸ¡ Rusak Ringan</option>
+                    <option value="Rusak Berat">ðŸ”´ Rusak Berat</option>
                   </select>
                 </div>
 
@@ -2014,7 +2014,7 @@ export default function InventarisasiAset({
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-[#0a3a2a] hover:bg-[#06291d] text-white font-bold flex items-center gap-1.5 shadow"
+                  className="px-5 py-2 rounded-xl bg-[#64589F] hover:bg-[#4E4380] text-white font-bold flex items-center gap-1.5 shadow"
                 >
                   <Save className="w-4 h-4 text-emerald-300" /> Simpan Data Aset
                 </button>

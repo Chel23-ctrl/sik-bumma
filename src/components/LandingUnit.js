@@ -14,7 +14,7 @@ export default function LandingUnit({
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
       {/* Welcome Banner */}
-      <div className="bg-gradient-to-r from-[#0a3a2a] to-[#125940] rounded-2xl p-6 md:p-8 text-white shadow-md relative overflow-hidden">
+      <div className="bg-gradient-to-r from-[#64589F] to-[#125940] rounded-2xl p-6 md:p-8 text-white shadow-md relative overflow-hidden">
         <div className="relative z-10">
           <div className="inline-flex items-center gap-2 bg-emerald-500/20 text-emerald-200 px-3 py-1 rounded-full text-xs font-semibold mb-3 border border-emerald-400/30">
             <ShieldCheck className="w-3.5 h-3.5" /> ARVEA &bull; Portal Siklus Akuntansi SAK EMKM
@@ -29,7 +29,7 @@ export default function LandingUnit({
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <button
               onClick={() => onNavigate('transaksi')}
-              className="bg-white text-[#0a3a2a] px-4 py-2.5 rounded-xl font-bold text-xs hover:bg-emerald-50 transition shadow flex items-center gap-2"
+              className="bg-white text-[#64589F] px-4 py-2.5 rounded-xl font-bold text-xs hover:bg-emerald-50 transition shadow flex items-center gap-2"
             >
               <Plus className="w-4 h-4" /> Catat Transaksi Baru
             </button>

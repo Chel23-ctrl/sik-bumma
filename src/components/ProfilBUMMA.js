@@ -159,7 +159,7 @@ export default function ProfilBUMMA({ profile, setProfile }) {
         <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
           <button
             type="submit"
-            className="bg-[#0a3a2a] text-white px-6 py-2.5 rounded-xl font-bold hover:bg-[#06291d] shadow transition"
+            className="bg-[#64589F] text-white px-6 py-2.5 rounded-xl font-bold hover:bg-[#4E4380] shadow transition"
           >
             Simpan Perubahan Profil
           </button>

@@ -93,7 +93,7 @@ export default function KasBank({ transactions, setTransactions, accounts }) {
           </button>
           <button
             onClick={() => setShowModal(true)}
-            className="px-4 py-2 bg-[#0a3a2a] hover:bg-[#06291d] text-white rounded-xl text-xs font-bold shadow transition flex items-center gap-1.5"
+            className="px-4 py-2 bg-[#64589F] hover:bg-[#4E4380] text-white rounded-xl text-xs font-bold shadow transition flex items-center gap-1.5"
           >
             <Plus className="w-4 h-4" /> + Catat Mutasi Kas
           </button>
@@ -321,7 +321,7 @@ export default function KasBank({ transactions, setTransactions, accounts }) {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 rounded-xl bg-[#0a3a2a] text-white font-bold hover:bg-[#06291d]"
+                  className="flex-1 py-2.5 rounded-xl bg-[#64589F] text-white font-bold hover:bg-[#4E4380]"
                 >
                   Simpan Kas
                 </button>

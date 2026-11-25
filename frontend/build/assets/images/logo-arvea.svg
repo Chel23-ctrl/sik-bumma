@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 110" fill="none">
+  <defs>
+    <linearGradient id="arveaDiamondGrad" x1="12" y1="18" x2="104" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#B0BFE6"/>
+      <stop offset="50%" stop-color="#9A90CC"/>
+      <stop offset="100%" stop-color="#7D8BC2"/>
+    </linearGradient>
+  </defs>
+  <!-- Faceted Diamond (ARVÉA Emblem) -->
+  <polygon points="31,32 82,32 98,51 56.5,98 15,51" fill="url(#arveaDiamondGrad)"/>
+  <!-- Facet Lines -->
+  <path d="M15 51H98M31 32L41 51L56.5 98M82 32L72 51L56.5 98M31 32L56.5 51L82 32" stroke="#FFFFFF" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <!-- 4-Point Sparkle Star on Top Right Shoulder -->
+  <path d="M84 12 L87.8 25.2 L101 29 L87.8 32.8 L84 46 L80.2 32.8 L67 29 L80.2 25.2 Z" fill="url(#arveaDiamondGrad)" stroke="#FFFFFF" stroke-width="2.4" stroke-linejoin="round"/>
+</svg>

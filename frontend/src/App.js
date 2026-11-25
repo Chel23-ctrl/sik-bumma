@@ -21,14 +21,14 @@ import {
   ShieldCheck,
   Lock,
   Unlock,
-  Users,
   Boxes,
   FileEdit,
   UserCog
 } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
 
-import LoginSplit, { DEMO_ACCOUNTS } from './components/LoginSplit';
+import LoginSplit from './components/LoginSplit';
+import ArveaLogo from './components/ArveaLogo';
 import FirstTimePasswordGuard from './components/FirstTimePasswordGuard';
 import PengelolaanPengguna, { INITIAL_USERS } from './components/PengelolaanPengguna';
 import LandingUnit from './components/LandingUnit';
@@ -700,22 +700,22 @@ export default function App() {
     );
   } else {
     viewContent = (
-    <div className={`min-h-screen flex flex-col ${darkMode ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'} print:bg-white print:text-slate-900 print:min-h-0 print:h-auto print:block`}>
+    <div className={`min-h-screen flex flex-col ${darkMode ? 'dark bg-[#1D1833] text-slate-100' : 'bg-gradient-to-br from-[#F2EFFA] via-[#EAE5F7] to-[#DFD8F2] text-[#1E1B2E]'} print:bg-white print:text-slate-900 print:min-h-0 print:h-auto print:block`}>
 
       {/* TOP HEADER */}
-      <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between px-6 sticky top-0 z-30 print:hidden shadow-xs">
+      <header className="h-16 border-b border-[#9A90CC]/30 dark:border-[#9A90CC]/20 bg-white/95 dark:bg-[#251F42]/95 backdrop-blur flex items-center justify-between px-6 sticky top-0 z-30 print:hidden shadow-xs">
         <div className="flex items-center gap-4">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300"
+            className="p-2 rounded-lg hover:bg-[#F2EFFA] dark:hover:bg-[#332B59] text-[#4E4380] dark:text-[#DDD6F0]"
           >
             <Menu className="w-5 h-5" />
           </button>
           
-          <div className="flex items-center gap-1.5 text-xs font-semibold">
-            <span className="text-emerald-700 dark:text-emerald-400 font-extrabold tracking-wide">ARVEA</span>
-            <span className="text-slate-300 dark:text-slate-600">/</span>
-            <span className="text-slate-900 dark:text-white font-bold">{menuTitles[activeMenu] || 'Dashboard'}</span>
+          <div className="flex items-center gap-2 text-xs font-semibold">
+            <ArveaLogo variant="horizontal" theme={darkMode ? 'light' : 'lilac'} size="sm" />
+            <span className="text-[#9A90CC]/60">/</span>
+            <span className="text-[#1E1B2E] dark:text-white font-bold">{menuTitles[activeMenu] || 'Dashboard'}</span>
             <span className="hidden md:inline-block text-[10px] text-slate-400 font-normal pl-1">
               &bull; SAK EMKM
             </span>
@@ -723,7 +723,7 @@ export default function App() {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full text-xs font-medium text-slate-600 dark:text-slate-300">
+          <div className="hidden sm:flex items-center gap-1.5 bg-[#F2EFFA] dark:bg-[#332B59] px-3 py-1 rounded-full text-xs font-semibold text-[#4E4380] dark:text-[#DDD6F0] border border-[#9A90CC]/30">
             <span>Periode {selectedYear}</span>
           </div>
 
@@ -732,10 +732,10 @@ export default function App() {
             onClick={() =>
               runWithLoader('Membuka Toko Digital...', () => setAppMode('storefront'), 450)
             }
-            className="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 text-emerald-800 dark:text-emerald-300 text-xs font-bold border border-emerald-300 dark:border-emerald-700 flex items-center gap-1.5 transition shadow-xs"
-            title="Buka Toko Digital Pemesanan BUMKam (Tampilan Ulambox)"
+            className="px-3 py-1.5 rounded-xl bg-[#F2EFFA] dark:bg-[#332B59] hover:bg-[#E4DDF5] text-[#4E4380] dark:text-[#DDD6F0] text-xs font-bold border border-[#9A90CC]/45 flex items-center gap-1.5 transition shadow-xs"
+            title="Buka Toko Digital Pemesanan BUMKam"
           >
-            <Store className="w-3.5 h-3.5 text-emerald-600" />
+            <Store className="w-3.5 h-3.5 text-[#64589F] dark:text-[#C4B9E5]" />
             <span className="hidden sm:inline">Toko Digital</span>
           </button>
 
@@ -748,87 +748,45 @@ export default function App() {
             }}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold border flex items-center gap-1.5 transition shadow-xs cursor-pointer ${
               rbacStrict
-                ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100'
+                ? 'bg-[#F2EFFA] dark:bg-[#332B59] border-[#9A90CC]/45 text-[#4E4380] dark:text-[#DDD6F0] hover:bg-[#E4DDF5]'
                 : 'bg-amber-50 dark:bg-amber-950/60 border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300 hover:bg-amber-100'
             }`}
-            title={rbacStrict ? 'Akses dibatasi sesuai role. Klik untuk buka semua menu (Mode Demo).' : 'Semua menu terbuka. Klik untuk kunci sesuai role (Mode Ketat).'}
+            title={rbacStrict ? 'Akses dibatasi sesuai role. Klik untuk buka semua menu.' : 'Semua menu terbuka. Klik untuk kunci sesuai role.'}
           >
-            {rbacStrict ? <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> : <Unlock className="w-3.5 h-3.5 text-amber-600" />}
-            <span className="hidden xl:inline">{rbacStrict ? 'Akses: Sesuai Role (Ketat)' : 'Akses: Mode Demo (Bebas)'}</span>
-            <span className="xl:hidden">{rbacStrict ? 'Role RBAC' : 'Demo Bebas'}</span>
+            {rbacStrict ? <ShieldCheck className="w-3.5 h-3.5 text-[#64589F] dark:text-[#C4B9E5]" /> : <Unlock className="w-3.5 h-3.5 text-amber-600" />}
+            <span className="hidden xl:inline">{rbacStrict ? 'Akses: Sesuai Role' : 'Akses: Bebas'}</span>
+            <span className="xl:hidden">{rbacStrict ? 'RBAC' : 'Bebas'}</span>
           </button>
 
-          {/* Quick Role Switcher for Demo / Presentation */}
-          <div className="hidden lg:flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/80 px-2.5 py-1 rounded-xl text-xs border border-slate-200 dark:border-slate-700">
-            <Users className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-            <span className="text-slate-400 text-[11px] font-medium shrink-0">Peran:</span>
-            <select
-              value={userRole}
-              onChange={(e) => {
-                const targetRole = e.target.value;
-                const matchedUser = users.find(u => u.role === targetRole && u.is_active !== false);
-                const matchedDemo = DEMO_ACCOUNTS.find(acc => acc.role === targetRole);
-                const matched = matchedUser || matchedDemo;
-                if (matched) {
-                  runWithLoader(`Beralih ke peran ${matched.role}...`, () => {
-                    setUser({
-                      id: matched.id,
-                      username: matched.username,
-                      email: matched.email || matched.username,
-                      name: matched.full_name || matched.name,
-                      full_name: matched.full_name || matched.name,
-                      role: matched.role,
-                      unit_kerja: matched.unit_kerja,
-                      initials: matched.initials,
-                      is_active: matched.is_active !== false,
-                      must_change_password: Boolean(matched.must_change_password),
-                      password_changed_at: matched.password_changed_at || new Date().toISOString()
-                    });
-                  }, 420).then(() => {
-                    toast.success(`Beralih ke peran: ${matched.role} (${matched.full_name || matched.name})`);
-                  });
-                }
-              }}
-              className="bg-transparent text-xs font-bold text-slate-800 dark:text-slate-200 outline-none cursor-pointer pr-1"
-              title="Ganti Peran Pengguna Cepat (Mode Presentasi)"
-            >
-              {DEMO_ACCOUNTS.map(acc => (
-                <option key={acc.role} value={acc.role} className="text-slate-900 bg-white dark:bg-slate-900 dark:text-slate-100">
-                  {acc.role} ({acc.title})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="hidden md:flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 px-3 py-1 rounded-lg text-xs">
-            <Store className="w-3.5 h-3.5 text-emerald-600" />
+          <div className="hidden md:flex items-center gap-1.5 bg-[#F2EFFA] dark:bg-[#332B59] border border-[#9A90CC]/40 px-3 py-1 rounded-lg text-xs">
+            <Store className="w-3.5 h-3.5 text-[#64589F] dark:text-[#C4B9E5]" />
             <select
               value={selectedUnit}
               onChange={(e) => setSelectedUnit(e.target.value)}
-              className="bg-transparent font-bold text-emerald-900 dark:text-emerald-200 outline-none cursor-pointer"
+              className="bg-transparent font-bold text-[#3C3365] dark:text-[#EDE9F7] outline-none cursor-pointer"
             >
-              <option value="all">Semua Unit</option>
-              <option value="perdagangan">Unit Perdagangan</option>
-              <option value="jasa">Unit Jasa</option>
-              <option value="kantor">Kantor Pengelola</option>
+              <option value="all" className="text-slate-900 bg-white">Semua Unit</option>
+              <option value="perdagangan" className="text-slate-900 bg-white">Unit Perdagangan</option>
+              <option value="jasa" className="text-slate-900 bg-white">Unit Jasa</option>
+              <option value="kantor" className="text-slate-900 bg-white">Kantor Pengelola</option>
             </select>
           </div>
 
           <button
             onClick={() => setDarkMode(!darkMode)}
-            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300"
+            className="p-2 rounded-lg hover:bg-[#F2EFFA] dark:hover:bg-[#332B59] text-[#4E4380] dark:text-slate-300"
             title="Ganti Tema"
           >
-            {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
+            {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-[#64589F]" />}
           </button>
 
-          <div className="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-800">
-            <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs">
-              {user?.initials || (user?.name ? user.name.slice(0, 2).toUpperCase() : 'AD')}
+          <div className="flex items-center gap-2 pl-2 border-l border-[#9A90CC]/30 dark:border-slate-800">
+            <div className="w-8 h-8 rounded-full bg-[#64589F] text-white flex items-center justify-center font-bold text-xs shadow-xs">
+              {activeUserRecord?.initials || (activeUserRecord?.name ? activeUserRecord.name.slice(0, 2).toUpperCase() : 'AD')}
             </div>
             <div className="hidden lg:block text-left">
-              <p className="text-xs font-bold leading-none text-slate-800 dark:text-slate-200">{user?.name || 'Administrator'}</p>
-              <p className="text-[10px] text-slate-400 leading-tight">{user?.role || 'Administrator'}</p>
+              <p className="text-xs font-bold leading-none text-[#1E1B2E] dark:text-slate-200">{activeUserRecord?.name || 'Administrator'}</p>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">{activeUserRecord?.role || 'Administrator'}</p>
             </div>
             <button
               onClick={handleLogout}
@@ -846,33 +804,34 @@ export default function App() {
         <aside
           className={`${
             sidebarOpen ? 'w-64' : 'w-20'
-          } transition-all duration-200 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col justify-between shrink-0 print:hidden overflow-y-auto`}
+          } transition-all duration-200 border-r border-[#9A90CC]/30 dark:border-[#9A90CC]/20 bg-white/95 dark:bg-[#251F42] backdrop-blur flex flex-col justify-between shrink-0 print:hidden overflow-y-auto`}
         >
           <div>
-            <div className="p-4 flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800">
-              <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-extrabold text-xs shadow-xs">
-                AR
-              </div>
-              {sidebarOpen && (
-                <div>
-                  <h2 className="font-extrabold text-xs tracking-tight text-slate-900 dark:text-white uppercase">ARVEA</h2>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">BUMKam Mekar Sari</p>
-                </div>
+            <div className={`p-4 flex items-center ${sidebarOpen ? 'justify-start' : 'justify-center'} border-b border-[#9A90CC]/20 dark:border-[#9A90CC]/15`}>
+              {sidebarOpen ? (
+                <ArveaLogo
+                  variant="horizontal"
+                  theme={darkMode ? 'light' : 'lilac'}
+                  size="sm"
+                  subtitle="BUMKam Mekar Sari"
+                />
+              ) : (
+                <ArveaLogo variant="mark" theme={darkMode ? 'light' : 'lilac'} size="sm" />
               )}
             </div>
 
             {/* Role Indicator & Menu Count Pill */}
             {sidebarOpen && (
-              <div className="px-3 py-1.5 mx-3 mb-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/60 text-[10px] flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400 font-semibold truncate">
-                  Role: <strong className="text-emerald-700 dark:text-emerald-300">{userRole}</strong>
+              <div className="px-3 py-1.5 mx-3 my-2 rounded-xl bg-[#F4F1FA] dark:bg-[#332B59]/80 border border-[#9A90CC]/30 text-[10px] flex items-center justify-between">
+                <span className="text-slate-600 dark:text-slate-300 font-semibold truncate">
+                  Role: <strong className="text-[#524788] dark:text-[#DDD6F0]">{userRole}</strong>
                 </span>
                 <span className={`px-1.5 py-0.5 rounded-md font-bold shrink-0 ${
                   rbacStrict 
-                    ? 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200' 
+                    ? 'bg-[#9A90CC]/25 text-[#4E4380] dark:text-[#EDE9F7]' 
                     : 'bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200'
                 }`}>
-                  {sidebarOpen && (rbacStrict ? `${allowedMenus.length} Menu` : 'Demo (14)')}
+                  {sidebarOpen && (rbacStrict ? `${allowedMenus.length} Menu` : 'Bebas')}
                 </span>
               </div>
             )}
@@ -906,17 +865,17 @@ export default function App() {
                     onClick={() => handleNavigateMenu(item.id, item.label)}
                     className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition ${
                       isActive
-                        ? 'bg-emerald-600 text-white shadow-sm font-bold'
+                        ? 'bg-[#64589F] text-white shadow-sm font-bold'
                         : item.highlight
-                        ? 'text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/30'
-                        : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                        ? 'text-[#524788] dark:text-[#C4B9E5] hover:bg-[#F2EFFA] dark:hover:bg-[#332B59]/50'
+                        : 'text-slate-700 dark:text-slate-300 hover:bg-[#F2EFFA] dark:hover:bg-[#332B59]/50'
                     }`}
                     title={item.label}
                   >
-                    <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : item.highlight ? 'text-emerald-600' : 'text-slate-400'}`} />
+                    <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : item.highlight ? 'text-[#7C6FB8]' : 'text-[#9A90CC]'}`} />
                     {sidebarOpen && <span className="flex-1 text-left truncate">{item.label}</span>}
                     {sidebarOpen && item.badge && (
-                      <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${isActive ? 'bg-emerald-800 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'}`}>
+                      <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${isActive ? 'bg-white/20 text-white' : 'bg-[#EDE9F7] dark:bg-[#332B59] text-[#4E4380] dark:text-[#DDD6F0]'}`}>
                         {item.badge}
                       </span>
                     )}
@@ -927,14 +886,14 @@ export default function App() {
           </div>
 
           {sidebarOpen && (
-            <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+            <div className="p-4 border-t border-[#9A90CC]/20 dark:border-slate-800 flex items-center justify-between text-xs">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-emerald-600 text-white font-bold flex items-center justify-center text-xs">
-                  {user?.initials || (user?.name ? user.name.slice(0, 2).toUpperCase() : 'AD')}
+                <div className="w-8 h-8 rounded-full bg-[#64589F] text-white font-bold flex items-center justify-center text-xs">
+                  {activeUserRecord?.initials || (activeUserRecord?.name ? activeUserRecord.name.slice(0, 2).toUpperCase() : 'AD')}
                 </div>
                 <div>
-                  <p className="font-bold text-slate-900 dark:text-white leading-tight">{user?.name || 'Administrator'}</p>
-                  <p className="text-[10px] text-slate-400 leading-tight">{user?.role || 'Administrator'}</p>
+                  <p className="font-bold text-[#1E1B2E] dark:text-white leading-tight">{activeUserRecord?.name || 'Administrator'}</p>
+                  <p className="text-[10px] text-slate-500 leading-tight">{activeUserRecord?.role || 'Administrator'}</p>
                 </div>
               </div>
               <button onClick={handleLogout} className="text-slate-400 hover:text-red-600 p-1">
@@ -1157,9 +1116,9 @@ export default function App() {
           )}
 
           {/* Backoffice Footer */}
-          <footer className="mt-14 pt-6 border-t border-slate-200 dark:border-slate-800 text-center text-slate-400 text-xs print:hidden">
-            <p className="font-semibold text-slate-700 dark:text-slate-300">ARVEA &bull; Financial Management System BUMKam Mekar Sari</p>
-            <p className="italic text-emerald-600 dark:text-emerald-400 text-[11px] mt-0.5">&ldquo;Satu Nilai, Satu Tujuan, Bertumbuh Bersama&rdquo;</p>
+          <footer className="mt-14 pt-6 border-t border-[#9A90CC]/30 dark:border-slate-800 text-center text-slate-500 text-xs print:hidden">
+            <p className="font-semibold text-[#3C3365] dark:text-slate-300">ARVÉA &bull; Financial Management System BUMKam Mekar Sari</p>
+            <p className="italic text-[#64589F] dark:text-[#C4B9E5] text-[11px] mt-0.5">&ldquo;Satu Nilai, Satu Tujuan, Bertumbuh Bersama&rdquo;</p>
             <p className="mt-1 text-slate-500 text-[11px]">Kampung Sabron Sari, Distrik Sentani Barat, Kabupaten Jayapura &bull; Standar SAK EMKM</p>
             <p className="mt-1 text-slate-400 text-[10px]">Teknologi Digital Akuntansi (TDA) Kelompok 3C &bull; S1 Akuntansi FEB Uncen</p>
           </footer>

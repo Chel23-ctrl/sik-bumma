@@ -34,7 +34,7 @@ export const PERLAKUAN_OPTIONS = [
 export const SATUAN_OPTIONS = [
   'Pcs', 'Unit', 'Buah', 'Set', 'Paket', 'Lusin', 'Rim', 'Lembar',
   'Batang', 'Gulung', 'Milimeter (mm)', 'Centimeter (cm)', 'Meter (m)',
-  'Meter Persegi (m²)', 'Meter Kubik (m³)', 'Gram (g)', 'Kilogram (kg)',
+  'Meter Persegi (mÂ²)', 'Meter Kubik (mÂ³)', 'Gram (g)', 'Kilogram (kg)',
   'Ton', 'Mililiter (mL)', 'Liter (L)', 'Kaleng', 'Botol', 'Jerigen',
   'Karton', 'Box', 'Karung', 'Sak', 'Butir', 'Tray', 'Rak', 'Ekor',
   'Jam', 'Hari'
@@ -454,7 +454,7 @@ export default function MasterData({
             { id: 'customers', label: 'Pelanggan', icon: Users, count: customers.length },
             { id: 'suppliers', label: 'Pemasok / Supplier', icon: Truck, count: suppliers.length },
             { id: 'accounts', label: 'Bagan Akun (COA)', icon: Layers, count: accounts.length },
-            { id: 'landing_showcase', label: '🌟 Showcase Landing Page', icon: Sparkles, count: 3 }
+            { id: 'landing_showcase', label: 'ðŸŒŸ Showcase Landing Page', icon: Sparkles, count: 3 }
           ].map(t => {
             const Icon = t.icon;
             const isActive = tab === t.id;
@@ -464,7 +464,7 @@ export default function MasterData({
                 onClick={() => { setTab(t.id); setSearchQuery(''); }}
                 className={`px-3.5 py-2 rounded-xl font-bold transition flex items-center gap-2 whitespace-nowrap ${
                   isActive 
-                    ? 'bg-[#0a3a2a] text-white shadow-md' 
+                    ? 'bg-[#64589F] text-white shadow-md' 
                     : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 border border-slate-200 dark:border-slate-700'
                 }`}
               >
@@ -849,7 +849,7 @@ export default function MasterData({
                       alt={prod.title}
                       className="w-full h-full object-cover"
                     />
-                    <div className="absolute top-3 left-3 bg-[#0a3a2a]/90 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider backdrop-blur-md">
+                    <div className="absolute top-3 left-3 bg-[#64589F]/90 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider backdrop-blur-md">
                       {prod.badge}
                     </div>
                   </div>
@@ -1018,7 +1018,7 @@ export default function MasterData({
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-[#0a3a2a] hover:bg-[#06291d] text-white font-bold flex items-center gap-1.5 shadow"
+                  className="px-5 py-2 rounded-xl bg-[#64589F] hover:bg-[#4E4380] text-white font-bold flex items-center gap-1.5 shadow"
                 >
                   <Save className="w-4 h-4 text-emerald-300" /> Simpan Produk
                 </button>
@@ -1085,7 +1085,7 @@ export default function MasterData({
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-[#0a3a2a] hover:bg-[#06291d] text-white font-bold flex items-center gap-1.5 shadow"
+                  className="px-5 py-2 rounded-xl bg-[#64589F] hover:bg-[#4E4380] text-white font-bold flex items-center gap-1.5 shadow"
                 >
                   <Save className="w-4 h-4 text-emerald-300" /> Simpan Pelanggan
                 </button>
@@ -1163,7 +1163,7 @@ export default function MasterData({
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-[#0a3a2a] hover:bg-[#06291d] text-white font-bold flex items-center gap-1.5 shadow"
+                  className="px-5 py-2 rounded-xl bg-[#64589F] hover:bg-[#4E4380] text-white font-bold flex items-center gap-1.5 shadow"
                 >
                   <Save className="w-4 h-4 text-emerald-300" /> Simpan Pemasok
                 </button>
@@ -1251,7 +1251,7 @@ export default function MasterData({
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-[#0a3a2a] hover:bg-[#06291d] text-white font-bold flex items-center gap-1.5 shadow"
+                  className="px-5 py-2 rounded-xl bg-[#64589F] hover:bg-[#4E4380] text-white font-bold flex items-center gap-1.5 shadow"
                 >
                   <Save className="w-4 h-4 text-emerald-300" /> Simpan Akun
                 </button>

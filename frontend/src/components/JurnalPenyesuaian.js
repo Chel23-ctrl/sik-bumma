@@ -727,7 +727,7 @@ export default function JurnalPenyesuaian({
 
             <button
               onClick={handleOpenAdd}
-              className="px-4 py-2 bg-[#0a3a2a] hover:bg-[#06291d] text-white rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5"
+              className="px-4 py-2 bg-[#64589F] hover:bg-[#4E4380] text-white rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5"
             >
               <Plus className="w-4 h-4" /> Tambah Jurnal Penyesuaian
             </button>
@@ -833,7 +833,7 @@ export default function JurnalPenyesuaian({
         <div className="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-2 shadow-xs print:hidden">
           <div className="flex flex-wrap items-center gap-1.5">
             {[
-              { id: 'all', label: 'Semua Unit (Konsolidasi)', icon: Building2, activeCls: 'bg-[#0a3a2a] text-white', idleCls: 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800', count: unitSummary.all.count },
+              { id: 'all', label: 'Semua Unit (Konsolidasi)', icon: Building2, activeCls: 'bg-[#64589F] text-white', idleCls: 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800', count: unitSummary.all.count },
               { id: 'perdagangan', label: 'Unit Perdagangan', icon: Store, activeCls: 'bg-emerald-600 text-white', idleCls: 'text-emerald-800 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40', count: unitSummary.perdagangan.count },
               { id: 'jasa', label: 'Unit Jasa', icon: Briefcase, activeCls: 'bg-blue-600 text-white', idleCls: 'text-blue-800 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/40', count: unitSummary.jasa.count },
               { id: 'kantor', label: 'Kantor Pengelola / Umum', icon: Landmark, activeCls: 'bg-purple-600 text-white', idleCls: 'text-purple-800 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-950/40', count: unitSummary.kantor.count }
@@ -1292,7 +1292,7 @@ export default function JurnalPenyesuaian({
                         <span className="text-rose-700 dark:text-rose-300">
                           {formTotals.totalDebit === 0 && formTotals.totalCredit === 0
                             ? 'Isi nominal Debit & Kredit terlebih dahulu'
-                            : 'BELUM SEIMBANG — Total Debit harus sama dengan Total Kredit'}
+                            : 'BELUM SEIMBANG â€” Total Debit harus sama dengan Total Kredit'}
                         </span>
                       </>
                     )}
@@ -1312,7 +1312,7 @@ export default function JurnalPenyesuaian({
                 <button
                   type="submit"
                   disabled={!canSubmit}
-                  className="px-5 py-2 rounded-xl bg-[#0a3a2a] hover:bg-[#06291d] disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold flex items-center gap-1.5 shadow transition"
+                  className="px-5 py-2 rounded-xl bg-[#64589F] hover:bg-[#4E4380] disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold flex items-center gap-1.5 shadow transition"
                 >
                   <Save className="w-4 h-4 text-emerald-300" />
                   {formHeader.status === 'Posted' ? 'Simpan & Posting Jurnal' : 'Simpan sebagai Draft'}

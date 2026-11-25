@@ -392,7 +392,7 @@ export default function PengelolaanPengguna({
     setResetTarget(null);
   };
 
-  // Toggle Active / Inactive (Soft Disable — Never Hard Delete!)
+  // Toggle Active / Inactive (Soft Disable â€” Never Hard Delete!)
   const handleToggleStatus = (u) => {
     const currentlyActive = u.is_active !== false;
     const isSelf =
@@ -468,7 +468,7 @@ export default function PengelolaanPengguna({
 
         <button
           onClick={handleOpenCreate}
-          className="px-4 py-2.5 bg-[#0a3a2a] hover:bg-[#06291d] text-white rounded-xl text-xs font-bold shadow-md transition flex items-center gap-2 self-start sm:self-auto"
+          className="px-4 py-2.5 bg-[#64589F] hover:bg-[#4E4380] text-white rounded-xl text-xs font-bold shadow-md transition flex items-center gap-2 self-start sm:self-auto"
         >
           <UserPlus className="w-4 h-4 text-emerald-300" /> Tambah Pengurus Baru
         </button>
@@ -860,7 +860,7 @@ export default function PengelolaanPengguna({
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-[#0a3a2a] hover:bg-[#06291d] text-white font-bold flex items-center gap-1.5 shadow"
+                  className="px-5 py-2 rounded-xl bg-[#64589F] hover:bg-[#4E4380] text-white font-bold flex items-center gap-1.5 shadow"
                 >
                   <Save className="w-4 h-4 text-emerald-300" />
                   {editingUserId ? 'Simpan Perubahan' : 'Buat Akun Pengurus'}
