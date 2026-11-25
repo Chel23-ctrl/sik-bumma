@@ -176,23 +176,43 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-gradient-to-br from-[#F2EFFA] via-[#E8E2F6] to-[#DCD4F0] text-[#1E1B2E]">
-      {/* Left Side: Lilac Brand Hero Panel (#9A90CC) */}
+      {/* Left Side: Lilac Brand Hero Panel (#9A90CC) with Translucent Team Photo Background */}
       <div
-        className="md:w-5/12 lg:w-1/2 text-white p-6 sm:p-8 md:p-12 lg:p-14 flex flex-col justify-between relative overflow-hidden"
+        className="md:w-5/12 lg:w-1/2 text-white p-6 sm:p-8 md:p-12 lg:p-14 flex flex-col justify-between relative overflow-hidden bg-[#8377BC]"
         style={{
           background: 'linear-gradient(145deg, #5F539C 0%, #8377BC 48%, #9A90CC 100%)'
         }}
       >
-        <SectorBackground variant="dark" />
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-white/15 rounded-full blur-3xl pointer-events-none animate-pulse-glow" />
+        {/* Background Layer (z-0): Foto Bersama Tim dengan Object-Cover & Efek Transparan Lilac */}
+        <img
+          src={`${process.env.PUBLIC_URL || ''}/assets/images/foto-bersama.jpg`}
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 z-0 w-full h-full object-cover object-center opacity-[0.26] mix-blend-luminosity scale-[1.01] select-none pointer-events-none"
+        />
+
+        {/* Overlay Tint Lilac (z-0): Menjaga warna ungu lilac ARVÉA tetap dominan & kontras teks putih tajam */}
         <div
-          className="absolute bottom-10 right-10 w-80 h-80 bg-[#C4B9E5]/25 rounded-full blur-3xl pointer-events-none animate-pulse-glow"
+          aria-hidden="true"
+          className="absolute inset-0 z-0 pointer-events-none"
+          style={{
+            background:
+              'linear-gradient(145deg, rgba(84, 71, 148, 0.44) 0%, rgba(131, 119, 188, 0.26) 48%, rgba(154, 144, 204, 0.40) 100%)'
+          }}
+        />
+
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          <SectorBackground variant="dark" />
+        </div>
+        <div className="absolute top-1/4 left-1/4 z-0 w-96 h-96 bg-white/15 rounded-full blur-3xl pointer-events-none animate-pulse-glow" />
+        <div
+          className="absolute bottom-10 right-10 z-0 w-80 h-80 bg-[#C4B9E5]/25 rounded-full blur-3xl pointer-events-none animate-pulse-glow"
           style={{ animationDelay: '2s' }}
         />
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
+        <div className="absolute inset-0 z-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
 
         {/* Top Brand Logo ARVÉA */}
-        <div className="flex items-center justify-between gap-3 z-10">
+        <div className="relative z-10 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <ArveaLogo
               variant="horizontal"
@@ -200,28 +220,28 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
               size="md"
               subtitle="Financial Management System BUMKam Mekar Sari"
             />
-            <span className="hidden sm:inline-block px-2.5 py-0.5 rounded-full bg-white/20 border border-white/30 text-[10px] font-extrabold text-white">
+            <span className="hidden sm:inline-block px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-xs border border-white/30 text-[10px] font-extrabold text-white">
               SAK EMKM
             </span>
           </div>
         </div>
 
         {/* Main Hero Pitch */}
-        <div className="my-8 z-10 max-w-xl">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 border border-white/30 text-white text-xs font-bold mb-4 backdrop-blur-xs">
+        <div className="relative z-10 my-8 max-w-xl">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#4B3F82]/35 border border-white/30 text-white text-xs font-bold mb-4 backdrop-blur-md shadow-xs">
             <Sparkles className="w-3.5 h-3.5 text-amber-200" /> &ldquo;Satu Nilai, Satu Tujuan, Bertumbuh Bersama&rdquo;
           </div>
 
-          <h2 className="text-2xl md:text-3xl lg:text-4xl font-black tracking-tight text-white leading-tight mb-4">
+          <h2 className="text-2xl md:text-3xl lg:text-4xl font-black tracking-tight text-white leading-tight mb-4 drop-shadow-sm">
             Kelola akuntansi &amp; aset BUMKam dengan akuntabel dan transparan.
           </h2>
-          <p className="text-white/90 text-xs md:text-sm leading-relaxed mb-6">
+          <p className="text-white/95 text-xs md:text-sm leading-relaxed mb-6 drop-shadow-xs">
             Standar pelaporan keuangan berbasis <strong>SAK EMKM</strong> terpadu, inventarisasi aset tetap &amp; operasional, jurnal penyesuaian, penggajian karyawan, dan pembukuan berpasangan digital.
           </p>
 
           {/* 3 Animated Sector Feature Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-            <div className="bg-white/15 backdrop-blur-md border border-white/25 rounded-2xl p-3 hover:bg-white/25 transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden animate-float">
+            <div className="bg-[#4B3F82]/30 backdrop-blur-md border border-white/30 rounded-2xl p-3 hover:bg-[#4B3F82]/40 transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden animate-float shadow-sm">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-base">🥚</span>
                 <span className="text-[9px] font-extrabold uppercase tracking-wider text-white bg-white/20 px-1.5 py-0.5 rounded">
@@ -229,8 +249,8 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
                 </span>
               </div>
               <p className="text-xs font-black text-white leading-tight">Peternakan Ayam</p>
-              <p className="text-[10px] text-white/85 font-bold mt-0.5">Produksi Telur Segar</p>
-              <div className="mt-2 flex items-center gap-1.5 text-[9px] text-white/85">
+              <p className="text-[10px] text-white/90 font-bold mt-0.5">Produksi Telur Segar</p>
+              <div className="mt-2 flex items-center gap-1.5 text-[9px] text-white/90">
                 <span className="relative flex h-1.5 w-1.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
                   <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white" />
@@ -239,7 +259,7 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
               </div>
             </div>
 
-            <div className="bg-white/15 backdrop-blur-md border border-white/25 rounded-2xl p-3 hover:bg-white/25 transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden animate-float-delayed">
+            <div className="bg-[#4B3F82]/30 backdrop-blur-md border border-white/30 rounded-2xl p-3 hover:bg-[#4B3F82]/40 transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden animate-float-delayed shadow-sm">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-base">⛺</span>
                 <span className="text-[9px] font-extrabold uppercase tracking-wider text-white bg-white/20 px-1.5 py-0.5 rounded">
@@ -247,8 +267,8 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
                 </span>
               </div>
               <p className="text-xs font-black text-white leading-tight">Tenda &amp; Kursi</p>
-              <p className="text-[10px] text-white/85 font-bold mt-0.5">Rp 1.000.000 / Hari</p>
-              <div className="mt-2 flex items-center gap-1.5 text-[9px] text-white/85">
+              <p className="text-[10px] text-white/90 font-bold mt-0.5">Rp 1.000.000 / Hari</p>
+              <div className="mt-2 flex items-center gap-1.5 text-[9px] text-white/90">
                 <span className="relative flex h-1.5 w-1.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
                   <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white" />
@@ -257,7 +277,7 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
               </div>
             </div>
 
-            <div className="bg-white/15 backdrop-blur-md border border-white/25 rounded-2xl p-3 hover:bg-white/25 transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden animate-float">
+            <div className="bg-[#4B3F82]/30 backdrop-blur-md border border-white/30 rounded-2xl p-3 hover:bg-[#4B3F82]/40 transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden animate-float shadow-sm">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-base">🏛️</span>
                 <span className="text-[9px] font-extrabold uppercase tracking-wider text-white bg-white/20 px-1.5 py-0.5 rounded">
@@ -265,8 +285,8 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
                 </span>
               </div>
               <p className="text-xs font-black text-white leading-tight">Gedung Serbaguna</p>
-              <p className="text-[10px] text-white/85 font-bold mt-0.5">Rp 2.000.000 / Acara</p>
-              <div className="mt-2 flex items-center gap-1.5 text-[9px] text-white/85">
+              <p className="text-[10px] text-white/90 font-bold mt-0.5">Rp 2.000.000 / Acara</p>
+              <div className="mt-2 flex items-center gap-1.5 text-[9px] text-white/90">
                 <span className="relative flex h-1.5 w-1.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
                   <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white" />
@@ -276,25 +296,25 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4 pt-5 border-t border-white/25">
+          <div className="grid grid-cols-3 gap-4 pt-5 border-t border-white/30">
             <div>
-              <p className="text-lg md:text-xl font-black text-white">SAK EMKM</p>
-              <p className="text-[11px] text-white/85 font-medium">Standar Pelaporan</p>
+              <p className="text-lg md:text-xl font-black text-white drop-shadow-xs">SAK EMKM</p>
+              <p className="text-[11px] text-white/90 font-medium">Standar Pelaporan</p>
             </div>
             <div>
-              <p className="text-lg md:text-xl font-black text-white">Multi-Unit</p>
-              <p className="text-[11px] text-white/85 font-medium">Perdagangan &amp; Jasa</p>
+              <p className="text-lg md:text-xl font-black text-white drop-shadow-xs">Multi-Unit</p>
+              <p className="text-[11px] text-white/90 font-medium">Perdagangan &amp; Jasa</p>
             </div>
             <div>
-              <p className="text-lg md:text-xl font-black text-white">2019–2035</p>
-              <p className="text-[11px] text-white/85 font-medium">Periode Terpadu</p>
+              <p className="text-lg md:text-xl font-black text-white drop-shadow-xs">2019–2035</p>
+              <p className="text-[11px] text-white/90 font-medium">Periode Terpadu</p>
             </div>
           </div>
         </div>
 
-        <div className="z-10 text-xs text-white/85 border-t border-white/20 pt-4 flex items-center justify-between">
+        <div className="relative z-10 text-xs text-white/90 border-t border-white/25 pt-4 flex items-center justify-between">
           <span>BUMKam Mekar Sari &bull; Kampung Sabron Sari, Sentani Barat</span>
-          <span className="text-[10px] text-white/75 font-semibold">TDA Kelompok 3C</span>
+          <span className="text-[10px] text-white/85 font-semibold">TDA Kelompok 3C</span>
         </div>
       </div>
 
