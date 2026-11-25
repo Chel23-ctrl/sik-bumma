@@ -304,6 +304,16 @@ export default function InventarisasiAset({
   const [showSplitModal, setShowSplitModal] = useState(null);
   const [editingAssetId, setEditingAssetId] = useState(null);
 
+  // Track whether user manually edited salvage_value (so auto 10% estimate doesn't overwrite manual input)
+  const [isSalvageManual, setIsSalvageManual] = useState(false);
+
+  const DEFAULT_SALVAGE_RATE = 0.1; // 10% estimasi default nilai residu
+
+  const estimateSalvageValue = (totalCost) => {
+    const cost = Math.max(0, Number(totalCost || 0));
+    return cost > 0 ? Math.round(cost * DEFAULT_SALVAGE_RATE) : 0;
+  };
+
   // Form State
   const [formData, setFormData] = useState({
     asset_type: 'Aset Tetap',
@@ -336,6 +346,34 @@ export default function InventarisasiAset({
 
   // Split Form State
   const [splitQty, setSplitQty] = useState(1);
+
+  // Reactive Straight-Line Depreciation Calculator for Add/Edit Form (Active only for 'Aset Tetap')
+  const liveDepreciation = useMemo(() => {
+    if (formData.asset_type !== 'Aset Tetap') {
+      return {
+        depreciableAmount: 0,
+        annualDepreciation: 0,
+        monthlyDepreciation: 0,
+        exceedsCost: false
+      };
+    }
+
+    const totalCost = Math.max(0, Number(formData.total_cost || 0));
+    const rawSalvage = Math.max(0, Number(formData.salvage_value || 0));
+    const exceedsCost = rawSalvage > totalCost && totalCost > 0;
+    const effectiveSalvage = Math.min(totalCost, rawSalvage);
+    const life = Number(formData.useful_life || 0);
+    const depreciableAmount = Math.max(0, totalCost - effectiveSalvage);
+    const annualDepreciation = life > 0 ? Math.round(depreciableAmount / life) : 0;
+    const monthlyDepreciation = life > 0 ? Math.round(depreciableAmount / life / 12) : 0;
+
+    return {
+      depreciableAmount,
+      annualDepreciation,
+      monthlyDepreciation,
+      exceedsCost
+    };
+  }, [formData.asset_type, formData.total_cost, formData.salvage_value, formData.useful_life]);
 
   // Straight-line Depreciation Calculator
   const calculateDepreciation = (asset) => {
@@ -443,6 +481,7 @@ export default function InventarisasiAset({
   // Open Add Modal
   const handleOpenAdd = () => {
     setEditingAssetId(null);
+    setIsSalvageManual(false);
     const nextNum = String(assets.length + 1).padStart(4, '0');
     setFormData({
       asset_type: 'Aset Tetap',
@@ -478,6 +517,7 @@ export default function InventarisasiAset({
   // Open Edit Modal
   const handleOpenEdit = (ast) => {
     setEditingAssetId(ast.id);
+    setIsSalvageManual(true);
     setFormData({
       ...ast,
       unit_usaha: inferAssetUnit(ast),
@@ -486,35 +526,50 @@ export default function InventarisasiAset({
     setShowAddModal(true);
   };
 
-  // When changing Asset Type in Add form
+  // When changing Asset Type in Add/Edit form
   const handleTypeChange = (newType) => {
     const isFixed = newType === 'Aset Tetap';
     const nextPrefix = isFixed ? 'AST' : 'INV';
     const nextNum = String(assets.length + 1).padStart(4, '0');
-    setFormData(prev => ({
-      ...prev,
-      asset_type: newType,
-      inv_number: `${nextPrefix}-${nextNum}`,
-      product_id: '',
-      product_code: '',
-      product_name: '',
-      category: '',
-      unit: 'Unit',
-      unit_price: 0,
-      total_cost: 0
-    }));
+    setIsSalvageManual(false);
+    setFormData(prev => {
+      const nextTotal = editingAssetId ? Number(prev.total_cost || 0) : 0;
+      return {
+        ...prev,
+        asset_type: newType,
+        inv_number: editingAssetId ? prev.inv_number : `${nextPrefix}-${nextNum}`,
+        product_id: editingAssetId ? prev.product_id : '',
+        product_code: editingAssetId ? prev.product_code : '',
+        product_name: editingAssetId ? prev.product_name : '',
+        category: editingAssetId ? prev.category : '',
+        unit: editingAssetId ? prev.unit : 'Unit',
+        unit_price: editingAssetId ? prev.unit_price : 0,
+        total_cost: nextTotal,
+        useful_life: isFixed ? (Number(prev.useful_life) > 0 ? Number(prev.useful_life) : 5) : 0,
+        salvage_value: isFixed ? estimateSalvageValue(nextTotal) : 0,
+        deprec_method: isFixed ? 'Garis Lurus' : '-'
+      };
+    });
   };
 
-  // When changing Model Type in Add form
+  // When changing Model Type in Add/Edit form
   const handleModelChange = (newModel) => {
     const isIndiv = newModel === 'Individual';
     const qty = isIndiv ? 1 : Math.max(2, formData.qty || 2);
-    setFormData(prev => ({
-      ...prev,
-      model_type: newModel,
-      qty: qty,
-      total_cost: qty * Number(prev.unit_price || 0)
-    }));
+    setFormData(prev => {
+      const nextTotal = qty * Number(prev.unit_price || 0);
+      const nextSalvage =
+        prev.asset_type === 'Aset Tetap' && !isSalvageManual
+          ? estimateSalvageValue(nextTotal)
+          : prev.salvage_value;
+      return {
+        ...prev,
+        model_type: newModel,
+        qty: qty,
+        total_cost: nextTotal,
+        salvage_value: nextSalvage
+      };
+    });
   };
 
   // When selecting a Product from Master Data
@@ -524,12 +579,17 @@ export default function InventarisasiAset({
 
     const unitPrice = Number(matched.buy_price || 0);
     const qty = formData.model_type === 'Individual' ? 1 : Math.max(1, formData.qty || 1);
+    const nextTotal = qty * unitPrice;
     const inferredUnit =
       matched.unit_usaha === 'perdagangan' || matched.unit_usaha === 'jasa'
         ? matched.unit_usaha
         : '';
     setFormData(prev => {
       const nextUnit = prev.unit_usaha || inferredUnit;
+      const nextSalvage =
+        prev.asset_type === 'Aset Tetap' && !isSalvageManual
+          ? estimateSalvageValue(nextTotal)
+          : prev.salvage_value;
       return {
         ...prev,
         unit_usaha: nextUnit,
@@ -540,7 +600,8 @@ export default function InventarisasiAset({
         category: matched.category,
         unit: matched.unit || 'Unit',
         unit_price: unitPrice,
-        total_cost: qty * unitPrice
+        total_cost: nextTotal,
+        salvage_value: nextSalvage
       };
     });
   };
@@ -572,6 +633,13 @@ export default function InventarisasiAset({
     const qty = formData.model_type === 'Individual' ? 1 : Math.max(1, Number(formData.qty || 1));
     const unitPrice = Number(formData.unit_price || 0);
     const totalCost = qty * unitPrice;
+    const isFixedAsset = formData.asset_type === 'Aset Tetap';
+    const usefulLife = isFixedAsset ? Math.max(1, Number(formData.useful_life || 1)) : 0;
+    const salvageValue = isFixedAsset ? Math.max(0, Number(formData.salvage_value || 0)) : 0;
+    const deprecMethod = isFixedAsset ? 'Garis Lurus' : '-';
+    const depreciableBase = isFixedAsset ? Math.max(0, totalCost - Math.min(totalCost, salvageValue)) : 0;
+    const annualDeprec = isFixedAsset && usefulLife > 0 ? Math.round(depreciableBase / usefulLife) : 0;
+    const monthlyDeprec = isFixedAsset && usefulLife > 0 ? Math.round(depreciableBase / usefulLife / 12) : 0;
 
     if (editingAssetId) {
       const updated = assets.map(a => {
@@ -581,7 +649,12 @@ export default function InventarisasiAset({
             ...formData,
             qty,
             unit_price: unitPrice,
-            total_cost: totalCost
+            total_cost: totalCost,
+            useful_life: usefulLife,
+            salvage_value: salvageValue,
+            deprec_method: deprecMethod,
+            annual_depreciation: annualDeprec,
+            monthly_depreciation: monthlyDeprec
           };
         }
         return a;
@@ -607,7 +680,12 @@ export default function InventarisasiAset({
         ...formData,
         qty,
         unit_price: unitPrice,
-        total_cost: totalCost
+        total_cost: totalCost,
+        useful_life: usefulLife,
+        salvage_value: salvageValue,
+        deprec_method: deprecMethod,
+        annual_depreciation: annualDeprec,
+        monthly_depreciation: monthlyDeprec
       };
       saveAssets([newAsset, ...assets]);
 
@@ -1622,11 +1700,16 @@ export default function InventarisasiAset({
                     value={formData.qty}
                     onChange={(e) => {
                       const q = Math.max(1, Number(e.target.value || 1));
-                      setFormData({
-                        ...formData,
+                      const nextTotal = q * Number(formData.unit_price || 0);
+                      setFormData(prev => ({
+                        ...prev,
                         qty: q,
-                        total_cost: q * Number(formData.unit_price || 0)
-                      });
+                        total_cost: nextTotal,
+                        salvage_value:
+                          prev.asset_type === 'Aset Tetap' && !isSalvageManual
+                            ? estimateSalvageValue(nextTotal)
+                            : prev.salvage_value
+                      }));
                     }}
                     disabled={formData.model_type === 'Individual'}
                     className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 font-bold disabled:bg-slate-100 disabled:text-slate-500"
@@ -1641,12 +1724,18 @@ export default function InventarisasiAset({
                     min="0"
                     value={formData.unit_price}
                     onChange={(e) => {
-                      const p = Number(e.target.value || 0);
-                      setFormData({
-                        ...formData,
-                        unit_price: p,
-                        total_cost: Number(formData.qty || 1) * p
-                      });
+                      const raw = e.target.value;
+                      const p = raw === '' ? 0 : Math.max(0, Number(raw));
+                      const nextTotal = Number(formData.qty || 1) * p;
+                      setFormData(prev => ({
+                        ...prev,
+                        unit_price: raw === '' ? '' : p,
+                        total_cost: nextTotal,
+                        salvage_value:
+                          prev.asset_type === 'Aset Tetap' && !isSalvageManual
+                            ? estimateSalvageValue(nextTotal)
+                            : prev.salvage_value
+                      }));
                     }}
                     className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 font-mono font-bold"
                     required
@@ -1664,40 +1753,156 @@ export default function InventarisasiAset({
                 </div>
               </div>
 
-              {/* PENYUSUTAN (HANYA UNTUK ASET TETAP) */}
-              {formData.asset_type === 'Aset Tetap' && (
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-blue-50 dark:bg-blue-950/30 p-3 rounded-xl border border-blue-200 dark:border-blue-800">
-                  <div>
-                    <label className="block font-bold text-blue-900 dark:text-blue-200 mb-1">Umur Manfaat (Tahun) *</label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="30"
-                      value={formData.useful_life}
-                      onChange={(e) => setFormData({ ...formData, useful_life: Number(e.target.value || 1) })}
-                      className="w-full p-2 rounded-lg border border-blue-300 dark:border-blue-700 bg-white dark:bg-slate-900 font-bold"
-                      required
-                    />
+              {/* PENYUSUTAN (HANYA AKTIF UNTUK ASET TETAP - METODE GARIS LURUS) */}
+              {formData.asset_type === 'Aset Tetap' ? (
+                <div className="bg-blue-50 dark:bg-blue-950/30 p-3.5 rounded-xl border border-blue-200 dark:border-blue-800 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-[11px] font-extrabold uppercase tracking-wider text-blue-900 dark:text-blue-200">
+                      Perhitungan Penyusutan Aset Tetap (SAK EMKM)
+                    </span>
+                    <span className="text-[10px] font-semibold text-blue-700 dark:text-blue-300">
+                      Real-time &bull; Metode Garis Lurus
+                    </span>
                   </div>
-                  <div>
-                    <label className="block font-bold text-blue-900 dark:text-blue-200 mb-1">Nilai Residu (IDR)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={formData.salvage_value}
-                      onChange={(e) => setFormData({ ...formData, salvage_value: Number(e.target.value || 0) })}
-                      className="w-full p-2 rounded-lg border border-blue-300 dark:border-blue-700 bg-white dark:bg-slate-900 font-mono"
-                    />
+
+                  {/* Baris 1: Umur Manfaat (Manual), Nilai Residu (Auto 10% / Manual), Metode Penyusutan */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block font-bold text-blue-900 dark:text-blue-200 mb-1">
+                        Umur Manfaat (Tahun) *
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="30"
+                        value={formData.useful_life}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          setFormData(prev => ({
+                            ...prev,
+                            useful_life: raw === '' ? '' : Math.max(1, Number(raw))
+                          }));
+                        }}
+                        placeholder="Contoh: 4"
+                        className="w-full p-2 rounded-lg border border-blue-300 dark:border-blue-700 bg-white dark:bg-slate-900 font-bold"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="font-bold text-blue-900 dark:text-blue-200">
+                          Nilai Residu (IDR)
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsSalvageManual(false);
+                            setFormData(prev => ({
+                              ...prev,
+                              salvage_value: estimateSalvageValue(prev.total_cost)
+                            }));
+                          }}
+                          className="text-[10px] font-extrabold text-blue-700 dark:text-blue-300 hover:underline"
+                          title="Hitung ulang estimasi default 10% dari Total Nilai Perolehan"
+                        >
+                          Auto 10%
+                        </button>
+                      </div>
+                      <input
+                        type="number"
+                        min="0"
+                        value={formData.salvage_value}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          setIsSalvageManual(true);
+                          setFormData(prev => ({
+                            ...prev,
+                            salvage_value: raw === '' ? '' : Math.max(0, Number(raw))
+                          }));
+                        }}
+                        placeholder="Contoh: 500000"
+                        className="w-full p-2 rounded-lg border border-blue-300 dark:border-blue-700 bg-white dark:bg-slate-900 font-mono font-bold"
+                      />
+                      <p className="text-[10px] text-blue-700/80 dark:text-blue-300/80 mt-0.5">
+                        {isSalvageManual
+                          ? 'Diisi manual (klik Auto 10% untuk estimasi otomatis)'
+                          : 'Estimasi otomatis 10% dari total perolehan (dapat diubah manual)'}
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-blue-900 dark:text-blue-200 mb-1">
+                        Metode Penyusutan
+                      </label>
+                      <input
+                        type="text"
+                        value="Garis Lurus (Straight Line)"
+                        readOnly
+                        className="w-full p-2 rounded-lg border border-blue-200 dark:border-blue-700 bg-blue-100/60 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 font-bold"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block font-bold text-blue-900 dark:text-blue-200 mb-1">Metode Penyusutan</label>
-                    <input
-                      type="text"
-                      value="Garis Lurus (Straight Line)"
-                      readOnly
-                      className="w-full p-2 rounded-lg border border-blue-200 dark:border-blue-700 bg-blue-100/50 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 font-bold"
-                    />
+
+                  {/* Baris 2: Output Otomatis Beban Penyusutan per Tahun & per Bulan */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-blue-200/80 dark:border-blue-800/70">
+                    <div>
+                      <label className="block font-bold text-blue-900 dark:text-blue-200 mb-1">
+                        Nilai yang Disusutkan (Otomatis)
+                      </label>
+                      <input
+                        type="text"
+                        value={formatIDR(liveDepreciation.depreciableAmount)}
+                        readOnly
+                        className="w-full p-2 rounded-lg border border-blue-200 dark:border-blue-700 bg-white/80 dark:bg-slate-900/70 text-slate-800 dark:text-slate-200 font-mono font-bold"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-emerald-900 dark:text-emerald-300 mb-1">
+                        Penyusutan per Tahun (Otomatis)
+                      </label>
+                      <input
+                        type="text"
+                        value={formatIDR(liveDepreciation.annualDepreciation)}
+                        readOnly
+                        className="w-full p-2 rounded-lg border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 font-mono font-black"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-emerald-900 dark:text-emerald-300 mb-1">
+                        Penyusutan per Bulan (Otomatis)
+                      </label>
+                      <input
+                        type="text"
+                        value={formatIDR(liveDepreciation.monthlyDepreciation)}
+                        readOnly
+                        className="w-full p-2 rounded-lg border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 font-mono font-black"
+                      />
+                    </div>
                   </div>
+
+                  {/* Simulasi Rumus Real-Time */}
+                  <div className="text-[11px] bg-white/75 dark:bg-slate-900/60 border border-blue-200/80 dark:border-blue-800/60 rounded-lg px-3 py-2 text-blue-900 dark:text-blue-200 flex flex-wrap items-center justify-between gap-1">
+                    <span>
+                      Rumus: ({formatIDR(formData.total_cost)} &minus; {formatIDR(formData.salvage_value || 0)}) &divide; {Number(formData.useful_life) || 0} tahun ={' '}
+                      <strong className="text-emerald-700 dark:text-emerald-300">{formatIDR(liveDepreciation.annualDepreciation)} / tahun</strong>{' '}
+                      ({formatIDR(liveDepreciation.monthlyDepreciation)} / bulan)
+                    </span>
+                    {liveDepreciation.exceedsCost && (
+                      <span className="text-rose-600 dark:text-rose-400 font-bold">
+                        Nilai residu melebihi nilai perolehan
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700 text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                  <Info className="w-4 h-4 text-slate-400 shrink-0" />
+                  <span>
+                    Perhitungan <strong>Nilai Residu &amp; Penyusutan</strong> dinonaktifkan karena jenis aset yang dipilih adalah <strong>Inventaris Operasional</strong>.
+                  </span>
                 </div>
               )}
 
@@ -1954,22 +2159,35 @@ export default function InventarisasiAset({
 
               {showDetailModal.asset_type === 'Aset Tetap' && (
                 <div className="p-3 bg-blue-50 dark:bg-blue-950/40 rounded-xl space-y-2">
-                  <p className="font-bold text-blue-900 dark:text-blue-200">Perhitungan Akuntansi SAK EMKM:</p>
+                  <p className="font-bold text-blue-900 dark:text-blue-200">Perhitungan Akuntansi SAK EMKM (Garis Lurus):</p>
                   {(() => {
                     const d = calculateDepreciation(showDetailModal);
+                    const monthly = Math.round(d.annualDeprec / 12);
                     return (
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         <div>
                           <span className="text-[10px] text-blue-700 dark:text-blue-300 block">Umur Manfaat</span>
                           <p className="font-bold">{showDetailModal.useful_life} Tahun</p>
                         </div>
                         <div>
+                          <span className="text-[10px] text-blue-700 dark:text-blue-300 block">Nilai Residu</span>
+                          <p className="font-bold">{formatIDR(showDetailModal.salvage_value || 0)}</p>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-blue-700 dark:text-blue-300 block">Penyusutan / Tahun</span>
+                          <p className="font-bold text-blue-800 dark:text-blue-200">{formatIDR(Math.round(d.annualDeprec))}</p>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-blue-700 dark:text-blue-300 block">Penyusutan / Bulan</span>
+                          <p className="font-bold text-blue-800 dark:text-blue-200">{formatIDR(monthly)}</p>
+                        </div>
+                        <div>
                           <span className="text-[10px] text-blue-700 dark:text-blue-300 block">Akumulasi Penyusutan</span>
-                          <p className="font-bold text-rose-600">{formatIDR(d.accumDeprec)}</p>
+                          <p className="font-bold text-rose-600">{formatIDR(Math.round(d.accumDeprec))}</p>
                         </div>
                         <div>
                           <span className="text-[10px] text-blue-700 dark:text-blue-300 block">Nilai Buku Bersih</span>
-                          <p className="font-black text-emerald-700 dark:text-emerald-300">{formatIDR(d.bookValue)}</p>
+                          <p className="font-black text-emerald-700 dark:text-emerald-300">{formatIDR(Math.round(d.bookValue))}</p>
                         </div>
                       </div>
                     );
