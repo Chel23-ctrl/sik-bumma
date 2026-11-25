@@ -67,7 +67,7 @@ export default function LoginSplit({ onLogin, onBackToStore }) {
 
     // Check if password is valid
     if (!validPasswords.includes(pw)) {
-      toast.error('Kata sandi salah. Gunakan BummaMekarSari2026! atau arvea2026!');
+      toast.error('Kata sandi tidak valid. Silakan periksa kembali kata sandi Anda.');
       return;
     }
 
@@ -300,7 +300,7 @@ export default function LoginSplit({ onLogin, onBackToStore }) {
             <div className="flex items-center justify-between mb-2.5">
               <h3 className="text-[11px] font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
                 <Users className="w-3.5 h-3.5 text-emerald-600" />
-                6 PERAN PENGGUNA (KATA SANDI: BummaMekarSari2026!)
+                6 PERAN PENGGUNA
               </h3>
             </div>
 
