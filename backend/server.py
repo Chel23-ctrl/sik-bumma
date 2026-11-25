@@ -97,6 +97,121 @@ DEFAULT_EMPLOYEES = [
     {'id': 'emp_4', 'nik': '9271000004', 'name': 'Markus Krey', 'position': 'Kepala Unit Jasa', 'unit': 'Unit Jasa Penyewaan', 'salary': 3800000, 'status': 'Aktif'}
 ]
 
+DEFAULT_ASSETS = [
+    {
+        'id': 'ast_1',
+        'inv_number': 'AST-0001',
+        'product_code': 'PRD-007',
+        'product_name': 'Mesin Penetas Telur Otomatis 500 Butir',
+        'category': 'Peralatan Peternakan',
+        'asset_type': 'Aset Tetap',
+        'model_type': 'Individual',
+        'unit_usaha': 'perdagangan',
+        'brand': 'Inkubator Sentani Tech',
+        'type_name': 'Super Hatch 500',
+        'serial_number': 'SN-INC-2024-0089',
+        'qty': 1,
+        'unit': 'Unit',
+        'unit_price': 7500000,
+        'total_cost': 7500000,
+        'acq_date': '2024-03-15',
+        'acq_source': 'Pembelian',
+        'useful_life': 5,
+        'salvage_value': 500000,
+        'deprec_method': 'Garis Lurus',
+        'location': 'Tempat Produksi Kandang',
+        'department': 'Unit Perdagangan & Peternakan',
+        'pic': 'Yohanis Wenda',
+        'condition': 'Baik',
+        'status': 'Aktif/Digunakan',
+        'notes': 'Kondisi prima, digunakan untuk penetasan bibit ayam petelur lokal'
+    },
+    {
+        'id': 'ast_2',
+        'inv_number': 'AST-0002',
+        'product_code': 'PRD-008',
+        'product_name': 'Komputer Administrasi Kantor',
+        'category': 'Teknologi & Kantor',
+        'asset_type': 'Aset Tetap',
+        'model_type': 'Individual',
+        'unit_usaha': 'perdagangan',
+        'brand': 'Lenovo ThinkCentre',
+        'type_name': 'M70s Gen 3 Core i5',
+        'serial_number': 'SN-LNV-2024-7712',
+        'qty': 1,
+        'unit': 'Unit',
+        'unit_price': 6500000,
+        'total_cost': 6500000,
+        'acq_date': '2024-01-10',
+        'acq_source': 'Penyertaan Modal',
+        'useful_life': 4,
+        'salvage_value': 500000,
+        'deprec_method': 'Garis Lurus',
+        'location': 'Kantor BUMKam',
+        'department': 'Unit Perdagangan & Peternakan',
+        'pic': 'Rita Fanghoi',
+        'condition': 'Baik',
+        'status': 'Aktif/Digunakan',
+        'notes': 'Komputer utama pencatatan aplikasi akuntansi SAK EMKM ARVEA'
+    },
+    {
+        'id': 'ast_3',
+        'inv_number': 'INV-0001',
+        'product_code': 'PRD-010',
+        'product_name': 'Kursi Lipat Acara / Pesta',
+        'category': 'Perlengkapan Acara',
+        'asset_type': 'Inventaris Operasional',
+        'model_type': 'Kelompok',
+        'unit_usaha': 'jasa',
+        'brand': 'Futura',
+        'type_name': 'Chitose Standard',
+        'serial_number': '-',
+        'qty': 150,
+        'unit': 'Unit',
+        'unit_price': 150000,
+        'total_cost': 22500000,
+        'acq_date': '2024-05-20',
+        'acq_source': 'Pembelian',
+        'useful_life': 0,
+        'salvage_value': 0,
+        'deprec_method': '-',
+        'location': 'Gudang Tenda & Perlengkapan',
+        'department': 'Unit Jasa Penyewaan',
+        'pic': 'Markus Krey',
+        'condition': 'Baik',
+        'status': 'Aktif/Digunakan',
+        'notes': '150 unit kursi sewa dalam kelompok, bersih dan siap pasang'
+    },
+    {
+        'id': 'ast_4',
+        'inv_number': 'INV-0002',
+        'product_code': 'PRD-011',
+        'product_name': 'Meja Persegi Acara / Pertemuan',
+        'category': 'Perlengkapan Acara',
+        'asset_type': 'Inventaris Operasional',
+        'model_type': 'Kelompok',
+        'unit_usaha': 'jasa',
+        'brand': 'Olympic Adat',
+        'type_name': 'Meja Lipat 120x60',
+        'serial_number': '-',
+        'qty': 20,
+        'unit': 'Unit',
+        'unit_price': 450000,
+        'total_cost': 9000000,
+        'acq_date': '2024-06-12',
+        'acq_source': 'Pembelian',
+        'useful_life': 0,
+        'salvage_value': 0,
+        'deprec_method': '-',
+        'location': 'Gudang Tenda & Perlengkapan',
+        'department': 'Unit Jasa Penyewaan',
+        'pic': 'Markus Krey',
+        'condition': 'Baik',
+        'status': 'Aktif/Digunakan',
+        'notes': 'Meja operasional acara sewa warga kampung'
+    }
+]
+
 DEFAULT_PROFILE = {
     'id': 'profile',
     'name': 'BUMMA MEKAR SARI',
@@ -140,6 +255,8 @@ async def seed_data():
         await db.suppliers.insert_many(DEFAULT_SUPPLIERS)
     if await db.employees.count_documents({}) == 0:
         await db.employees.insert_many(DEFAULT_EMPLOYEES)
+    if await db.assets.count_documents({}) == 0:
+        await db.assets.insert_many(DEFAULT_ASSETS)
     if await db.profile.count_documents({}) == 0:
         await db.profile.insert_one(DEFAULT_PROFILE)
 
@@ -287,6 +404,114 @@ async def list_journals():
                 'balance': running_balance
             })
     return {'entries': jrns, 'rows': flat_rows}
+
+VALID_ASSET_UNITS = {'perdagangan', 'jasa'}
+
+def normalize_asset_unit(raw_unit: Optional[str]) -> str:
+    val = (raw_unit or '').strip().lower()
+    if val in ('perdagangan', 'unit perdagangan'):
+        return 'perdagangan'
+    if val in ('jasa', 'unit jasa'):
+        return 'jasa'
+    return ''
+
+def summarize_assets(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    def calc(subset):
+        return {
+            'records': len(subset),
+            'total_units': sum(int(x.get('qty', 1) or 1) for x in subset),
+            'total_value': sum(rupiah(x.get('total_cost', 0)) for x in subset)
+        }
+    perdagangan = [x for x in rows if normalize_asset_unit(x.get('unit_usaha')) == 'perdagangan']
+    jasa = [x for x in rows if normalize_asset_unit(x.get('unit_usaha')) == 'jasa']
+    return {
+        'all': calc(rows),
+        'perdagangan': calc(perdagangan),
+        'jasa': calc(jasa)
+    }
+
+@api.get('/assets')
+async def list_assets(unit: str = 'all', search: str = ''):
+    await seed_data()
+    all_assets = await db.assets.find({}, {'_id': 0}).to_list(1000)
+    summary = summarize_assets(all_assets)
+
+    unit_filter = (unit or 'all').strip().lower()
+    filtered = all_assets
+    if unit_filter in VALID_ASSET_UNITS:
+        filtered = [a for a in filtered if normalize_asset_unit(a.get('unit_usaha')) == unit_filter]
+
+    q = (search or '').strip().lower()
+    if q:
+        filtered = [
+            a for a in filtered
+            if q in str(a.get('inv_number', '')).lower()
+            or q in str(a.get('product_name', '')).lower()
+            or q in str(a.get('product_code', '')).lower()
+            or q in str(a.get('serial_number', '')).lower()
+            or q in str(a.get('pic', '')).lower()
+            or q in str(a.get('unit_usaha', '')).lower()
+        ]
+
+    return {'items': filtered, 'summary': summary}
+
+@api.post('/assets')
+async def create_asset(body: RecordBody, user=Depends(current_user)):
+    await seed_data()
+    data = dict(body.data or {})
+    unit_usaha = normalize_asset_unit(data.get('unit_usaha'))
+    if unit_usaha not in VALID_ASSET_UNITS:
+        raise HTTPException(400, 'Unit Usaha wajib dipilih (perdagangan atau jasa).')
+
+    qty = max(1, int(data.get('qty', 1) or 1))
+    unit_price = rupiah(data.get('unit_price', 0))
+    item = {
+        'id': uid('ast'),
+        **data,
+        'unit_usaha': unit_usaha,
+        'department': data.get('department') or (
+            'Unit Perdagangan & Peternakan' if unit_usaha == 'perdagangan' else 'Unit Jasa Penyewaan'
+        ),
+        'qty': qty,
+        'unit_price': unit_price,
+        'total_cost': qty * unit_price,
+        'created_at': now()
+    }
+    await db.assets.insert_one(item)
+    return public(item)
+
+@api.put('/assets/{asset_id}')
+async def update_asset(asset_id: str, body: RecordBody, user=Depends(current_user)):
+    await seed_data()
+    data = dict(body.data or {})
+    unit_usaha = normalize_asset_unit(data.get('unit_usaha'))
+    if unit_usaha not in VALID_ASSET_UNITS:
+        raise HTTPException(400, 'Unit Usaha wajib dipilih (perdagangan atau jasa).')
+
+    qty = max(1, int(data.get('qty', 1) or 1))
+    unit_price = rupiah(data.get('unit_price', 0))
+    update_fields = {
+        **data,
+        'unit_usaha': unit_usaha,
+        'qty': qty,
+        'unit_price': unit_price,
+        'total_cost': qty * unit_price,
+        'updated_at': now()
+    }
+    update_fields.pop('id', None)
+    result = await db.assets.update_one({'id': asset_id}, {'$set': update_fields})
+    if result.matched_count == 0:
+        raise HTTPException(404, 'Data aset tidak ditemukan.')
+    updated = await db.assets.find_one({'id': asset_id}, {'_id': 0})
+    return updated
+
+@api.delete('/assets/{asset_id}')
+async def delete_asset(asset_id: str, user=Depends(current_user)):
+    await seed_data()
+    result = await db.assets.delete_one({'id': asset_id})
+    if result.deleted_count == 0:
+        raise HTTPException(404, 'Data aset tidak ditemukan.')
+    return {'ok': True}
 
 # Master Data Generic CRUD
 @api.get('/master/{resource}')

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Boxes, 
   Plus, 
@@ -22,21 +22,81 @@ import {
   MapPin,
   User,
   Layers,
-  ChevronRight
+  ChevronRight,
+  Store,
+  Briefcase,
+  Building2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatIDR } from './Transaksi';
 import { exportToExcel } from '../utils/exportUtils';
+
+export const UNIT_USAHA_META = {
+  perdagangan: {
+    value: 'perdagangan',
+    label: 'Unit Perdagangan',
+    shortLabel: 'Perdagangan',
+    department: 'Unit Perdagangan & Peternakan',
+    badgeClass:
+      'bg-emerald-100 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/70 dark:text-emerald-300 dark:border-emerald-800'
+  },
+  jasa: {
+    value: 'jasa',
+    label: 'Unit Jasa',
+    shortLabel: 'Jasa',
+    department: 'Unit Jasa Penyewaan',
+    badgeClass:
+      'bg-blue-100 text-blue-800 border border-blue-200 dark:bg-blue-950/70 dark:text-blue-300 dark:border-blue-800'
+  }
+};
+
+export const inferAssetUnit = (asset) => {
+  const raw = (asset?.unit_usaha || '').toString().trim().toLowerCase();
+  if (raw === 'perdagangan' || raw === 'unit perdagangan') return 'perdagangan';
+  if (raw === 'jasa' || raw === 'unit jasa') return 'jasa';
+
+  const dept = (asset?.department || '').toLowerCase();
+  const loc = (asset?.location || '').toLowerCase();
+  const name = (asset?.product_name || '').toLowerCase();
+  if (
+    asset?.id === 'ast_3' ||
+    asset?.id === 'ast_4' ||
+    dept.includes('jasa') ||
+    loc.includes('tenda') ||
+    loc.includes('gedung') ||
+    name.includes('kursi') ||
+    name.includes('meja') ||
+    name.includes('tenda')
+  ) {
+    return 'jasa';
+  }
+  return 'perdagangan';
+};
+
+const normalizeAssetRecord = (asset) => {
+  const unit_usaha = inferAssetUnit(asset);
+  const product_name =
+    asset.id === 'ast_1' && asset.product_name === 'Mesin Penetas Telur Otomatis'
+      ? 'Mesin Penetas Telur Otomatis 500 Butir'
+      : asset.product_name;
+  return {
+    ...asset,
+    product_name,
+    unit_usaha,
+    department: asset.department || UNIT_USAHA_META[unit_usaha].department
+  };
+};
 
 export const INITIAL_ASSETS = [
   {
     id: 'ast_1',
     inv_number: 'AST-0001',
     product_code: 'PRD-007',
-    product_name: 'Mesin Penetas Telur Otomatis',
+    product_name: 'Mesin Penetas Telur Otomatis 500 Butir',
     category: 'Peralatan Peternakan',
     asset_type: 'Aset Tetap',
     model_type: 'Individual',
+    unit_usaha: 'perdagangan',
     brand: 'Inkubator Sentani Tech',
     type_name: 'Super Hatch 500',
     serial_number: 'SN-INC-2024-0089',
@@ -64,6 +124,7 @@ export const INITIAL_ASSETS = [
     category: 'Teknologi & Kantor',
     asset_type: 'Aset Tetap',
     model_type: 'Individual',
+    unit_usaha: 'perdagangan',
     brand: 'Lenovo ThinkCentre',
     type_name: 'M70s Gen 3 Core i5',
     serial_number: 'SN-LNV-2024-7712',
@@ -77,7 +138,7 @@ export const INITIAL_ASSETS = [
     salvage_value: 500000,
     deprec_method: 'Garis Lurus',
     location: 'Kantor BUMKam',
-    department: 'Sekretariat & Keuangan',
+    department: 'Unit Perdagangan & Peternakan',
     pic: 'Rita Fanghoi',
     condition: 'Baik',
     status: 'Aktif/Digunakan',
@@ -91,6 +152,7 @@ export const INITIAL_ASSETS = [
     category: 'Perlengkapan Acara',
     asset_type: 'Inventaris Operasional',
     model_type: 'Kelompok',
+    unit_usaha: 'jasa',
     brand: 'Futura',
     type_name: 'Chitose Standard',
     serial_number: '-',
@@ -118,6 +180,7 @@ export const INITIAL_ASSETS = [
     category: 'Perlengkapan Acara',
     asset_type: 'Inventaris Operasional',
     model_type: 'Kelompok',
+    unit_usaha: 'jasa',
     brand: 'Olympic Adat',
     type_name: 'Meja Lipat 120x60',
     serial_number: '-',
@@ -172,12 +235,21 @@ export const INITIAL_ASSET_LOGS = [
 export default function InventarisasiAset({
   products = [],
   profile = {},
-  selectedYear = '2026'
+  selectedYear = '2026',
+  selectedUnit = 'all'
 }) {
   const [assets, setAssets] = useState(() => {
     try {
       const stored = localStorage.getItem('arvea_assets');
-      return stored ? JSON.parse(stored) : INITIAL_ASSETS;
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const normalized = parsed.map(normalizeAssetRecord);
+          try { localStorage.setItem('arvea_assets', JSON.stringify(normalized)); } catch (e) {}
+          return normalized;
+        }
+      }
+      return INITIAL_ASSETS;
     } catch (e) {
       return INITIAL_ASSETS;
     }
@@ -194,8 +266,9 @@ export default function InventarisasiAset({
 
   // Save to localStorage
   const saveAssets = (newAssets) => {
-    setAssets(newAssets);
-    try { localStorage.setItem('arvea_assets', JSON.stringify(newAssets)); } catch (e) {}
+    const normalized = newAssets.map(normalizeAssetRecord);
+    setAssets(normalized);
+    try { localStorage.setItem('arvea_assets', JSON.stringify(normalized)); } catch (e) {}
   };
 
   const saveLogs = (newLogs) => {
@@ -205,6 +278,17 @@ export default function InventarisasiAset({
 
   // View Mode: 'list' | 'logs'
   const [activeTab, setActiveTab] = useState('list');
+
+  // Unit Usaha Tab: 'all' | 'perdagangan' | 'jasa'
+  const [unitTab, setUnitTab] = useState(
+    selectedUnit === 'perdagangan' || selectedUnit === 'jasa' ? selectedUnit : 'all'
+  );
+
+  useEffect(() => {
+    if (selectedUnit === 'perdagangan' || selectedUnit === 'jasa' || selectedUnit === 'all') {
+      setUnitTab(selectedUnit);
+    }
+  }, [selectedUnit]);
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -224,6 +308,7 @@ export default function InventarisasiAset({
   const [formData, setFormData] = useState({
     asset_type: 'Aset Tetap',
     model_type: 'Individual',
+    unit_usaha: '',
     product_id: '',
     inv_number: '',
     product_code: '',
@@ -282,8 +367,27 @@ export default function InventarisasiAset({
     };
   };
 
-  // Summary Metrics Computation
+  // Summary Metrics Computation (per Unit Usaha + Overall)
+  const unitSummary = useMemo(() => {
+    const calc = (list) => ({
+      records: list.length,
+      totalUnits: list.reduce((sum, a) => sum + Number(a.qty || 1), 0),
+      totalValue: list.reduce((sum, a) => sum + Number(a.total_cost || 0), 0)
+    });
+
+    const perdaganganList = assets.filter(a => inferAssetUnit(a) === 'perdagangan');
+    const jasaList = assets.filter(a => inferAssetUnit(a) === 'jasa');
+
+    return {
+      all: calc(assets),
+      perdagangan: calc(perdaganganList),
+      jasa: calc(jasaList)
+    };
+  }, [assets]);
+
   const summaryStats = useMemo(() => {
+    const scopedAssets =
+      unitTab === 'all' ? assets : assets.filter(a => inferAssetUnit(a) === unitTab);
     let countFixed = 0;
     let countOper = 0;
     let totalAcqCost = 0;
@@ -291,7 +395,7 @@ export default function InventarisasiAset({
     let countActive = 0;
     let countDamaged = 0;
 
-    assets.forEach(a => {
+    scopedAssets.forEach(a => {
       const cost = Number(a.total_cost || 0);
       totalAcqCost += cost;
 
@@ -319,9 +423,9 @@ export default function InventarisasiAset({
       totalBookVal,
       countActive,
       countDamaged,
-      totalCount: assets.length
+      totalCount: scopedAssets.length
     };
-  }, [assets, selectedYear]);
+  }, [assets, selectedYear, unitTab]);
 
   // Filtered Products from Master Data based on selected asset_type
   const availableMasterProducts = useMemo(() => {
@@ -343,6 +447,7 @@ export default function InventarisasiAset({
     setFormData({
       asset_type: 'Aset Tetap',
       model_type: 'Individual',
+      unit_usaha: '',
       product_id: '',
       inv_number: `AST-${nextNum}`,
       product_code: '',
@@ -375,6 +480,7 @@ export default function InventarisasiAset({
     setEditingAssetId(ast.id);
     setFormData({
       ...ast,
+      unit_usaha: inferAssetUnit(ast),
       product_id: ''
     });
     setShowAddModal(true);
@@ -418,22 +524,35 @@ export default function InventarisasiAset({
 
     const unitPrice = Number(matched.buy_price || 0);
     const qty = formData.model_type === 'Individual' ? 1 : Math.max(1, formData.qty || 1);
-    setFormData(prev => ({
-      ...prev,
-      product_id: prodId,
-      product_code: matched.code,
-      product_name: matched.name,
-      category: matched.category,
-      unit: matched.unit || 'Unit',
-      unit_price: unitPrice,
-      total_cost: qty * unitPrice
-    }));
+    const inferredUnit =
+      matched.unit_usaha === 'perdagangan' || matched.unit_usaha === 'jasa'
+        ? matched.unit_usaha
+        : '';
+    setFormData(prev => {
+      const nextUnit = prev.unit_usaha || inferredUnit;
+      return {
+        ...prev,
+        unit_usaha: nextUnit,
+        department: nextUnit ? UNIT_USAHA_META[nextUnit].department : prev.department,
+        product_id: prodId,
+        product_code: matched.code,
+        product_name: matched.name,
+        category: matched.category,
+        unit: matched.unit || 'Unit',
+        unit_price: unitPrice,
+        total_cost: qty * unitPrice
+      };
+    });
   };
 
   // Save Asset Form
   const handleSaveAsset = (e) => {
     e.preventDefault();
 
+    if (!formData.unit_usaha || !UNIT_USAHA_META[formData.unit_usaha]) {
+      toast.error('Harap pilih Unit Usaha (Unit Perdagangan atau Unit Jasa) terlebih dahulu.');
+      return;
+    }
     if (!formData.product_name.trim()) {
       toast.error('Harap pilih produk dari Master Data terlebih dahulu.');
       return;
@@ -575,6 +694,7 @@ export default function InventarisasiAset({
         category: parent.category,
         asset_type: parent.asset_type,
         model_type: 'Individual',
+        unit_usaha: inferAssetUnit(parent),
         brand: parent.brand || '-',
         type_name: parent.type_name || '-',
         serial_number: `SPLIT-${Date.now().toString().slice(-4)}-${i + 1}`,
@@ -614,9 +734,11 @@ export default function InventarisasiAset({
     setShowSplitModal(null);
   };
 
-  // Filtered Assets List
+  // Filtered Assets List (scoped by active Unit Usaha tab + search + filters)
   const filteredAssets = useMemo(() => {
     return assets.filter(a => {
+      const assetUnit = inferAssetUnit(a);
+      if (unitTab !== 'all' && assetUnit !== unitTab) return false;
       if (filterType !== 'all' && a.asset_type !== filterType) return false;
       if (filterModel !== 'all' && a.model_type !== filterModel) return false;
       if (filterCondition !== 'all' && a.condition !== filterCondition) return false;
@@ -630,12 +752,13 @@ export default function InventarisasiAset({
         const matchCode = (a.product_code || '').toLowerCase().includes(q);
         const matchSN = (a.serial_number || '').toLowerCase().includes(q);
         const matchPIC = (a.pic || '').toLowerCase().includes(q);
-        if (!matchInv && !matchName && !matchCode && !matchSN && !matchPIC) return false;
+        const matchUnit = (UNIT_USAHA_META[assetUnit]?.label || '').toLowerCase().includes(q);
+        if (!matchInv && !matchName && !matchCode && !matchSN && !matchPIC && !matchUnit) return false;
       }
 
       return true;
     });
-  }, [assets, filterType, filterModel, filterCondition, filterStatus, filterLocation, searchQuery]);
+  }, [assets, unitTab, filterType, filterModel, filterCondition, filterStatus, filterLocation, searchQuery]);
 
   // Export to Excel handler
   const handleExportExcel = (exportAll = false) => {
@@ -647,9 +770,11 @@ export default function InventarisasiAset({
 
     const data = sourceData.map((a, idx) => {
       const dep = calculateDepreciation(a);
+      const unitMeta = UNIT_USAHA_META[inferAssetUnit(a)];
       return {
         No: idx + 1,
         'Nomor Inventaris': a.inv_number,
+        'Unit Usaha': unitMeta.label,
         'Kode Produk': a.product_code,
         'Nama Aset': a.product_name,
         Kategori: a.category,
@@ -741,7 +866,94 @@ export default function InventarisasiAset({
         </div>
       </div>
 
-      {/* 2. SUMMARY DASHBOARD CARDS (DOCX PARAGRAPH 849-858) */}
+      {/* 2A. RINGKASAN ASET PER UNIT USAHA (SEMUA UNIT / PERDAGANGAN / JASA) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 print:hidden">
+        <button
+          type="button"
+          onClick={() => { setActiveTab('list'); setUnitTab('all'); }}
+          className={`text-left rounded-2xl border p-4 transition shadow-xs ${
+            unitTab === 'all' && activeTab === 'list'
+              ? 'bg-slate-900 dark:bg-slate-800 border-slate-900 dark:border-emerald-600 text-white ring-2 ring-emerald-500/30'
+              : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className={`text-[10px] font-extrabold uppercase tracking-wider ${unitTab === 'all' && activeTab === 'list' ? 'text-emerald-300' : 'text-slate-400'}`}>
+              Total Seluruh Aset
+            </span>
+            <Building2 className={`w-4 h-4 ${unitTab === 'all' && activeTab === 'list' ? 'text-emerald-300' : 'text-slate-400'}`} />
+          </div>
+          <div className="mt-1.5 flex items-baseline justify-between gap-2">
+            <p className={`text-lg font-black ${unitTab === 'all' && activeTab === 'list' ? 'text-white' : 'text-slate-900 dark:text-white'}`}>
+              {unitSummary.all.totalUnits} Unit
+            </p>
+            <span className={`text-[11px] font-bold ${unitTab === 'all' && activeTab === 'list' ? 'text-slate-300' : 'text-slate-500'}`}>
+              {unitSummary.all.records} Jenis Aset
+            </span>
+          </div>
+          <p className={`text-xs font-extrabold mt-1 font-mono ${unitTab === 'all' && activeTab === 'list' ? 'text-emerald-300' : 'text-emerald-700 dark:text-emerald-400'}`}>
+            {formatIDR(unitSummary.all.totalValue)}
+          </p>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => { setActiveTab('list'); setUnitTab('perdagangan'); }}
+          className={`text-left rounded-2xl border p-4 transition shadow-xs ${
+            unitTab === 'perdagangan' && activeTab === 'list'
+              ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-500 ring-2 ring-emerald-500/25'
+              : 'bg-white dark:bg-slate-900 border-emerald-200/80 dark:border-emerald-900/50 hover:border-emerald-400'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+              Total Aset Unit Perdagangan
+            </span>
+            <Store className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+          </div>
+          <div className="mt-1.5 flex items-baseline justify-between gap-2">
+            <p className="text-lg font-black text-slate-900 dark:text-white">
+              {unitSummary.perdagangan.totalUnits} Unit
+            </p>
+            <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
+              {unitSummary.perdagangan.records} Jenis Aset
+            </span>
+          </div>
+          <p className="text-xs font-extrabold mt-1 font-mono text-emerald-700 dark:text-emerald-400">
+            {formatIDR(unitSummary.perdagangan.totalValue)}
+          </p>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => { setActiveTab('list'); setUnitTab('jasa'); }}
+          className={`text-left rounded-2xl border p-4 transition shadow-xs ${
+            unitTab === 'jasa' && activeTab === 'list'
+              ? 'bg-blue-50 dark:bg-blue-950/50 border-blue-500 ring-2 ring-blue-500/25'
+              : 'bg-white dark:bg-slate-900 border-blue-200/80 dark:border-blue-900/50 hover:border-blue-400'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-700 dark:text-blue-400">
+              Total Aset Unit Jasa
+            </span>
+            <Briefcase className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+          </div>
+          <div className="mt-1.5 flex items-baseline justify-between gap-2">
+            <p className="text-lg font-black text-slate-900 dark:text-white">
+              {unitSummary.jasa.totalUnits} Unit
+            </p>
+            <span className="text-[11px] font-bold text-blue-700 dark:text-blue-300">
+              {unitSummary.jasa.records} Jenis Aset
+            </span>
+          </div>
+          <p className="text-xs font-extrabold mt-1 font-mono text-blue-700 dark:text-blue-400">
+            {formatIDR(unitSummary.jasa.totalValue)}
+          </p>
+        </button>
+      </div>
+
+      {/* 2B. SUMMARY DASHBOARD CARDS (DOCX PARAGRAPH 849-858) */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 print:hidden">
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs">
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Aset Tetap</span>
@@ -812,6 +1024,72 @@ export default function InventarisasiAset({
           Tahun Evaluasi: <strong className="text-emerald-700 dark:text-emerald-400">{selectedYear}</strong>
         </span>
       </div>
+
+      {/* 3B. TAB PEMISAHAN UNIT USAHA: SEMUA UNIT | UNIT PERDAGANGAN | UNIT JASA */}
+      {activeTab === 'list' && (
+        <div className="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-2 shadow-xs print:hidden">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setUnitTab('all')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+                unitTab === 'all'
+                  ? 'bg-[#0a3a2a] text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Building2 className="w-3.5 h-3.5" />
+              <span>Semua Unit</span>
+              <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-black ${
+                unitTab === 'all' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200'
+              }`}>
+                {unitSummary.all.records}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setUnitTab('perdagangan')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+                unitTab === 'perdagangan'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'text-emerald-800 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/50'
+              }`}
+            >
+              <Store className="w-3.5 h-3.5" />
+              <span>Unit Perdagangan</span>
+              <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-black ${
+                unitTab === 'perdagangan' ? 'bg-white/20 text-white' : 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200'
+              }`}>
+                {unitSummary.perdagangan.records}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setUnitTab('jasa')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+                unitTab === 'jasa'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-blue-800 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/50'
+              }`}
+            >
+              <Briefcase className="w-3.5 h-3.5" />
+              <span>Unit Jasa</span>
+              <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-black ${
+                unitTab === 'jasa' ? 'bg-white/20 text-white' : 'bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200'
+              }`}>
+                {unitSummary.jasa.records}
+              </span>
+            </button>
+          </div>
+
+          <span className="text-[11px] text-slate-500 dark:text-slate-400 px-2 font-medium">
+            Menampilkan <strong className="text-slate-900 dark:text-white">{filteredAssets.length}</strong> aset
+            {unitTab === 'all' ? ' (Semua Unit)' : ` (${UNIT_USAHA_META[unitTab].label})`}
+          </span>
+        </div>
+      )}
 
       {/* 4. FILTER PANEL & SEARCH BAR (DOCX 1259-1273) */}
       {activeTab === 'list' && (
@@ -937,6 +1215,9 @@ export default function InventarisasiAset({
                   <th className="p-3.5 print:p-1">No</th>
                   <th className="p-3.5 print:p-1">No. Inventaris</th>
                   <th className="p-3.5 print:p-1">Nama Aset</th>
+                  {unitTab === 'all' && (
+                    <th className="p-3.5 print:p-1 text-center">Unit Usaha</th>
+                  )}
                   <th className="p-3.5 print:p-1 text-center">Jenis &amp; Model</th>
                   <th className="p-3.5 print:p-1 text-center">Qty</th>
                   <th className="p-3.5 print:p-1 text-right">Nilai / Unit</th>
@@ -950,13 +1231,14 @@ export default function InventarisasiAset({
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {filteredAssets.length === 0 ? (
                   <tr>
-                    <td colSpan="11" className="text-center py-12 text-slate-400 print:py-4">
+                    <td colSpan={unitTab === 'all' ? 12 : 11} className="text-center py-12 text-slate-400 print:py-4">
                       Tidak ada data inventarisasi aset yang cocok dengan filter. Klik "+ Tambah Aset" untuk mencatat aset baru.
                     </td>
                   </tr>
                 ) : (
                   filteredAssets.map((ast, idx) => {
                     const dep = calculateDepreciation(ast);
+                    const unitMeta = UNIT_USAHA_META[inferAssetUnit(ast)];
                     return (
                       <tr key={ast.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
                         <td className="p-3.5 print:p-1 text-slate-400 font-mono print:text-[7.5pt]">{idx + 1}</td>
@@ -967,6 +1249,18 @@ export default function InventarisasiAset({
                           <p className="font-bold text-slate-900 dark:text-white leading-tight print:text-[7.5pt] print:overflow-visible print:whitespace-normal">{ast.product_name}</p>
                           <p className="text-[10px] text-slate-400 mt-0.5 print:text-[6.5pt]">{ast.product_code} &bull; {ast.category}</p>
                         </td>
+                        {unitTab === 'all' && (
+                          <td className="p-3.5 print:p-1 text-center whitespace-nowrap">
+                            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold print:text-[6.5pt] ${unitMeta.badgeClass}`}>
+                              {unitMeta.value === 'perdagangan' ? (
+                                <Store className="w-3 h-3" />
+                              ) : (
+                                <Briefcase className="w-3 h-3" />
+                              )}
+                              {unitMeta.shortLabel}
+                            </span>
+                          </td>
+                        )}
                         <td className="p-3.5 print:p-1 text-center whitespace-nowrap">
                           <div className="space-y-1">
                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold block print:text-[6.5pt] ${
@@ -1192,7 +1486,32 @@ export default function InventarisasiAset({
                 </div>
               </div>
 
-              {/* STEP 3: PILIH PRODUK DARI MASTER DATA (PERLAKUAN PRODUK FILTERED) */}
+              {/* STEP 3: PILIH UNIT USAHA (WAJIB) & PRODUK DARI MASTER DATA */}
+              <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                <label className="block font-bold text-slate-800 dark:text-slate-200 mb-1 flex items-center justify-between">
+                  <span>Unit Usaha *</span>
+                  <span className="text-[10px] text-slate-500 font-semibold">Wajib dipilih untuk klasifikasi aset per unit</span>
+                </label>
+                <select
+                  value={formData.unit_usaha}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setFormData(prev => ({
+                      ...prev,
+                      unit_usaha: val,
+                      department: val && UNIT_USAHA_META[val] ? UNIT_USAHA_META[val].department : prev.department
+                    }));
+                  }}
+                  className="w-full p-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 font-bold text-slate-800 dark:text-slate-200"
+                  required
+                >
+                  <option value="">-- Pilih Unit Usaha --</option>
+                  <option value="perdagangan">Unit Perdagangan</option>
+                  <option value="jasa">Unit Jasa</option>
+                </select>
+              </div>
+
+              {/* STEP 4: PILIH PRODUK DARI MASTER DATA (PERLAKUAN PRODUK FILTERED) */}
               <div className="bg-emerald-50 dark:bg-emerald-950/40 p-4 rounded-xl border border-emerald-200 dark:border-emerald-800">
                 <label className="block font-bold text-emerald-900 dark:text-emerald-200 mb-1 flex items-center justify-between">
                   <span>Langkah 3 &mdash; Pilih Produk Sumber dari Master Data *</span>
@@ -1589,7 +1908,17 @@ export default function InventarisasiAset({
                 <div>
                   <span className="text-[10px] text-slate-400 block">Kategori &amp; Jenis</span>
                   <p className="font-semibold text-slate-800 dark:text-slate-200">{showDetailModal.category}</p>
-                  <span className="text-[10px] font-bold text-emerald-600">{showDetailModal.asset_type} ({showDetailModal.model_type})</span>
+                  <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                    <span className="text-[10px] font-bold text-emerald-600">{showDetailModal.asset_type} ({showDetailModal.model_type})</span>
+                    {(() => {
+                      const uMeta = UNIT_USAHA_META[inferAssetUnit(showDetailModal)];
+                      return (
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${uMeta.badgeClass}`}>
+                          {uMeta.label}
+                        </span>
+                      );
+                    })()}
+                  </div>
                 </div>
               </div>
 

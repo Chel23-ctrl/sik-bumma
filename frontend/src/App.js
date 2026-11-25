@@ -851,6 +851,7 @@ export default function App() {
               setProducts={setProducts}
               profile={profile}
               selectedYear={selectedYear}
+              selectedUnit={selectedUnit}
             />
           )}
 
