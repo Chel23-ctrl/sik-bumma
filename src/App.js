@@ -43,6 +43,7 @@ import InventarisasiAset from './components/InventarisasiAset';
 import ProfilBUMMA from './components/ProfilBUMMA';
 import StorefrontUlambox, { DEFAULT_CORE_PRODUCTS } from './components/StorefrontUlambox';
 import ScrollToTopButton from './components/ScrollToTopButton';
+import LoadingScreen from './components/LoadingScreen';
 
 const getStorage = (key, defaultVal) => {
   try {
@@ -166,6 +167,50 @@ export const ROLE_PERMISSIONS = {
 export default function App() {
   const [darkMode, setDarkMode] = useState(() => getStorage('dark_mode', false));
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // Global Fullscreen Loading Screen (CoreTaxify-style)
+  const [globalLoading, setGlobalLoading] = useState(true);
+  const [loadingMessage, setLoadingMessage] = useState('Menyiapkan sistem ARVEA...');
+  const loaderTimerRef = useRef(null);
+
+  useEffect(() => {
+    const bootTimer = setTimeout(() => {
+      setGlobalLoading(false);
+    }, 850);
+    return () => {
+      clearTimeout(bootTimer);
+      if (loaderTimerRef.current) clearTimeout(loaderTimerRef.current);
+    };
+  }, []);
+
+  const runWithLoader = (message, taskFn, minDuration = 420) => {
+    if (loaderTimerRef.current) clearTimeout(loaderTimerRef.current);
+    const start = Date.now();
+    setLoadingMessage(message || 'Memuat data...');
+    setGlobalLoading(true);
+
+    return new Promise((resolve, reject) => {
+      const finish = (err, result) => {
+        const elapsed = Date.now() - start;
+        const remaining = Math.max(0, minDuration - elapsed);
+        loaderTimerRef.current = setTimeout(() => {
+          setGlobalLoading(false);
+          if (err) reject(err);
+          else resolve(result);
+        }, remaining);
+      };
+
+      // Allow fade-in to cover view before swapping screen state
+      setTimeout(async () => {
+        try {
+          const res = typeof taskFn === 'function' ? await taskFn() : undefined;
+          finish(null, res);
+        } catch (err) {
+          finish(err);
+        }
+      }, 180);
+    });
+  };
 
   // App Mode ('storefront' | 'backoffice')
   const [appMode, setAppMode] = useState(() => getStorage('app_mode', 'storefront'));
@@ -298,8 +343,21 @@ export default function App() {
   useEffect(() => { setStorage('profile', profile); }, [profile]);
 
   const handleLogout = () => {
-    setUser(null);
-    toast.info('Anda telah keluar.');
+    runWithLoader('Mengakhiri sesi...', () => {
+      setUser(null);
+    }, 480).then(() => {
+      toast.info('Anda telah keluar.');
+    });
+  };
+
+  const handleNavigateMenu = (menuId, label) => {
+    if (menuId === activeMenu) return;
+    runWithLoader(`Memuat ${label}...`, () => {
+      setActiveMenu(menuId);
+      if (mainRef.current) {
+        mainRef.current.scrollTo({ top: 0 });
+      }
+    }, 300);
   };
 
   // Double-Entry Journals
@@ -452,42 +510,45 @@ export default function App() {
     setTransactions(prev => [...newTxList, ...prev]);
   };
 
-  // Render Storefront when in storefront mode
-  if (appMode === 'storefront') {
-    return (
-      <>
-        <Toaster position="top-right" richColors />
-        <StorefrontUlambox
-          products={products}
-          coreProducts={coreProducts}
-          onOpenBackoffice={() => setAppMode('backoffice')}
-          onDirectOrder={handleDirectOrder}
-          profile={profile}
-        />
-      </>
+  const handleLogin = (u) =>
+    runWithLoader(
+      `Memverifikasi akses ${u.role || 'Pengguna'}...`,
+      () => {
+        setUser(u);
+        setActiveMenu('dashboard');
+      },
+      650
     );
-  }
 
-  // Render Login when in backoffice mode without user
-  if (!user) {
-    return (
+  // Unified render so LoadingScreen stays mounted across mode/route changes for seamless fade transitions
+  let viewContent;
+  if (appMode === 'storefront') {
+    viewContent = (
+      <StorefrontUlambox
+        products={products}
+        coreProducts={coreProducts}
+        onOpenBackoffice={() =>
+          runWithLoader('Membuka Portal ARVEA...', () => setAppMode('backoffice'), 480)
+        }
+        onDirectOrder={handleDirectOrder}
+        profile={profile}
+      />
+    );
+  } else if (!user) {
+    viewContent = (
       <>
-        <Toaster position="top-right" richColors />
         <LoginSplit
-          onLogin={(u) => {
-            setUser(u);
-            setActiveMenu('dashboard');
-          }}
-          onBackToStore={() => setAppMode('storefront')}
+          onLogin={handleLogin}
+          onBackToStore={() =>
+            runWithLoader('Membuka Toko Digital...', () => setAppMode('storefront'), 450)
+          }
         />
         <ScrollToTopButton />
       </>
     );
-  }
-
-  return (
+  } else {
+    viewContent = (
     <div className={`min-h-screen flex flex-col ${darkMode ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'} print:bg-white print:text-slate-900 print:min-h-0 print:h-auto print:block`}>
-      <Toaster position="top-right" richColors />
 
       {/* TOP HEADER */}
       <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between px-6 sticky top-0 z-30 print:hidden shadow-xs">
@@ -516,7 +577,9 @@ export default function App() {
 
           {/* Switcher to Storefront */}
           <button
-            onClick={() => setAppMode('storefront')}
+            onClick={() =>
+              runWithLoader('Membuka Toko Digital...', () => setAppMode('storefront'), 450)
+            }
             className="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 text-emerald-800 dark:text-emerald-300 text-xs font-bold border border-emerald-300 dark:border-emerald-700 flex items-center gap-1.5 transition shadow-xs"
             title="Buka Toko Digital Pemesanan BUMKam (Tampilan Ulambox)"
           >
@@ -553,13 +616,16 @@ export default function App() {
                 const targetRole = e.target.value;
                 const matched = DEMO_ACCOUNTS.find(acc => acc.role === targetRole);
                 if (matched) {
-                  setUser({
-                    email: matched.username,
-                    name: matched.name,
-                    role: matched.role,
-                    initials: matched.initials
+                  runWithLoader(`Beralih ke peran ${matched.role}...`, () => {
+                    setUser({
+                      email: matched.username,
+                      name: matched.name,
+                      role: matched.role,
+                      initials: matched.initials
+                    });
+                  }, 420).then(() => {
+                    toast.success(`Beralih ke peran: ${matched.role} (${matched.name})`);
                   });
-                  toast.success(`Beralih ke peran: ${matched.role} (${matched.name})`);
                 }
               }}
               className="bg-transparent text-xs font-bold text-slate-800 dark:text-slate-200 outline-none cursor-pointer pr-1"
@@ -673,7 +739,7 @@ export default function App() {
                 return (
                   <button
                     key={item.id}
-                    onClick={() => setActiveMenu(item.id)}
+                    onClick={() => handleNavigateMenu(item.id, item.label)}
                     className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition ${
                       isActive
                         ? 'bg-emerald-600 text-white shadow-sm font-bold'
@@ -918,5 +984,14 @@ export default function App() {
         </main>
       </div>
     </div>
+    );
+  }
+
+  return (
+    <>
+      <Toaster position="top-right" richColors />
+      <LoadingScreen isLoading={globalLoading} message={loadingMessage} />
+      {viewContent}
+    </>
   );
 }

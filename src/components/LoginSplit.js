@@ -51,6 +51,7 @@ export const DEMO_ACCOUNTS = [
 export default function LoginSplit({ onLogin, onBackToStore }) {
   const [email, setEmail] = useState('administrator');
   const [password, setPassword] = useState('BummaMekarSari2026!');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validPasswords = [
     'bummamekarsari2026!',
@@ -60,8 +61,9 @@ export default function LoginSplit({ onLogin, onBackToStore }) {
     'arvea123'
   ];
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
     const em = email.trim().toLowerCase();
     const pw = password.trim().toLowerCase();
 
@@ -79,36 +81,47 @@ export default function LoginSplit({ onLogin, onBackToStore }) {
              (em === 'admin_bumma' && acc.role === 'Administrator')
     );
 
-    if (matched) {
-      onLogin({
-        email: matched.username,
-        name: matched.name,
-        role: matched.role,
-        initials: matched.initials
-      });
-      toast.success(`Selamat datang, ${matched.name} (${matched.role})`);
-    } else {
-      // Default fallback
-      onLogin({
-        email: email,
-        name: email.split('@')[0].toUpperCase(),
-        role: 'Administrator',
-        initials: 'AD'
-      });
-      toast.success(`Selamat datang, ${email}`);
+    setIsSubmitting(true);
+    try {
+      if (matched) {
+        await onLogin({
+          email: matched.username,
+          name: matched.name,
+          role: matched.role,
+          initials: matched.initials
+        });
+        toast.success(`Selamat datang, ${matched.name} (${matched.role})`);
+      } else {
+        // Default fallback
+        await onLogin({
+          email: email,
+          name: email.split('@')[0].toUpperCase(),
+          role: 'Administrator',
+          initials: 'AD'
+        });
+        toast.success(`Selamat datang, ${email}`);
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleQuickLogin = (acc) => {
+  const handleQuickLogin = async (acc) => {
+    if (isSubmitting) return;
     setEmail(acc.username);
     setPassword('BummaMekarSari2026!');
-    onLogin({
-      email: acc.username,
-      name: acc.name,
-      role: acc.role,
-      initials: acc.initials
-    });
-    toast.success(`Berhasil masuk sebagai ${acc.title} (${acc.role})`);
+    setIsSubmitting(true);
+    try {
+      await onLogin({
+        email: acc.username,
+        name: acc.name,
+        role: acc.role,
+        initials: acc.initials
+      });
+      toast.success(`Berhasil masuk sebagai ${acc.title} (${acc.role})`);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -289,9 +302,10 @@ export default function LoginSplit({ onLogin, onBackToStore }) {
 
             <button
               type="submit"
-              className="w-full py-2.5 px-4 bg-[#0a3a2a] hover:bg-[#06291d] text-white font-bold rounded-xl shadow transition flex items-center justify-center gap-2 text-xs"
+              disabled={isSubmitting}
+              className="w-full py-2.5 px-4 bg-[#0a3a2a] hover:bg-[#06291d] disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow transition flex items-center justify-center gap-2 text-xs"
             >
-              <Lock className="w-3.5 h-3.5" /> Masuk ke Aplikasi ARVEA
+              <Lock className="w-3.5 h-3.5" /> {isSubmitting ? 'Memverifikasi...' : 'Masuk ke Aplikasi ARVEA'}
             </button>
           </form>
 

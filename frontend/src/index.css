@@ -265,3 +265,47 @@
 .shimmer-gleam:hover::after {
   left: 200%;
 }
+
+/* CoreTaxify-Style Indeterminate Progress Bar & Splash Animations */
+@keyframes arveaProgressFlow {
+  0% {
+    transform: translateX(-110%) scaleX(0.35);
+  }
+  45% {
+    transform: translateX(30%) scaleX(0.85);
+  }
+  100% {
+    transform: translateX(220%) scaleX(0.4);
+  }
+}
+
+@keyframes arveaProgressShimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+@keyframes arveaLogoReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.985);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-arvea-progress {
+  animation:
+    arveaProgressFlow 1.55s cubic-bezier(0.4, 0, 0.2, 1) infinite,
+    arveaProgressShimmer 2.2s linear infinite;
+  background-size: 200% 100%;
+}
+
+.animate-arvea-logo {
+  animation: arveaLogoReveal 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
