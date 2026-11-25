@@ -191,7 +191,7 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
           {/* Foto Pertama (Atas) — object-contain agar 100% seluruh anggota kiri-kanan utuh tanpa terpotong */}
           <div className="relative flex-1 w-full flex items-end justify-center overflow-hidden">
             <img
-              src={`${process.env.PUBLIC_URL || ''}/assets/images/foto-bersama-1.jpg?v=2`}
+              src={`${process.env.PUBLIC_URL || ''}/assets/images/foto-bersama-1.jpg?v=3`}
               alt=""
               className="w-full h-full object-contain object-bottom opacity-[0.28] mix-blend-luminosity"
               style={{
