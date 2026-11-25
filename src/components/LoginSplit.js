@@ -230,8 +230,8 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
 
         {/* Main Hero Pitch */}
         <div className="relative z-10 my-8 max-w-xl">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#4B3F82]/35 border border-white/30 text-white text-xs font-bold mb-4 backdrop-blur-md shadow-xs">
-            <Sparkles className="w-3.5 h-3.5 text-amber-200" /> &ldquo;Satu Nilai, Satu Tujuan, Bertumbuh Bersama&rdquo;
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#4B3F82]/45 border border-white/40 text-white text-xs font-semibold tracking-[0.05em] mb-4 backdrop-blur-md shadow-sm arvea-slogan-light">
+            <Sparkles className="w-3.5 h-3.5 text-amber-200 shrink-0" /> &ldquo;Satu Nilai, Satu Tujuan, Bertumbuh Bersama&rdquo;
           </div>
 
           <h2 className="text-2xl md:text-3xl lg:text-4xl font-black tracking-tight text-white leading-tight mb-4 drop-shadow-sm">

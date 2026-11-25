@@ -28,7 +28,7 @@ export default function ArveaLogo({
 
   const wordmarkSrc = isLightOnDark
     ? `${publicBase}/assets/images/arvea-wordmark-white.png`
-    : `${publicBase}/assets/images/arvea-wordmark.png`;
+    : `${publicBase}/assets/images/arvea-wordmark-deep.png`;
 
   const markSizes = {
     sm: 'w-7 h-7',
@@ -48,18 +48,20 @@ export default function ArveaLogo({
     lg: 'text-4xl sm:text-5xl'
   };
 
-  const diamondFillStart = isLightOnDark ? '#FFFFFF' : '#A9C2EB';
-  const diamondFillMid = isLightOnDark ? '#F1F5FC' : '#9DB5DC';
-  const diamondFillEnd = isLightOnDark ? '#DCE6F7' : '#859FCE';
-  const facetStroke = isLightOnDark ? '#64589F' : '#FFFFFF';
-  const starStroke = isLightOnDark ? '#64589F' : '#FFFFFF';
+  const diamondFillStart = isLightOnDark ? '#FFFFFF' : '#7E93CC';
+  const diamondFillMid = isLightOnDark ? '#F8FAFC' : '#5E72AC';
+  const diamondFillEnd = isLightOnDark ? '#E0E7FF' : '#4B5B96';
+  const facetStroke = isLightOnDark ? '#5A4D94' : '#FFFFFF';
+  const starStroke = isLightOnDark ? '#5A4D94' : '#FFFFFF';
 
   const DiamondMark = ({ extraClass = '' }) => (
     <svg
       viewBox="0 0 120 110"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className={`${markSizes[size] || markSizes.md} shrink-0 ${extraClass}`}
+      className={`${markSizes[size] || markSizes.md} shrink-0 ${
+        isLightOnDark ? 'arvea-logo-glow-light' : 'arvea-logo-glow-deep'
+      } ${extraClass}`}
       aria-hidden="true"
     >
       <defs>
@@ -104,13 +106,17 @@ export default function ArveaLogo({
         alt="ARVÉA"
         onError={() => setImgError(true)}
         draggable={false}
-        className={`${wordmarkHeights[size] || wordmarkHeights.md} w-auto object-contain select-none`}
+        className={`${wordmarkHeights[size] || wordmarkHeights.md} w-auto object-contain select-none ${
+          isLightOnDark ? 'arvea-logo-glow-light' : 'arvea-logo-glow-deep'
+        }`}
       />
     ) : (
       <span
-        className={`${fallbackTextSizes[size] || fallbackTextSizes.md} font-semibold tracking-[0.14em] leading-none arvea-wordmark-text`}
+        className={`${fallbackTextSizes[size] || fallbackTextSizes.md} font-semibold tracking-[0.14em] leading-none arvea-wordmark-text ${
+          isLightOnDark ? 'arvea-slogan-light' : 'arvea-slogan-deep'
+        }`}
         style={{
-          color: isLightOnDark ? '#FFFFFF' : '#9DB5DC'
+          color: isLightOnDark ? '#FFFFFF' : '#4E4380'
         }}
       >
         ARVÉA
@@ -140,8 +146,8 @@ export default function ArveaLogo({
         <Wordmark />
         {showTagline && (
           <span
-            className={`mt-2 text-[11px] sm:text-xs font-medium tracking-wide ${
-              isLightOnDark ? 'text-white/90' : 'text-[#849BC7]'
+            className={`mt-2 text-[11px] sm:text-xs font-semibold tracking-[0.05em] ${
+              isLightOnDark ? 'arvea-slogan-light' : 'arvea-slogan-deep'
             }`}
           >
             Satu Nilai, Satu Tujuan, Bertumbuh Bersama
@@ -158,8 +164,8 @@ export default function ArveaLogo({
         <Wordmark />
         {subtitle && (
           <span
-            className={`text-[10px] font-semibold mt-1 leading-tight ${
-              isLightOnDark ? 'text-white/85' : 'text-slate-500 dark:text-slate-400'
+            className={`text-[10px] sm:text-[11px] font-semibold tracking-[0.03em] mt-1 leading-tight ${
+              isLightOnDark ? 'arvea-slogan-light' : 'text-[#524788] dark:text-[#F8FAFC]'
             }`}
           >
             {subtitle}
@@ -167,8 +173,8 @@ export default function ArveaLogo({
         )}
         {!subtitle && showTagline && (
           <span
-            className={`text-[10px] font-medium mt-1 leading-tight ${
-              isLightOnDark ? 'text-white/85' : 'text-[#849BC7]'
+            className={`text-[10px] sm:text-[11px] font-semibold tracking-[0.05em] mt-1 leading-tight ${
+              isLightOnDark ? 'arvea-slogan-light' : 'arvea-slogan-deep'
             }`}
           >
             Satu Nilai, Satu Tujuan, Bertumbuh Bersama

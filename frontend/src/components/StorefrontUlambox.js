@@ -183,21 +183,21 @@ export default function StorefrontUlambox({ onOpenBackoffice, profile = {}, core
     <div className="min-h-screen bg-gradient-to-b from-[#F4F1FA] via-[#EDE8F7] to-[#E6E0F4] text-[#1E1B2E] flex flex-col selection:bg-[#9A90CC] selection:text-white">
       
       {/* 1. TOP ANNOUNCEMENT BAR */}
-      <div className="bg-[#524788] text-white text-[11px] font-semibold py-2 px-4 text-center flex items-center justify-center gap-2">
-        <Sparkles className="w-3.5 h-3.5 text-amber-200 animate-pulse" />
-        <span>ARVÃ‰A &bull; Financial Management System BUMKam Mekar Sari Kampung Sabron Sari &bull; &ldquo;Satu Nilai, Satu Tujuan, Bertumbuh Bersama&rdquo; &bull; Standar SAK EMKM</span>
+      <div className="bg-[#524788] text-white text-[11px] font-semibold tracking-[0.04em] py-2 px-4 text-center flex items-center justify-center gap-2 arvea-slogan-light">
+        <Sparkles className="w-3.5 h-3.5 text-amber-200 animate-pulse shrink-0" />
+        <span>ARVÉA &bull; Financial Management System BUMKam Mekar Sari Kampung Sabron Sari &bull; &ldquo;Satu Nilai, Satu Tujuan, Bertumbuh Bersama&rdquo; &bull; Standar SAK EMKM</span>
       </div>
 
       {/* 2. MAIN HEADER & NAVBAR */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-[#9A90CC]/30 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           
-          {/* Brand Logo ARVÃ‰A */}
+          {/* Brand Logo ARVÉA */}
           <ArveaLogo
             variant="horizontal"
             theme="lilac"
             size="sm"
-            subtitle="BUMKam Mekar Sari â€¢ Kampung Sabron Sari"
+            subtitle="BUMKam Mekar Sari • Kampung Sabron Sari"
           />
 
           {/* Nav Links */}
@@ -208,15 +208,15 @@ export default function StorefrontUlambox({ onOpenBackoffice, profile = {}, core
             <a href="#kontak" className="hover:text-[#64589F] transition">Kontak Kami</a>
           </nav>
 
-          {/* Switcher to ARVÃ‰A (Internal Accounting Portal) */}
+          {/* Switcher to ARVÉA (Internal Accounting Portal) */}
           <div className="flex items-center gap-2">
             <button
               onClick={onOpenBackoffice}
               className="px-4 py-2 rounded-xl bg-[#64589F] hover:bg-[#4E4380] text-white font-bold text-xs transition flex items-center gap-1.5 shadow-sm transform hover:-translate-y-0.5"
-              title="Masuk ke Sistem Informasi Keuangan BUMKam (ARVÃ‰A)"
+              title="Masuk ke Sistem Informasi Keuangan BUMKam (ARVÉA)"
             >
               <Store className="w-4 h-4 text-[#DDD6F0]" />
-              <span>Portal Keuangan (ARVÃ‰A)</span>
+              <span>Portal Keuangan (ARVÉA)</span>
               <ChevronRight className="w-3.5 h-3.5 opacity-80" />
             </button>
           </div>
@@ -635,7 +635,7 @@ export default function StorefrontUlambox({ onOpenBackoffice, profile = {}, core
                 className="px-6 py-3.5 rounded-xl bg-white text-[#4E4380] font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg hover:bg-[#F4F1FA] transition transform hover:scale-105"
               >
                 <Store className="w-4 h-4 text-[#64589F]" />
-                Portal ARVÃ‰A
+                Portal ARVÉA
               </button>
             </div>
           </div>
@@ -650,35 +650,35 @@ export default function StorefrontUlambox({ onOpenBackoffice, profile = {}, core
               variant="horizontal"
               theme="light"
               size="sm"
-              subtitle="BUMKam Mekar Sari â€¢ Kampung Sabron Sari"
+              subtitle="BUMKam Mekar Sari • Kampung Sabron Sari"
             />
-            <p className="text-white/75 leading-relaxed max-w-md">
+            <p className="text-white/85 leading-relaxed max-w-md">
               Badan Usaha Milik Kampung (BUMKam) Mekar Sari Kampung Sabron Sari. Mengelola peternakan telur ayam lokal, persewaan tenda acara, dan persewaan gedung serbaguna berstandar SAK EMKM.
             </p>
-            <p className="text-[#C4B9E5] font-medium">
+            <p className="text-[#E0E7FF] font-semibold tracking-wide">
               Kampung Sabron Sari &bull; Distrik Sentani Barat &bull; Kabupaten Jayapura, Papua
             </p>
           </div>
 
           <div className="space-y-2">
             <p className="font-bold text-white uppercase tracking-wider text-[11px]">Kontak &amp; Operasional</p>
-            <ul className="space-y-1.5 text-white/75">
-              <li className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5 text-[#C4B9E5]" /> WhatsApp: 0812-4000-1122</li>
-              <li className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-[#C4B9E5]" /> Buka: Senin - Sabtu (08:00 - 17:00 WIT)</li>
-              <li className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-[#C4B9E5]" /> Sentani, Kab. Jayapura</li>
+            <ul className="space-y-1.5 text-white/80">
+              <li className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5 text-[#E0E7FF]" /> WhatsApp: 0812-4000-1122</li>
+              <li className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-[#E0E7FF]" /> Buka: Senin - Sabtu (08:00 - 17:00 WIT)</li>
+              <li className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-[#E0E7FF]" /> Sentani, Kab. Jayapura</li>
             </ul>
           </div>
 
           <div className="space-y-2">
             <p className="font-bold text-white uppercase tracking-wider text-[11px]">Portal Pengurus BUMKam</p>
-            <p className="text-white/75 leading-relaxed">
+            <p className="text-white/80 leading-relaxed">
               Khusus pengurus, bendahara, direktur, dan pengawas BUMKam untuk pembukuan jurnal dan laporan SAK EMKM.
             </p>
             <button
               onClick={onOpenBackoffice}
               className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#64589F] hover:bg-[#7C6FB8] text-white font-bold text-[11px]"
             >
-              <LogIn className="w-3.5 h-3.5" /> Masuk Portal ARVÃ‰A
+              <LogIn className="w-3.5 h-3.5" /> Masuk Portal ARVÉA
             </button>
           </div>
         </div>
