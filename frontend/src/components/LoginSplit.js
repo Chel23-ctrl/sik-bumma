@@ -413,23 +413,40 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
 
             <div className="grid grid-cols-2 gap-2.5">
               {DEMO_ACCOUNTS.map((acc) => {
-                const isSelected = email.toLowerCase() === acc.username.toLowerCase();
+                const liveAcc = users.find(
+                  u =>
+                    (acc.username === 'administrator' && u.id === 'usr_admin') ||
+                    (u.username || '').toLowerCase() === acc.username.toLowerCase() ||
+                    u.role === acc.role
+                );
+                const displayUsername = liveAcc?.username || acc.username;
+                const isInactive = liveAcc?.is_active === false;
+                const isSelected = email.toLowerCase() === displayUsername.toLowerCase();
                 return (
                   <button
                     key={acc.username}
                     type="button"
                     onClick={() => handleQuickLogin(acc)}
                     className={`p-3 rounded-xl border text-left transition duration-150 flex flex-col justify-center ${
-                      isSelected
-                        ? 'border-emerald-600 bg-emerald-50/70 shadow-xs ring-1 ring-emerald-600'
-                        : 'border-slate-200 hover:border-emerald-500 hover:bg-slate-50 shadow-xs'
+                      isInactive
+                        ? 'border-rose-200 bg-rose-50/40 opacity-75 hover:border-rose-300'
+                        : isSelected
+                          ? 'border-emerald-600 bg-emerald-50/70 shadow-xs ring-1 ring-emerald-600'
+                          : 'border-slate-200 hover:border-emerald-500 hover:bg-slate-50 shadow-xs'
                     }`}
                   >
-                    <span className="text-xs font-bold text-slate-900 leading-tight">
-                      {acc.title}
-                    </span>
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-xs font-bold text-slate-900 leading-tight truncate">
+                        {acc.title}
+                      </span>
+                      {isInactive && (
+                        <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 shrink-0">
+                          Nonaktif
+                        </span>
+                      )}
+                    </div>
                     <span className="text-[10px] text-slate-500 truncate mt-0.5 font-mono">
-                      {acc.username}
+                      {displayUsername}
                     </span>
                   </button>
                 );

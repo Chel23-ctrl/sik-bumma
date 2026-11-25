@@ -257,7 +257,8 @@ export default function App() {
       u =>
         (user.id && u.id === user.id) ||
         (user.username && u.username === user.username) ||
-        (user.email && (u.email === user.email || u.username === user.email))
+        (user.email && (u.email === user.email || u.username === user.email)) ||
+        (user.email === 'admin_bumma' && u.id === 'usr_admin')
     );
     return found ? { ...user, ...found, name: found.full_name || found.name } : user;
   }, [user, users]);
@@ -316,7 +317,7 @@ export default function App() {
   const [rbacStrict, setRbacStrict] = useState(() => getStorage('rbac_strict', true));
   useEffect(() => { setStorage('rbac_strict', rbacStrict); }, [rbacStrict]);
 
-  const userRole = user?.role || 'Administrator';
+  const userRole = activeUserRecord?.role || user?.role || 'Administrator';
   const allowedMenus = useMemo(() => {
     if (!rbacStrict) {
       return [
