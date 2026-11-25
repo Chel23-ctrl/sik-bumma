@@ -183,37 +183,37 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
           background: 'linear-gradient(145deg, #5F539C 0%, #8377BC 48%, #9A90CC 100%)'
         }}
       >
-        {/* Background Layer (z-0): 2 Foto Tim Memanjang ke Samping (Foto 1 di Atas, Foto 2 di Bawah) — Hanya di Panel Kiri */}
+        {/* Background Layer (z-0): 2 Foto Tim Memanjang ke Samping (Foto 1 di Atas, Foto 2 di Bawah) — Tanpa Terpotong */}
         <div
           aria-hidden="true"
-          className="absolute inset-0 z-0 flex flex-col pointer-events-none select-none overflow-hidden"
+          className="absolute inset-0 z-0 flex flex-col justify-center pointer-events-none select-none overflow-hidden"
         >
-          {/* Foto Pertama (Atas) */}
-          <div className="relative flex-1 w-full overflow-hidden">
+          {/* Foto Pertama (Atas) — object-contain agar 100% seluruh anggota kiri-kanan utuh tanpa terpotong */}
+          <div className="relative flex-1 w-full flex items-end justify-center overflow-hidden">
             <img
               src={`${process.env.PUBLIC_URL || ''}/assets/images/foto-bersama-1.jpg?v=2`}
               alt=""
-              className="w-full h-full object-cover object-center opacity-[0.28] mix-blend-luminosity"
-            />
-            <div
-              className="absolute inset-x-0 bottom-0 h-12"
+              className="w-full h-full object-contain object-bottom opacity-[0.28] mix-blend-luminosity"
               style={{
-                background: 'linear-gradient(to bottom, transparent 0%, rgba(114, 101, 178, 0.55) 100%)'
+                WebkitMaskImage:
+                  'linear-gradient(to bottom, transparent 0%, black 14%, black 88%, transparent 100%)',
+                maskImage:
+                  'linear-gradient(to bottom, transparent 0%, black 14%, black 88%, transparent 100%)'
               }}
             />
           </div>
 
-          {/* Foto Kedua (Bawah) */}
-          <div className="relative flex-1 w-full overflow-hidden">
+          {/* Foto Kedua (Bawah) — rapat di bawah foto pertama dengan transparansi lembut senada */}
+          <div className="relative flex-1 w-full flex items-start justify-center overflow-hidden">
             <img
               src={`${process.env.PUBLIC_URL || ''}/assets/images/foto-bersama-2.jpg`}
               alt=""
-              className="w-full h-full object-cover object-center opacity-[0.28] mix-blend-luminosity"
-            />
-            <div
-              className="absolute inset-x-0 top-0 h-12"
+              className="w-full h-full object-contain object-top opacity-[0.28] mix-blend-luminosity"
               style={{
-                background: 'linear-gradient(to top, transparent 0%, rgba(114, 101, 178, 0.55) 100%)'
+                WebkitMaskImage:
+                  'linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)',
+                maskImage:
+                  'linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)'
               }}
             />
           </div>
