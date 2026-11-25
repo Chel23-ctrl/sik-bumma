@@ -175,41 +175,43 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-gradient-to-br from-[#F2EFFA] via-[#E8E2F6] to-[#DCD4F0] text-[#1E1B2E]">
-      {/* Left Side: Lilac Brand Hero Panel (#9A90CC) with Translucent Team Photo Background */}
+    <div
+      className="min-h-screen flex flex-col md:flex-row relative overflow-hidden bg-[#8377BC] text-[#1E1B2E]"
+      style={{
+        background: 'linear-gradient(115deg, #5A4E98 0%, #7C6FB8 45%, #9A90CC 72%, #C9BFE8 100%)'
+      }}
+    >
+      {/* Full-Width Background Layer (z-0): Foto Bersama Tim memanjang penuh dari kiri ke kanan agar seluruh wajah terlihat */}
+      <img
+        src={`${process.env.PUBLIC_URL || ''}/assets/images/foto-bersama.jpg`}
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 z-0 w-full h-full object-cover object-[center_55%] opacity-[0.30] mix-blend-luminosity select-none pointer-events-none"
+      />
+
+      {/* Full-Width Lilac Overlay Tint (z-0): Ungu lilac lebih pekat di kiri (kontras teks putih) & lembut transparan di kanan */}
       <div
-        className="md:w-5/12 lg:w-1/2 text-white p-6 sm:p-8 md:p-12 lg:p-14 flex flex-col justify-between relative overflow-hidden bg-[#8377BC]"
+        aria-hidden="true"
+        className="absolute inset-0 z-0 pointer-events-none"
         style={{
-          background: 'linear-gradient(145deg, #5F539C 0%, #8377BC 48%, #9A90CC 100%)'
+          background:
+            'linear-gradient(105deg, rgba(82, 70, 146, 0.58) 0%, rgba(114, 101, 178, 0.44) 46%, rgba(154, 144, 204, 0.34) 68%, rgba(235, 230, 248, 0.50) 100%)'
         }}
-      >
-        {/* Background Layer (z-0): Foto Bersama Tim dengan Object-Cover & Efek Transparan Lilac */}
-        <img
-          src={`${process.env.PUBLIC_URL || ''}/assets/images/foto-bersama.jpg`}
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 z-0 w-full h-full object-cover object-center opacity-[0.26] mix-blend-luminosity scale-[1.01] select-none pointer-events-none"
-        />
+      />
 
-        {/* Overlay Tint Lilac (z-0): Menjaga warna ungu lilac ARVÉA tetap dominan & kontras teks putih tajam */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 z-0 pointer-events-none"
-          style={{
-            background:
-              'linear-gradient(145deg, rgba(84, 71, 148, 0.44) 0%, rgba(131, 119, 188, 0.26) 48%, rgba(154, 144, 204, 0.40) 100%)'
-          }}
-        />
+      {/* Soft Ambient Orbs & Dot Texture (z-0) */}
+      <div className="absolute top-1/4 left-1/4 z-0 w-96 h-96 bg-white/15 rounded-full blur-3xl pointer-events-none animate-pulse-glow" />
+      <div
+        className="absolute bottom-10 right-10 z-0 w-80 h-80 bg-[#C4B9E5]/25 rounded-full blur-3xl pointer-events-none animate-pulse-glow"
+        style={{ animationDelay: '2s' }}
+      />
+      <div className="absolute inset-0 z-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
 
+      {/* Left Side: Lilac Brand Hero Content (Transparan menyatu dengan foto penuh) */}
+      <div className="md:w-5/12 lg:w-1/2 text-white p-6 sm:p-8 md:p-12 lg:p-14 flex flex-col justify-between relative z-10 overflow-hidden">
         <div className="absolute inset-0 z-0 pointer-events-none">
           <SectorBackground variant="dark" />
         </div>
-        <div className="absolute top-1/4 left-1/4 z-0 w-96 h-96 bg-white/15 rounded-full blur-3xl pointer-events-none animate-pulse-glow" />
-        <div
-          className="absolute bottom-10 right-10 z-0 w-80 h-80 bg-[#C4B9E5]/25 rounded-full blur-3xl pointer-events-none animate-pulse-glow"
-          style={{ animationDelay: '2s' }}
-        />
-        <div className="absolute inset-0 z-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
 
         {/* Top Brand Logo ARVÉA */}
         <div className="relative z-10 flex items-center justify-between gap-3">
@@ -241,7 +243,7 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
 
           {/* 3 Animated Sector Feature Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-            <div className="bg-[#4B3F82]/30 backdrop-blur-md border border-white/30 rounded-2xl p-3 hover:bg-[#4B3F82]/40 transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden animate-float shadow-sm">
+            <div className="bg-[#4B3F82]/35 backdrop-blur-md border border-white/30 rounded-2xl p-3 hover:bg-[#4B3F82]/45 transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden animate-float shadow-sm">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-base">🥚</span>
                 <span className="text-[9px] font-extrabold uppercase tracking-wider text-white bg-white/20 px-1.5 py-0.5 rounded">
@@ -259,7 +261,7 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
               </div>
             </div>
 
-            <div className="bg-[#4B3F82]/30 backdrop-blur-md border border-white/30 rounded-2xl p-3 hover:bg-[#4B3F82]/40 transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden animate-float-delayed shadow-sm">
+            <div className="bg-[#4B3F82]/35 backdrop-blur-md border border-white/30 rounded-2xl p-3 hover:bg-[#4B3F82]/45 transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden animate-float-delayed shadow-sm">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-base">⛺</span>
                 <span className="text-[9px] font-extrabold uppercase tracking-wider text-white bg-white/20 px-1.5 py-0.5 rounded">
@@ -277,7 +279,7 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
               </div>
             </div>
 
-            <div className="bg-[#4B3F82]/30 backdrop-blur-md border border-white/30 rounded-2xl p-3 hover:bg-[#4B3F82]/40 transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden animate-float shadow-sm">
+            <div className="bg-[#4B3F82]/35 backdrop-blur-md border border-white/30 rounded-2xl p-3 hover:bg-[#4B3F82]/45 transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden animate-float shadow-sm">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-base">🏛️</span>
                 <span className="text-[9px] font-extrabold uppercase tracking-wider text-white bg-white/20 px-1.5 py-0.5 rounded">
@@ -318,9 +320,9 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
         </div>
       </div>
 
-      {/* Right Side: Clean Lilac-Tinted Authentication Card */}
-      <div className="md:w-7/12 lg:w-1/2 p-6 md:p-10 lg:p-12 flex flex-col justify-center items-center overflow-y-auto">
-        <div className="max-w-md w-full bg-white/95 backdrop-blur-md rounded-3xl border border-[#9A90CC]/35 shadow-xl p-7 sm:p-8 space-y-5">
+      {/* Right Side: Clean Frosted-Glass Authentication Card over Continuous Full-Width Team Photo */}
+      <div className="md:w-7/12 lg:w-1/2 p-6 md:p-10 lg:p-12 flex flex-col justify-center items-center overflow-y-auto relative z-10">
+        <div className="max-w-md w-full bg-white/82 backdrop-blur-md rounded-3xl border border-white/65 shadow-2xl p-7 sm:p-8 space-y-5">
           <div>
             {onBackToStore && (
               <button
