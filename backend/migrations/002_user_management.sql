@@ -9,7 +9,15 @@ CREATE TABLE IF NOT EXISTS users (
   username             VARCHAR(80)  NOT NULL UNIQUE,
   email                VARCHAR(150) NOT NULL UNIQUE,
   password_hash        VARCHAR(255) NOT NULL,
-  role                 VARCHAR(60)  NOT NULL DEFAULT 'Umum',
+  role                 VARCHAR(60)  NOT NULL DEFAULT 'Umum'
+                       CHECK (role IN (
+                         'Administrator',
+                         'Ketua BUMKam',
+                         'Sekretaris BUMKam',
+                         'Bendahara BUMKam',
+                         'Auditor',
+                         'Umum'
+                       )),
   unit_kerja           VARCHAR(100) NOT NULL DEFAULT 'BUMKam Mekar Sari',
   is_active            BOOLEAN      NOT NULL DEFAULT TRUE,   -- Soft delete / nonaktifkan akun
   must_change_password BOOLEAN      NOT NULL DEFAULT TRUE,   -- Wajib ganti password saat login perdana

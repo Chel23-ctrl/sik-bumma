@@ -1,4 +1,5 @@
 import os, uuid, bcrypt, jwt, logging
+from enum import Enum
 from datetime import datetime, timezone, timedelta
 from typing import Optional, Any
 from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends
@@ -130,9 +131,78 @@ async def require_password_changed(user=Depends(current_user)):
         )
     return user
 
+# ============================================================================
+# STANDARISASI 6 PERAN PENGGUNA (OFFICIAL ROLE & PERMISSION ENUM)
+# ============================================================================
+class UserRole(str, Enum):
+    ADMINISTRATOR = 'Administrator'
+    KETUA_BUMKAM = 'Ketua BUMKam'
+    SEKRETARIS_BUMKAM = 'Sekretaris BUMKam'
+    BENDAHARA_BUMKAM = 'Bendahara BUMKam'
+    AUDITOR = 'Auditor'
+    UMUM = 'Umum'
+
+OFFICIAL_ROLES = [r.value for r in UserRole]
+
+ROLE_PERMISSIONS = {
+    UserRole.ADMINISTRATOR.value: [
+        'dashboard', 'profil', 'pengguna', 'master', 'aset', 'landing_unit', 'transaksi',
+        'kas_bank', 'jurnal', 'jurnal_penyesuaian', 'buku_besar', 'neraca_saldo', 'laporan',
+        'analisis', 'operasional', 'penggajian'
+    ],
+    UserRole.KETUA_BUMKAM.value: [
+        'dashboard', 'profil', 'landing_unit', 'kas_bank', 'laporan', 'analisis', 'operasional'
+    ],
+    UserRole.SEKRETARIS_BUMKAM.value: [
+        'dashboard', 'profil', 'master', 'aset', 'landing_unit', 'operasional'
+    ],
+    UserRole.BENDAHARA_BUMKAM.value: [
+        'dashboard', 'master', 'aset', 'landing_unit', 'transaksi', 'kas_bank', 'jurnal',
+        'jurnal_penyesuaian', 'buku_besar', 'neraca_saldo', 'laporan', 'analisis', 'operasional', 'penggajian'
+    ],
+    UserRole.AUDITOR.value: [
+        'dashboard', 'landing_unit', 'transaksi', 'kas_bank', 'jurnal', 'jurnal_penyesuaian',
+        'buku_besar', 'neraca_saldo', 'laporan', 'analisis', 'operasional'
+    ],
+    UserRole.UMUM.value: [
+        'profil', 'landing_unit'
+    ]
+}
+
+LEGACY_ROLE_MAP = {
+    'admin bumkam': UserRole.ADMINISTRATOR.value,
+    'admin': UserRole.ADMINISTRATOR.value,
+    'bendahara': UserRole.BENDAHARA_BUMKAM.value,
+    'akuntansi': UserRole.BENDAHARA_BUMKAM.value,
+    'keuangan': UserRole.BENDAHARA_BUMKAM.value,
+    'pengurus unit perdagangan': UserRole.SEKRETARIS_BUMKAM.value,
+    'pengurus unit jasa': UserRole.SEKRETARIS_BUMKAM.value,
+    'manajer': UserRole.KETUA_BUMKAM.value,
+    'publik': UserRole.UMUM.value,
+}
+
+def normalize_role(raw_role: Optional[str]) -> str:
+    if not raw_role:
+        return UserRole.UMUM.value
+    cleaned = str(raw_role).strip()
+    for r in OFFICIAL_ROLES:
+        if r.lower() == cleaned.lower():
+            return r
+    return LEGACY_ROLE_MAP.get(cleaned.lower(), UserRole.UMUM.value)
+
+def validate_official_role(raw_role: str) -> str:
+    cleaned = str(raw_role or '').strip()
+    for r in OFFICIAL_ROLES:
+        if r.lower() == cleaned.lower():
+            return r
+    raise HTTPException(
+        status_code=400,
+        detail=f'Peran "{cleaned}" tidak valid. Pilih salah satu dari 6 peran resmi: {", ".join(OFFICIAL_ROLES)}.'
+    )
+
 async def require_admin(user=Depends(require_password_changed)):
-    if user.get('role') not in ('Administrator', 'Admin BUMKam'):
-        raise HTTPException(403, 'Akses ditolak. Hanya Administrator / Admin BUMKam yang diizinkan mengelola pengguna.')
+    if normalize_role(user.get('role')) != UserRole.ADMINISTRATOR.value:
+        raise HTTPException(403, 'Akses ditolak. Hanya Administrator yang diizinkan mengelola pengguna.')
     return user
 
 class LoginBody(BaseModel):
@@ -148,7 +218,7 @@ class CreateUserBody(BaseModel):
     full_name: str
     username: str
     email: str
-    role: str = 'Pengurus Unit Perdagangan'
+    role: str = UserRole.SEKRETARIS_BUMKAM.value
     unit_kerja: str = 'BUMKam Mekar Sari'
     temp_password: str
     must_change_password: bool = True
@@ -409,37 +479,9 @@ DEMO_USERS = [
         'name': 'Rita Fanghoi',
         'username': 'bendahara_bumkam',
         'email': 'bendahara@arvea-mekarsari.id',
-        'role': 'Bendahara',
+        'role': UserRole.BENDAHARA_BUMKAM.value,
         'unit_kerja': 'Keuangan & Akuntansi',
-        'initials': 'BD',
-        'is_active': True,
-        'must_change_password': False,
-        'password_changed_at': '2026-01-15T08:00:00+00:00',
-        'is_default_account': False
-    },
-    {
-        'id': 'usr_perdagangan',
-        'full_name': 'Yohanis Wenda',
-        'name': 'Yohanis Wenda',
-        'username': 'unit_perdagangan',
-        'email': 'perdagangan@arvea-mekarsari.id',
-        'role': 'Pengurus Unit Perdagangan',
-        'unit_kerja': 'Unit Perdagangan',
-        'initials': 'YW',
-        'is_active': True,
-        'must_change_password': False,
-        'password_changed_at': '2026-01-15T08:00:00+00:00',
-        'is_default_account': False
-    },
-    {
-        'id': 'usr_jasa',
-        'full_name': 'Markus Krey',
-        'name': 'Markus Krey',
-        'username': 'unit_jasa',
-        'email': 'jasa@arvea-mekarsari.id',
-        'role': 'Pengurus Unit Jasa',
-        'unit_kerja': 'Unit Jasa',
-        'initials': 'MK',
+        'initials': 'BB',
         'is_active': True,
         'must_change_password': False,
         'password_changed_at': '2026-01-15T08:00:00+00:00',
@@ -451,7 +493,7 @@ DEMO_USERS = [
         'name': 'Auditor Pengawas',
         'username': 'auditor',
         'email': 'auditor@arvea-mekarsari.id',
-        'role': 'Auditor',
+        'role': UserRole.AUDITOR.value,
         'unit_kerja': 'Pengawas Independen',
         'initials': 'AU',
         'is_active': True,
@@ -465,7 +507,7 @@ DEMO_USERS = [
         'name': 'Masyarakat & Publik',
         'username': 'umum',
         'email': 'publik@arvea-mekarsari.id',
-        'role': 'Umum',
+        'role': UserRole.UMUM.value,
         'unit_kerja': 'Transparansi Kampung',
         'initials': 'UM',
         'is_active': True,
@@ -519,6 +561,13 @@ async def seed_data():
 @api.get('/health')
 async def health_check():
     return {'ok': True, 'storage': STORAGE_MODE, 'multi_device': True}
+
+@api.get('/auth/roles')
+async def list_official_roles():
+    return {
+        'roles': OFFICIAL_ROLES,
+        'permissions': ROLE_PERMISSIONS
+    }
 
 @api.post('/auth/login')
 async def login(body: LoginBody, request: Request, response: Response):
@@ -666,6 +715,7 @@ async def create_user(body: CreateUserBody, admin=Depends(require_admin)):
     if dup:
         raise HTTPException(409, 'Username atau email sudah terdaftar.')
 
+    valid_role = validate_official_role(body.role)
     parts = [p for p in body.full_name.strip().split(' ') if p]
     initials = (parts[0][0] + (parts[1][0] if len(parts) > 1 else parts[0][1:2])).upper() if parts else 'US'
 
@@ -675,7 +725,7 @@ async def create_user(body: CreateUserBody, admin=Depends(require_admin)):
         'name': body.full_name.strip(),
         'username': username,
         'email': email,
-        'role': body.role.strip(),
+        'role': valid_role,
         'unit_kerja': body.unit_kerja.strip() or 'BUMKam Mekar Sari',
         'initials': initials[:2],
         'password_hash': hash_password(body.temp_password.strip()),
@@ -713,7 +763,7 @@ async def update_user(user_id: str, body: UpdateUserBody, admin=Depends(require_
             raise HTTPException(409, f'Email "{em}" sudah digunakan.')
         updates['email'] = em
     if body.role is not None and body.role.strip():
-        updates['role'] = body.role.strip()
+        updates['role'] = validate_official_role(body.role)
     if body.unit_kerja is not None and body.unit_kerja.strip():
         updates['unit_kerja'] = body.unit_kerja.strip()
 
@@ -755,9 +805,9 @@ async def toggle_user_status(user_id: str, body: ToggleStatusBody, admin=Depends
     if user_id == admin['id'] and not body.is_active:
         raise HTTPException(400, 'Anda tidak dapat menonaktifkan akun yang sedang digunakan login.')
 
-    if not body.is_active and target.get('role') in ('Administrator', 'Admin BUMKam'):
+    if not body.is_active and normalize_role(target.get('role')) == UserRole.ADMINISTRATOR.value:
         active_admins = await db.users.count_documents({
-            'role': {'$in': ['Administrator', 'Admin BUMKam']},
+            'role': UserRole.ADMINISTRATOR.value,
             'is_active': True,
             'id': {'$ne': user_id}
         })

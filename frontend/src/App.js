@@ -20,7 +20,7 @@ import {
   ArrowUp,
   ShieldCheck,
   Lock,
-  Unlock,
+  Eye,
   Boxes,
   FileEdit,
   UserCog
@@ -49,8 +49,12 @@ import ProfilBUMMA from './components/ProfilBUMMA';
 import StorefrontUlambox, { DEFAULT_CORE_PRODUCTS } from './components/StorefrontUlambox';
 import ScrollToTopButton from './components/ScrollToTopButton';
 import LoadingScreen from './components/LoadingScreen';
+import RoleSwitcherDropdown from './components/RoleSwitcherDropdown';
 import apiClient, { clearAuthToken, setAuthToken, isJsonApiResponse } from './utils/apiClient';
 import { hashPasswordLocal, readStoredUsers, writeStoredUsers, USERS_STORAGE_KEY } from './utils/passwordAuth';
+import { USER_ROLES, ROLE_PERMISSIONS, normalizeRole, getRoleMeta } from './utils/roles';
+
+export { ROLE_PERMISSIONS };
 
 const getStorage = (key, defaultVal) => {
   try {
@@ -143,48 +147,6 @@ const INITIAL_PROFILE = {
   bankHolder: 'BUMKAM MEKAR SARI'
 };
 
-export const ROLE_PERMISSIONS = {
-  'Administrator': [
-    'dashboard', 'profil', 'pengguna', 'master', 'aset', 'landing_unit', 'transaksi', 
-    'kas_bank', 'jurnal', 'jurnal_penyesuaian', 'buku_besar', 'neraca_saldo', 'laporan', 
-    'analisis', 'operasional', 'penggajian'
-  ],
-  'Admin BUMKam': [
-    'dashboard', 'profil', 'pengguna', 'master', 'aset', 'landing_unit', 'transaksi', 
-    'kas_bank', 'jurnal', 'jurnal_penyesuaian', 'buku_besar', 'neraca_saldo', 'laporan', 
-    'analisis', 'operasional', 'penggajian'
-  ],
-  'Ketua BUMKam': [
-    'dashboard', 'profil', 'landing_unit', 'kas_bank', 'laporan', 
-    'analisis', 'operasional'
-  ],
-  'Sekretaris BUMKam': [
-    'dashboard', 'profil', 'landing_unit', 'kas_bank', 'laporan', 
-    'analisis', 'operasional'
-  ],
-  'Bendahara': [
-    'dashboard', 'master', 'aset', 'landing_unit', 'transaksi', 
-    'kas_bank', 'jurnal', 'jurnal_penyesuaian', 'buku_besar', 'neraca_saldo', 'laporan', 
-    'analisis', 'operasional', 'penggajian'
-  ],
-  'Pengurus Unit Perdagangan': [
-    'dashboard', 'master', 'aset', 'landing_unit', 'transaksi', 'kas_bank', 'operasional'
-  ],
-  'Pengurus Unit Jasa': [
-    'dashboard', 'master', 'aset', 'landing_unit', 'transaksi', 'kas_bank', 'operasional'
-  ],
-  'Auditor': [
-    'dashboard', 'landing_unit', 'jurnal', 'jurnal_penyesuaian', 'buku_besar', 'neraca_saldo'
-  ],
-  'Umum': [
-    'dashboard', 'profil', 'landing_unit', 'laporan', 'analisis'
-  ],
-  // Fallbacks for previous sessions
-  'Akuntansi': ['dashboard', 'master', 'aset', 'landing_unit', 'transaksi', 'kas_bank', 'jurnal', 'jurnal_penyesuaian', 'buku_besar', 'neraca_saldo', 'laporan', 'analisis'],
-  'Keuangan': ['dashboard', 'landing_unit', 'transaksi', 'kas_bank', 'jurnal_penyesuaian', 'neraca_saldo', 'laporan', 'analisis', 'penggajian'],
-  'Manajer': ['dashboard', 'profil', 'master', 'aset', 'landing_unit', 'transaksi', 'kas_bank', 'laporan', 'analisis', 'operasional', 'penggajian']
-};
-
 export default function App() {
   const [darkMode, setDarkMode] = useState(() => getStorage('dark_mode', false));
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -243,10 +205,15 @@ export default function App() {
     const source = Array.isArray(stored) && stored.length > 0 ? stored : INITIAL_USERS;
     let migratedAny = false;
     const normalized = source.map(u => {
+      const normalizedRole = normalizeRole(u.role);
       const next = {
         ...u,
+        role: normalizedRole,
         is_active: u.is_active !== false
       };
+      if (normalizedRole !== u.role) {
+        migratedAny = true;
+      }
       // Migrasi aman: konversi plaintext password lama ke salted hash dan hapus field plaintext
       if (!next.password_hash && typeof next.password === 'string' && next.password.trim()) {
         next.password_hash = hashPasswordLocal(next.password.trim());
@@ -367,29 +334,81 @@ export default function App() {
   // Current page
   const [activeMenu, setActiveMenu] = useState('dashboard');
 
-  // RBAC Dual Mode (Strict by role vs Open Demo for presentations)
-  const [rbacStrict, setRbacStrict] = useState(() => getStorage('rbac_strict', true));
-  useEffect(() => { setStorage('rbac_strict', rbacStrict); }, [rbacStrict]);
-
-  const userRole = activeUserRecord?.role || user?.role || 'Administrator';
-  const allowedMenus = useMemo(() => {
-    if (!rbacStrict) {
-      return [
-        'dashboard', 'profil', 'pengguna', 'master', 'aset', 'landing_unit', 'transaksi', 
-        'kas_bank', 'jurnal', 'jurnal_penyesuaian', 'buku_besar', 'neraca_saldo', 'laporan', 
-        'analisis', 'operasional', 'penggajian'
-      ];
+  // Role Switcher State (6 Peran Resmi ARVÉA — tersimpan per sesi untuk simulasi real-time)
+  const [simulatedRole, setSimulatedRole] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('arvea_simulated_role');
+      return saved ? normalizeRole(saved) : null;
+    } catch (e) {
+      return null;
     }
-    return ROLE_PERMISSIONS[userRole] || ROLE_PERMISSIONS['Administrator'];
-  }, [rbacStrict, userRole]);
+  });
 
-  // When switching user role, ensure we gracefully default to dashboard if current menu is restricted
+  const baseUserRole = normalizeRole(activeUserRecord?.role || user?.role || USER_ROLES.ADMINISTRATOR);
+  const canSwitchRole = baseUserRole === USER_ROLES.ADMINISTRATOR;
+  const userRole = canSwitchRole && simulatedRole ? normalizeRole(simulatedRole) : baseUserRole;
+  const activeRoleMeta = getRoleMeta(userRole);
+  const isSimulatingRole = canSwitchRole && Boolean(simulatedRole) && userRole !== baseUserRole;
+
+  const allowedMenus = useMemo(() => {
+    return ROLE_PERMISSIONS[userRole] || ROLE_PERMISSIONS[USER_ROLES.UMUM];
+  }, [userRole]);
+
+  // Profil pengguna efektif yang tampil di navbar, sidebar, & halaman (otomatis ter-update saat role diganti)
+  const effectiveUser = useMemo(() => {
+    if (!activeUserRecord) return null;
+    if (!isSimulatingRole) {
+      return {
+        ...activeUserRecord,
+        role: userRole,
+        readOnly: activeRoleMeta.readOnly
+      };
+    }
+    return {
+      ...activeUserRecord,
+      name: activeRoleMeta.displayName,
+      full_name: activeRoleMeta.displayName,
+      initials: activeRoleMeta.initials,
+      role: userRole,
+      unit_kerja: activeRoleMeta.defaultUnit,
+      readOnly: activeRoleMeta.readOnly,
+      isSimulated: true
+    };
+  }, [activeUserRecord, isSimulatingRole, userRole, activeRoleMeta]);
+
+  const handleSelectRole = (nextRole) => {
+    const cleanRole = normalizeRole(nextRole);
+    const nextSim = cleanRole === baseUserRole ? null : cleanRole;
+    setSimulatedRole(nextSim);
+    try {
+      if (nextSim) sessionStorage.setItem('arvea_simulated_role', nextSim);
+      else sessionStorage.removeItem('arvea_simulated_role');
+    } catch (e) {}
+
+    const nextMenus = ROLE_PERMISSIONS[cleanRole] || ROLE_PERMISSIONS[USER_ROLES.UMUM];
+    if (!nextMenus.includes(activeMenu)) {
+      setActiveMenu(nextMenus[0] || 'profil');
+    }
+    toast.success(`Role akses diganti ke "${cleanRole}"`, {
+      description: `${nextMenus.length} menu aktif sesuai wewenang ${cleanRole}.`
+    });
+  };
+
+  const handleResetRole = () => {
+    setSimulatedRole(null);
+    try {
+      sessionStorage.removeItem('arvea_simulated_role');
+    } catch (e) {}
+    toast.info(`Kembali ke peran asli: ${baseUserRole}`);
+  };
+
+  // Saat berpindah role, pastikan menu aktif selalu valid untuk role tersebut
   const prevUserRoleRef = useRef(userRole);
   useEffect(() => {
     if (prevUserRoleRef.current !== userRole) {
       prevUserRoleRef.current = userRole;
       if (allowedMenus && !allowedMenus.includes(activeMenu)) {
-        setActiveMenu('dashboard');
+        setActiveMenu(allowedMenus[0] || 'profil');
       }
     }
   }, [userRole, allowedMenus, activeMenu]);
@@ -507,6 +526,10 @@ export default function App() {
     runWithLoader('Mengakhiri sesi...', () => {
       clearAuthToken();
       apiClient.post('/auth/logout').catch(() => {});
+      setSimulatedRole(null);
+      try {
+        sessionStorage.removeItem('arvea_simulated_role');
+      } catch (e) {}
       setUser(null);
     }, 480).then(() => {
       toast.info('Anda telah keluar.');
@@ -710,10 +733,16 @@ export default function App() {
 
   const handleLogin = (u) =>
     runWithLoader(
-      `Memverifikasi akses ${u.role || 'Pengguna'}...`,
+      `Memverifikasi akses ${normalizeRole(u.role) || 'Pengguna'}...`,
       () => {
-        setUser(u);
-        setActiveMenu('dashboard');
+        const normalizedRole = normalizeRole(u.role);
+        setSimulatedRole(null);
+        try {
+          sessionStorage.removeItem('arvea_simulated_role');
+        } catch (e) {}
+        setUser({ ...u, role: normalizedRole });
+        const startMenus = ROLE_PERMISSIONS[normalizedRole] || ROLE_PERMISSIONS[USER_ROLES.UMUM];
+        setActiveMenu(startMenus[0] || 'dashboard');
       },
       650
     );
@@ -795,24 +824,14 @@ export default function App() {
             <span className="hidden sm:inline">Toko Digital</span>
           </button>
 
-          {/* RBAC Mode Switcher (Ketat vs Demo) */}
-          <button
-            onClick={() => {
-              const nextMode = !rbacStrict;
-              setRbacStrict(nextMode);
-              toast.info(nextMode ? 'Mode Ketat (Sesuai Role) diaktifkan.' : 'Mode Demo (Semua Menu Terbuka) diaktifkan.');
-            }}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold border flex items-center gap-1.5 transition shadow-xs cursor-pointer ${
-              rbacStrict
-                ? 'bg-[#F2EFFA] dark:bg-[#332B59] border-[#9A90CC]/45 text-[#4E4380] dark:text-[#DDD6F0] hover:bg-[#E4DDF5]'
-                : 'bg-amber-50 dark:bg-amber-950/60 border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300 hover:bg-amber-100'
-            }`}
-            title={rbacStrict ? 'Akses dibatasi sesuai role. Klik untuk buka semua menu.' : 'Semua menu terbuka. Klik untuk kunci sesuai role.'}
-          >
-            {rbacStrict ? <ShieldCheck className="w-3.5 h-3.5 text-[#64589F] dark:text-[#C4B9E5]" /> : <Unlock className="w-3.5 h-3.5 text-amber-600" />}
-            <span className="hidden xl:inline">{rbacStrict ? 'Akses: Sesuai Role' : 'Akses: Bebas'}</span>
-            <span className="xl:hidden">{rbacStrict ? 'RBAC' : 'Bebas'}</span>
-          </button>
+          {/* Menu Dropdown Pilih Role Akses (6 Peran Resmi ARVÉA) */}
+          <RoleSwitcherDropdown
+            activeRole={userRole}
+            baseRole={baseUserRole}
+            canSwitch={canSwitchRole}
+            onSelectRole={handleSelectRole}
+            onResetRole={handleResetRole}
+          />
 
           <div className="hidden md:flex items-center gap-1.5 bg-[#F2EFFA] dark:bg-[#332B59] border border-[#9A90CC]/40 px-3 py-1 rounded-lg text-xs">
             <Store className="w-3.5 h-3.5 text-[#64589F] dark:text-[#C4B9E5]" />
@@ -838,11 +857,13 @@ export default function App() {
 
           <div className="flex items-center gap-2 pl-2 border-l border-[#9A90CC]/30 dark:border-slate-800">
             <div className="w-8 h-8 rounded-full bg-[#64589F] text-white flex items-center justify-center font-bold text-xs shadow-xs">
-              {activeUserRecord?.initials || (activeUserRecord?.name ? activeUserRecord.name.slice(0, 2).toUpperCase() : 'AD')}
+              {effectiveUser?.initials || (effectiveUser?.name ? effectiveUser.name.slice(0, 2).toUpperCase() : 'AD')}
             </div>
             <div className="hidden lg:block text-left">
-              <p className="text-xs font-bold leading-none text-[#1E1B2E] dark:text-slate-200">{activeUserRecord?.name || 'Administrator'}</p>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">{activeUserRecord?.role || 'Administrator'}</p>
+              <p className="text-xs font-bold leading-none text-[#1E1B2E] dark:text-slate-200">{effectiveUser?.name || 'Administrator ARVÉA'}</p>
+              <p className="text-[10px] text-[#64589F] dark:text-[#C4B9E5] font-semibold leading-tight mt-0.5">
+                {effectiveUser?.role || userRole}
+              </p>
             </div>
             <button
               onClick={handleLogout}
@@ -878,16 +899,16 @@ export default function App() {
 
             {/* Role Indicator & Menu Count Pill */}
             {sidebarOpen && (
-              <div className="px-3 py-1.5 mx-3 my-2 rounded-xl bg-[#F4F1FA] dark:bg-[#332B59]/80 border border-[#9A90CC]/30 text-[10px] flex items-center justify-between">
+              <div className="px-3 py-1.5 mx-3 my-2 rounded-xl bg-[#F4F1FA] dark:bg-[#332B59]/80 border border-[#9A90CC]/30 text-[10px] flex items-center justify-between gap-2">
                 <span className="text-slate-600 dark:text-slate-300 font-semibold truncate">
                   Role: <strong className="text-[#524788] dark:text-[#DDD6F0]">{userRole}</strong>
                 </span>
                 <span className={`px-1.5 py-0.5 rounded-md font-bold shrink-0 ${
-                  rbacStrict 
-                    ? 'bg-[#9A90CC]/25 text-[#4E4380] dark:text-[#EDE9F7]' 
-                    : 'bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200'
+                  isSimulatingRole
+                    ? 'bg-[#64589F] text-white'
+                    : 'bg-[#9A90CC]/25 text-[#4E4380] dark:text-[#EDE9F7]'
                 }`}>
-                  {sidebarOpen && (rbacStrict ? `${allowedMenus.length} Menu` : 'Bebas')}
+                  {allowedMenus.length} Menu
                 </span>
               </div>
             )}
@@ -943,16 +964,16 @@ export default function App() {
 
           {sidebarOpen && (
             <div className="p-4 border-t border-[#9A90CC]/20 dark:border-slate-800 flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-[#64589F] text-white font-bold flex items-center justify-center text-xs">
-                  {activeUserRecord?.initials || (activeUserRecord?.name ? activeUserRecord.name.slice(0, 2).toUpperCase() : 'AD')}
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-full bg-[#64589F] text-white font-bold flex items-center justify-center text-xs shrink-0">
+                  {effectiveUser?.initials || (effectiveUser?.name ? effectiveUser.name.slice(0, 2).toUpperCase() : 'AD')}
                 </div>
-                <div>
-                  <p className="font-bold text-[#1E1B2E] dark:text-white leading-tight">{activeUserRecord?.name || 'Administrator'}</p>
-                  <p className="text-[10px] text-slate-500 leading-tight">{activeUserRecord?.role || 'Administrator'}</p>
+                <div className="min-w-0">
+                  <p className="font-bold text-[#1E1B2E] dark:text-white leading-tight truncate">{effectiveUser?.name || 'Administrator ARVÉA'}</p>
+                  <p className="text-[10px] text-[#64589F] dark:text-[#C4B9E5] font-semibold leading-tight truncate">{effectiveUser?.role || userRole}</p>
                 </div>
               </div>
-              <button onClick={handleLogout} className="text-slate-400 hover:text-red-600 p-1">
+              <button onClick={handleLogout} className="text-slate-400 hover:text-red-600 p-1 shrink-0">
                 <LogOut className="w-4 h-4" />
               </button>
             </div>
@@ -961,6 +982,48 @@ export default function App() {
 
         {/* WORKSPACE CONTENT */}
         <main ref={mainRef} onScroll={handleMainScroll} className="flex-1 overflow-y-auto p-5 md:p-8 relative print:overflow-visible print:p-0 print:m-0 print:block">
+          {/* Active Role Simulation / Read-Only Notice Banner */}
+          {(isSimulatingRole || activeRoleMeta.readOnly) && (
+            <div className="mb-5 px-4 py-2.5 rounded-2xl bg-white/90 dark:bg-[#251F42]/90 border border-[#9A90CC]/45 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs print:hidden">
+              <div className="flex items-center gap-2.5">
+                <span className="w-7 h-7 rounded-xl bg-[#F2EFFA] dark:bg-[#332B59] text-[#64589F] dark:text-[#C4B9E5] flex items-center justify-center shrink-0">
+                  {activeRoleMeta.readOnly ? <Eye className="w-4 h-4" /> : <ShieldCheck className="w-4 h-4" />}
+                </span>
+                <div>
+                  <p className="font-bold text-[#3C3365] dark:text-white leading-snug">
+                    {isSimulatingRole ? `Simulasi Peran Aktif: ${userRole}` : `Mode Akses ${userRole}`}
+                    {activeRoleMeta.readOnly && (
+                      <span className="ml-2 px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950/70 text-purple-800 dark:text-purple-300 text-[10px] font-extrabold">
+                        Read-Only
+                      </span>
+                    )}
+                  </p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-300">{activeRoleMeta.description}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {userRole === USER_ROLES.UMUM && (
+                  <button
+                    type="button"
+                    onClick={() => runWithLoader('Membuka Katalog Produk & Toko Digital...', () => setAppMode('storefront'), 420)}
+                    className="px-3 py-1.5 rounded-xl bg-[#F2EFFA] hover:bg-[#E4DDF5] text-[#4E4380] font-bold text-[11px] border border-[#9A90CC]/45 flex items-center gap-1.5 transition"
+                  >
+                    <Store className="w-3.5 h-3.5" /> Lihat Katalog Produk
+                  </button>
+                )}
+                {isSimulatingRole && (
+                  <button
+                    type="button"
+                    onClick={handleResetRole}
+                    className="px-3 py-1.5 rounded-xl bg-[#64589F] hover:bg-[#4E4380] text-white font-bold text-[11px] transition shadow-xs"
+                  >
+                    Kembali ke {baseUserRole}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
           {!allowedMenus.includes(activeMenu) ? (
             <div className="max-w-xl mx-auto my-12 p-8 bg-white dark:bg-slate-900 rounded-3xl border border-rose-200 dark:border-rose-900/50 shadow-xl text-center">
               <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-600 flex items-center justify-center shadow-inner">
@@ -970,23 +1033,23 @@ export default function App() {
                 Hak Akses Terbatas (RBAC)
               </span>
               <h2 className="text-xl font-extrabold text-slate-900 dark:text-white mb-2">
-                Modul Dibatasi untuk Peran "{userRole}"
+                Modul Dibatasi untuk Peran &ldquo;{userRole}&rdquo;
               </h2>
               <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-6">
                 Berdasarkan prinsip tata kelola akuntansi dan pemisahan fungsi (<em>Segregation of Duties</em>), 
-                akun Anda dengan wewenang <strong className="text-emerald-700 dark:text-emerald-400">{userRole}</strong> tidak memiliki izin mengakses modul <strong className="text-slate-900 dark:text-white">{menuTitles[activeMenu] || activeMenu}</strong>.
+                peran <strong className="text-[#524788] dark:text-[#C4B9E5]">{userRole}</strong> tidak memiliki izin mengakses modul <strong className="text-slate-900 dark:text-white">{menuTitles[activeMenu] || activeMenu}</strong>.
               </p>
 
               <div className="bg-slate-50 dark:bg-slate-800/60 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700/60 mb-6 text-left">
                 <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Modul Resmi yang Dapat Diakses:
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#64589F]" /> Modul Resmi yang Dapat Diakses:
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   {allowedMenus.map(m => (
                     <button
                       key={m}
                       onClick={() => setActiveMenu(m)}
-                      className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 text-[11px] font-semibold text-slate-700 dark:text-slate-300 transition cursor-pointer"
+                      className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-[#64589F] text-[11px] font-semibold text-slate-700 dark:text-slate-300 transition cursor-pointer"
                     >
                       {menuTitles[m] || m} &rarr;
                     </button>
@@ -996,20 +1059,19 @@ export default function App() {
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                 <button
-                  onClick={() => setActiveMenu('dashboard')}
+                  onClick={() => setActiveMenu(allowedMenus[0] || 'profil')}
                   className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition shadow-xs cursor-pointer"
                 >
-                  Kembali ke Dashboard
+                  Buka Menu Utama ({menuTitles[allowedMenus[0]] || 'Profil'})
                 </button>
-                <button
-                  onClick={() => {
-                    setRbacStrict(false);
-                    toast.info('Mode Demo diaktifkan: Akses ke seluruh modul dibuka untuk keperluan presentasi.');
-                  }}
-                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-md flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <Unlock className="w-4 h-4" /> Buka Akses Demo (Presentasi)
-                </button>
+                {isSimulatingRole && (
+                  <button
+                    onClick={handleResetRole}
+                    className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#64589F] hover:bg-[#4E4380] text-white text-xs font-bold transition shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <ShieldCheck className="w-4 h-4" /> Kembali ke Peran {baseUserRole}
+                  </button>
+                )}
               </div>
             </div>
           ) : (
@@ -1018,7 +1080,7 @@ export default function App() {
             <DashboardView
               stats={stats}
               transactions={transactions}
-              user={user}
+              user={effectiveUser}
               profile={profile}
               onNavigate={(menu) => setActiveMenu(menu)}
             />
@@ -1081,7 +1143,7 @@ export default function App() {
               setAdjustingJournals={setAdjustingJournals}
               accounts={accounts}
               profile={profile}
-              user={user}
+              user={effectiveUser}
               selectedUnit={selectedUnit}
               selectedYear={selectedYear}
             />
@@ -1150,7 +1212,7 @@ export default function App() {
               setEmployees={setEmployees}
               coreProducts={coreProducts}
               setCoreProducts={setCoreProducts}
-              user={user}
+              user={effectiveUser}
             />
           )}
 

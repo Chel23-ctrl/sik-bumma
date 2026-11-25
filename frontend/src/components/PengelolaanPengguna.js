@@ -18,18 +18,10 @@ import {
 import { toast } from 'sonner';
 import apiClient, { hasExplicitRemoteApi, parseAuthError } from '../utils/apiClient';
 import { hashPasswordLocal, writeStoredUsers } from '../utils/passwordAuth';
+import { OFFICIAL_ROLE_DEFINITIONS, USER_ROLES, normalizeRole } from '../utils/roles';
 
-export const USER_ROLE_OPTIONS = [
-  { value: 'Administrator', label: 'Administrator (Super Admin)', defaultUnit: 'Kantor Pengelola BUMKam', badge: 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-950/70 dark:text-emerald-300 dark:border-emerald-800' },
-  { value: 'Admin BUMKam', label: 'Admin BUMKam', defaultUnit: 'Kantor Pengelola BUMKam', badge: 'bg-teal-100 text-teal-800 border-teal-200 dark:bg-teal-950/70 dark:text-teal-300 dark:border-teal-800' },
-  { value: 'Ketua BUMKam', label: 'Ketua BUMKam', defaultUnit: 'BUMKam Mekar Sari', badge: 'bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-950/70 dark:text-indigo-300 dark:border-indigo-800' },
-  { value: 'Sekretaris BUMKam', label: 'Sekretaris BUMKam', defaultUnit: 'Kantor Pengelola BUMKam', badge: 'bg-sky-100 text-sky-800 border-sky-200 dark:bg-sky-950/70 dark:text-sky-300 dark:border-sky-800' },
-  { value: 'Bendahara', label: 'Bendahara', defaultUnit: 'Keuangan & Akuntansi', badge: 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/70 dark:text-amber-300 dark:border-amber-800' },
-  { value: 'Pengurus Unit Perdagangan', label: 'Pengurus Unit Perdagangan', defaultUnit: 'Unit Perdagangan', badge: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-950/70 dark:text-green-300 dark:border-green-800' },
-  { value: 'Pengurus Unit Jasa', label: 'Pengurus Unit Jasa', defaultUnit: 'Unit Jasa', badge: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-950/70 dark:text-blue-300 dark:border-blue-800' },
-  { value: 'Auditor', label: 'Auditor', defaultUnit: 'Pengawas Independen', badge: 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-950/70 dark:text-purple-300 dark:border-purple-800' },
-  { value: 'Umum', label: 'Umum / Publik', defaultUnit: 'Transparansi Kampung', badge: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700' }
-];
+// Hanya 6 peran resmi ARVÉA BUMKam
+export const USER_ROLE_OPTIONS = OFFICIAL_ROLE_DEFINITIONS;
 
 export const INITIAL_USERS = [
   {
@@ -38,7 +30,7 @@ export const INITIAL_USERS = [
     name: 'Administrator ARVÉA',
     username: 'administrator',
     email: 'admin@arvea-mekarsari.id',
-    role: 'Administrator',
+    role: USER_ROLES.ADMINISTRATOR,
     unit_kerja: 'Kantor Pengelola BUMKam',
     initials: 'AD',
     password: 'BummaMekarSari2026!',
@@ -54,7 +46,7 @@ export const INITIAL_USERS = [
     name: 'Eko L Wibowo',
     username: 'ketua_bumkam',
     email: 'ketua@arvea-mekarsari.id',
-    role: 'Ketua BUMKam',
+    role: USER_ROLES.KETUA_BUMKAM,
     unit_kerja: 'BUMKam Mekar Sari',
     initials: 'KB',
     password: 'BummaMekarSari2026!',
@@ -70,7 +62,7 @@ export const INITIAL_USERS = [
     name: 'Sekretaris BUMKam',
     username: 'sekretaris_bumkam',
     email: 'sekretaris@arvea-mekarsari.id',
-    role: 'Sekretaris BUMKam',
+    role: USER_ROLES.SEKRETARIS_BUMKAM,
     unit_kerja: 'Kantor Pengelola BUMKam',
     initials: 'SB',
     password: 'BummaMekarSari2026!',
@@ -86,9 +78,9 @@ export const INITIAL_USERS = [
     name: 'Rita Fanghoi',
     username: 'bendahara_bumkam',
     email: 'bendahara@arvea-mekarsari.id',
-    role: 'Bendahara',
+    role: USER_ROLES.BENDAHARA_BUMKAM,
     unit_kerja: 'Keuangan & Akuntansi',
-    initials: 'BD',
+    initials: 'BB',
     password: 'BummaMekarSari2026!',
     is_active: true,
     must_change_password: false,
@@ -97,44 +89,12 @@ export const INITIAL_USERS = [
     created_at: '2026-01-05T09:00:00Z'
   },
   {
-    id: 'usr_perdagangan',
-    full_name: 'Yohanis Wenda',
-    name: 'Yohanis Wenda',
-    username: 'unit_perdagangan',
-    email: 'perdagangan@arvea-mekarsari.id',
-    role: 'Pengurus Unit Perdagangan',
-    unit_kerja: 'Unit Perdagangan',
-    initials: 'YW',
-    password: 'BummaMekarSari2026!',
-    is_active: true,
-    must_change_password: false,
-    password_changed_at: '2026-01-15T09:30:00Z',
-    is_default_account: false,
-    created_at: '2026-01-06T08:00:00Z'
-  },
-  {
-    id: 'usr_jasa',
-    full_name: 'Markus Krey',
-    name: 'Markus Krey',
-    username: 'unit_jasa',
-    email: 'jasa@arvea-mekarsari.id',
-    role: 'Pengurus Unit Jasa',
-    unit_kerja: 'Unit Jasa',
-    initials: 'MK',
-    password: 'BummaMekarSari2026!',
-    is_active: true,
-    must_change_password: false,
-    password_changed_at: '2026-01-15T10:00:00Z',
-    is_default_account: false,
-    created_at: '2026-01-06T08:30:00Z'
-  },
-  {
     id: 'usr_auditor',
     full_name: 'Auditor Pengawas',
     name: 'Auditor Pengawas',
     username: 'auditor',
     email: 'auditor@arvea-mekarsari.id',
-    role: 'Auditor',
+    role: USER_ROLES.AUDITOR,
     unit_kerja: 'Pengawas Independen',
     initials: 'AU',
     password: 'BummaMekarSari2026!',
@@ -150,7 +110,7 @@ export const INITIAL_USERS = [
     name: 'Masyarakat & Publik',
     username: 'umum',
     email: 'publik@arvea-mekarsari.id',
-    role: 'Umum',
+    role: USER_ROLES.UMUM,
     unit_kerja: 'Transparansi Kampung',
     initials: 'UM',
     password: 'BummaMekarSari2026!',
@@ -196,8 +156,8 @@ export default function PengelolaanPengguna({
     full_name: '',
     username: '',
     email: '',
-    role: 'Pengurus Unit Perdagangan',
-    unit_kerja: 'Unit Perdagangan',
+    role: USER_ROLES.SEKRETARIS_BUMKAM,
+    unit_kerja: 'Kantor Pengelola BUMKam',
     temp_password: '',
     must_change_password: true
   });
@@ -247,8 +207,8 @@ export default function PengelolaanPengguna({
       full_name: '',
       username: '',
       email: '',
-      role: 'Pengurus Unit Perdagangan',
-      unit_kerja: 'Unit Perdagangan',
+      role: USER_ROLES.SEKRETARIS_BUMKAM,
+      unit_kerja: 'Kantor Pengelola BUMKam',
       temp_password: generateTempPassword(),
       must_change_password: true
     });
@@ -262,7 +222,7 @@ export default function PengelolaanPengguna({
       full_name: u.full_name || u.name || '',
       username: u.username || '',
       email: u.email || '',
-      role: u.role || 'Umum',
+      role: normalizeRole(u.role),
       unit_kerja: u.unit_kerja || 'BUMKam Mekar Sari',
       temp_password: '',
       must_change_password: Boolean(u.must_change_password)
@@ -486,15 +446,15 @@ export default function PengelolaanPengguna({
       return;
     }
 
-    if (currentlyActive && (u.role === 'Administrator' || u.role === 'Admin BUMKam')) {
+    if (currentlyActive && normalizeRole(u.role) === USER_ROLES.ADMINISTRATOR) {
       const otherActiveAdmins = users.filter(
         x =>
           x.id !== u.id &&
           x.is_active !== false &&
-          (x.role === 'Administrator' || x.role === 'Admin BUMKam')
+          normalizeRole(x.role) === USER_ROLES.ADMINISTRATOR
       );
       if (otherActiveAdmins.length === 0) {
-        toast.error('Minimal harus ada 1 akun Administrator / Admin BUMKam yang tetap aktif.');
+        toast.error('Minimal harus ada 1 akun Administrator yang tetap aktif.');
         return;
       }
     }
