@@ -158,9 +158,9 @@ export default function ArveaLogo({
   }
 
   return (
-    <div className={`inline-flex items-center gap-2.5 select-none ${className}`}>
+    <div className={`inline-flex items-center gap-2.5 select-none text-left ${className}`}>
       <DiamondMark />
-      <div className="flex flex-col justify-center leading-none">
+      <div className="flex flex-col items-start justify-center leading-none text-left">
         <Wordmark />
         {subtitle && (
           <span

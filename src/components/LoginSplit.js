@@ -239,31 +239,27 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
         />
         <div className="absolute inset-0 z-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
 
-        {/* Top Brand Logo ARVÉA + Slogan (dinaikkan rapi di area atas dinding agar seluruh wajah tim tidak tertutup) */}
-        <div className="relative z-10 flex flex-col gap-2">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <ArveaLogo
-                variant="horizontal"
-                theme="light"
-                size="sm"
-                subtitle="Financial Management System BUMKam Mekar Sari"
-              />
-              <span className="hidden sm:inline-block px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-xs border border-white/30 text-[10px] font-extrabold text-white">
-                SAK EMKM
-              </span>
-            </div>
-          </div>
-
-          <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#4B3F82]/45 border border-white/40 text-white text-[11px] font-semibold tracking-[0.05em] backdrop-blur-md shadow-sm arvea-slogan-light">
-              <Sparkles className="w-3 h-3 text-amber-200 shrink-0" /> &ldquo;Satu Nilai, Satu Tujuan, Bertumbuh Bersama&rdquo;
-            </div>
-          </div>
+        {/* Top Brand Logo ARVÉA (dipojokkan rapi ke sebelah kiri atas) */}
+        <div className="relative z-10 flex items-center justify-between gap-3 -ml-1 sm:-ml-2">
+          <ArveaLogo
+            variant="horizontal"
+            theme="light"
+            size="sm"
+            subtitle="Financial Management System BUMKam Mekar Sari"
+          />
+          <span className="hidden sm:inline-block px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-xs border border-white/30 text-[10px] font-extrabold text-white shrink-0">
+            SAK EMKM
+          </span>
         </div>
 
-        {/* Main Hero Pitch (diberi ruang lega di atas agar area wajah foto pertama tetap terlihat jelas) */}
-        <div className="relative z-10 mt-16 sm:mt-20 md:mt-24 mb-4 max-w-xl">
+        {/* Main Hero Pitch (ruang lega di atas agar area wajah foto pertama tetap terlihat, slogan di tengah tepat di atas judul) */}
+        <div className="relative z-10 mt-16 sm:mt-20 md:mt-24 mb-4 max-w-xl w-full">
+          <div className="flex justify-center mb-3.5">
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#4B3F82]/45 border border-white/40 text-white text-[11px] sm:text-xs font-semibold tracking-[0.05em] backdrop-blur-md shadow-sm arvea-slogan-light text-center">
+              <Sparkles className="w-3.5 h-3.5 text-amber-200 shrink-0" /> &ldquo;Satu Nilai, Satu Tujuan, Bertumbuh Bersama&rdquo;
+            </div>
+          </div>
+
           <h2 className="text-xl md:text-2xl lg:text-3xl font-black tracking-tight text-white leading-tight mb-3 drop-shadow-sm">
             Kelola akuntansi &amp; aset BUMKam dengan akuntabel dan transparan.
           </h2>
