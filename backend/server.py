@@ -175,8 +175,6 @@ LEGACY_ROLE_MAP = {
     'bendahara': UserRole.BENDAHARA_BUMKAM.value,
     'akuntansi': UserRole.BENDAHARA_BUMKAM.value,
     'keuangan': UserRole.BENDAHARA_BUMKAM.value,
-    'pengurus unit perdagangan': UserRole.SEKRETARIS_BUMKAM.value,
-    'pengurus unit jasa': UserRole.SEKRETARIS_BUMKAM.value,
     'manajer': UserRole.KETUA_BUMKAM.value,
     'publik': UserRole.UMUM.value,
 }
@@ -525,6 +523,19 @@ async def seed_data():
             for u in DEMO_USERS
         ]
         await db.users.insert_many(seed_docs)
+    else:
+        # Bersihkan akun role lama "Unit Perdagangan" & "Unit Jasa" serta normalisasi nama role Bendahara
+        await db.users.delete_many({
+            '$or': [
+                {'id': {'$in': ['usr_perdagangan', 'usr_jasa']}},
+                {'username': {'$in': ['unit_perdagangan', 'unit_jasa']}},
+                {'role': {'$in': ['Pengurus Unit Perdagangan', 'Pengurus Unit Jasa', 'Unit Perdagangan', 'Unit Jasa']}}
+            ]
+        })
+        await db.users.update_many(
+            {'role': 'Bendahara'},
+            {'$set': {'role': UserRole.BENDAHARA_BUMKAM.value, 'updated_at': now()}}
+        )
     if await db.accounts.count_documents({}) == 0:
         await db.accounts.insert_many(DEFAULT_ACCOUNTS)
     if await db.products.count_documents({}) == 0:

@@ -180,12 +180,31 @@ const LEGACY_ROLE_MAP = {
   'bendahara': USER_ROLES.BENDAHARA_BUMKAM,
   'akuntansi': USER_ROLES.BENDAHARA_BUMKAM,
   'keuangan': USER_ROLES.BENDAHARA_BUMKAM,
-  'pengurus unit perdagangan': USER_ROLES.SEKRETARIS_BUMKAM,
-  'pengurus unit jasa': USER_ROLES.SEKRETARIS_BUMKAM,
   'manajer': USER_ROLES.KETUA_BUMKAM,
   'publik': USER_ROLES.UMUM,
   'umum / publik': USER_ROLES.UMUM
 };
+
+export const DEPRECATED_USER_IDS = new Set(['usr_perdagangan', 'usr_jasa']);
+export const DEPRECATED_USERNAMES = new Set(['unit_perdagangan', 'unit_jasa']);
+export const DEPRECATED_ROLE_NAMES = new Set([
+  'pengurus unit perdagangan',
+  'pengurus unit jasa',
+  'unit perdagangan',
+  'unit jasa'
+]);
+
+export function isDeprecatedUnitRoleAccount(userRecord) {
+  if (!userRecord) return false;
+  const id = String(userRecord.id || '').trim().toLowerCase();
+  const uname = String(userRecord.username || '').trim().toLowerCase();
+  const role = String(userRecord.role || '').trim().toLowerCase();
+  return (
+    DEPRECATED_USER_IDS.has(id) ||
+    DEPRECATED_USERNAMES.has(uname) ||
+    DEPRECATED_ROLE_NAMES.has(role)
+  );
+}
 
 /**
  * Normalisasi role lama (misal dari localStorage sebelumnya) ke salah satu dari 6 role resmi.

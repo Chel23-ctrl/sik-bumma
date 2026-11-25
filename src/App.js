@@ -52,7 +52,13 @@ import LoadingScreen from './components/LoadingScreen';
 import RoleSwitcherDropdown from './components/RoleSwitcherDropdown';
 import apiClient, { clearAuthToken, setAuthToken, isJsonApiResponse } from './utils/apiClient';
 import { hashPasswordLocal, readStoredUsers, writeStoredUsers, USERS_STORAGE_KEY } from './utils/passwordAuth';
-import { USER_ROLES, ROLE_PERMISSIONS, normalizeRole, getRoleMeta } from './utils/roles';
+import {
+  USER_ROLES,
+  ROLE_PERMISSIONS,
+  normalizeRole,
+  getRoleMeta,
+  isDeprecatedUnitRoleAccount
+} from './utils/roles';
 
 export { ROLE_PERMISSIONS };
 
@@ -204,7 +210,15 @@ export default function App() {
     const stored = readStoredUsers(INITIAL_USERS);
     const source = Array.isArray(stored) && stored.length > 0 ? stored : INITIAL_USERS;
     let migratedAny = false;
-    const normalized = source.map(u => {
+    // Hapus akun legacy role "Unit Perdagangan" & "Unit Jasa" dari cache browser lama
+    const filteredSource = source.filter(u => {
+      if (isDeprecatedUnitRoleAccount(u)) {
+        migratedAny = true;
+        return false;
+      }
+      return true;
+    });
+    const normalized = filteredSource.map(u => {
       const normalizedRole = normalizeRole(u.role);
       const next = {
         ...u,
