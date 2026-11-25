@@ -9,6 +9,7 @@ import apiClient, {
   parseAuthError,
   hasExplicitRemoteApi
 } from '../utils/apiClient';
+import { readStoredUsers, verifyPasswordLocal } from '../utils/passwordAuth';
 
 export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
   const [email, setEmail] = useState('');
@@ -17,19 +18,13 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loginError, setLoginError] = useState(null);
 
-  const legacyDefaultPasswords = [
-    'bummamekarsari2026!',
-    'bumma123!',
-    'admin123',
-    'arvea2026!',
-    'arvea123'
-  ];
-
   const findManagedUser = (identifier) => {
     const idn = (identifier || '').trim().toLowerCase();
-    if (!idn || !Array.isArray(users) || users.length === 0) return null;
+    // Selalu baca data pengguna paling mutakhir dari storage (bukan state lama/stale)
+    const latestUsers = readStoredUsers(users);
+    if (!idn || !Array.isArray(latestUsers) || latestUsers.length === 0) return null;
     return (
-      users.find(
+      latestUsers.find(
         u =>
           (u.username || '').toLowerCase() === idn ||
           (u.email || '').toLowerCase() === idn ||
@@ -47,7 +42,6 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
     // Trim spasi tersembunyi dari keyboard HP / copy-paste & normalisasi huruf kecil untuk username/email
     const cleanIdentifier = (email || '').trim().toLowerCase();
     const cleanPassword = (password || '').trim();
-    const pwLower = cleanPassword.toLowerCase();
 
     if (!cleanIdentifier || !cleanPassword) {
       const errObj = {
@@ -137,11 +131,8 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
         return;
       }
 
-      const storedPwd = (managed.password || '').trim();
-      const isDefaultUnchanged = managed.is_default_account && managed.must_change_password;
-      const passwordMatches =
-        (storedPwd && cleanPassword === storedPwd) ||
-        (isDefaultUnchanged && legacyDefaultPasswords.includes(pwLower));
+      // Verifikasi ketat terhadap hash/password terkini yang tersimpan pada data user (tanpa hardcoded password)
+      const passwordMatches = verifyPasswordLocal(cleanPassword, managed);
 
       if (!passwordMatches) {
         const looksLikeGeneratedReset = cleanPassword.startsWith('Arvea#');

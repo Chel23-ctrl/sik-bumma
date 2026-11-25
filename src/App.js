@@ -50,6 +50,7 @@ import StorefrontUlambox, { DEFAULT_CORE_PRODUCTS } from './components/Storefron
 import ScrollToTopButton from './components/ScrollToTopButton';
 import LoadingScreen from './components/LoadingScreen';
 import apiClient, { clearAuthToken, setAuthToken, isJsonApiResponse } from './utils/apiClient';
+import { hashPasswordLocal, readStoredUsers, writeStoredUsers, USERS_STORAGE_KEY } from './utils/passwordAuth';
 
 const getStorage = (key, defaultVal) => {
   try {
@@ -238,20 +239,51 @@ export default function App() {
 
   // Auth & Managed Users (User Management + First-Time Password Guard)
   const [users, setUsers] = useState(() => {
-    const stored = getStorage('users', INITIAL_USERS);
-    if (Array.isArray(stored) && stored.length > 0) {
-      return stored.map(u => ({
+    const stored = readStoredUsers(INITIAL_USERS);
+    const source = Array.isArray(stored) && stored.length > 0 ? stored : INITIAL_USERS;
+    let migratedAny = false;
+    const normalized = source.map(u => {
+      const next = {
         ...u,
         is_active: u.is_active !== false
-      }));
+      };
+      // Migrasi aman: konversi plaintext password lama ke salted hash dan hapus field plaintext
+      if (!next.password_hash && typeof next.password === 'string' && next.password.trim()) {
+        next.password_hash = hashPasswordLocal(next.password.trim());
+        delete next.password;
+        migratedAny = true;
+      } else if (next.password_hash && 'password' in next) {
+        delete next.password;
+        migratedAny = true;
+      }
+      return next;
+    });
+    if (migratedAny || !localStorage.getItem(USERS_STORAGE_KEY)) {
+      writeStoredUsers(normalized);
     }
-    return INITIAL_USERS;
+    return normalized;
   });
-  useEffect(() => { setStorage('users', users); }, [users]);
+  useEffect(() => { writeStoredUsers(users); }, [users]);
+
+  // Sinkronisasi otomatis lintas tab browser (misal reset password di Tab 1, login di Tab 2)
+  useEffect(() => {
+    const handleStorageSync = (event) => {
+      if (event.key === USERS_STORAGE_KEY && event.newValue) {
+        try {
+          const parsed = JSON.parse(event.newValue);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setUsers(parsed);
+          }
+        } catch (e) {}
+      }
+    };
+    window.addEventListener('storage', handleStorageSync);
+    return () => window.removeEventListener('storage', handleStorageSync);
+  }, []);
 
   const [user, setUser] = useState(() => getStorage('user', null));
 
-  // Sync active user with managed users store (detect deactivation or password reset)
+  // Sync active user profile/status with managed users store (detect live deactivation)
   const activeUserRecord = useMemo(() => {
     if (!user) return null;
     if (user.auth_source === 'api') return user;
@@ -273,10 +305,11 @@ export default function App() {
     }
   }, [activeUserRecord]);
 
-  // Route Guard 2: Detect mandatory first-time password change
+  // Route Guard 2: Detect mandatory password change on login session
+  // (Gunakan flag sesi login `user` agar admin yang mereset sandinya sendiri tidak langsung terlempar sebelum modal ditutup,
+  //  lalu wajib ganti password saat login berikutnya dengan password sementara)
   const requiresInitialPasswordChange = Boolean(
-    activeUserRecord &&
-      (activeUserRecord.must_change_password === true || !activeUserRecord.password_changed_at)
+    user && (user.must_change_password === true || !user.password_changed_at)
   );
 
   const handleCompleteInitialCredentials = ({ newUsername, newPassword }) =>
@@ -294,21 +327,30 @@ export default function App() {
             setAuthToken(res.data.access_token);
           }
         }
-        setUsers(prev =>
-          prev.map(u =>
-            u.id === activeUserRecord.id ||
-            (u.username && u.username === activeUserRecord.username)
-              ? {
-                  ...u,
-                  username: newUsername || u.username,
-                  password: newPassword,
-                  must_change_password: false,
-                  password_changed_at: changedAt,
-                  updated_at: changedAt
-                }
-              : u
-          )
-        );
+        const hashedNewPwd = hashPasswordLocal(newPassword);
+        setUsers(prev => {
+          const next = prev.map(u => {
+            if (
+              u.id === activeUserRecord.id ||
+              (u.username && u.username === activeUserRecord.username)
+            ) {
+              const updated = {
+                ...u,
+                username: newUsername || u.username,
+                password_hash: hashedNewPwd,
+                must_change_password: false,
+                password_changed_at: changedAt,
+                is_default_account: false,
+                updated_at: changedAt
+              };
+              delete updated.password;
+              return updated;
+            }
+            return u;
+          });
+          writeStoredUsers(next);
+          return next;
+        });
         setUser(prev => ({
           ...prev,
           username: newUsername || prev.username,
@@ -1131,7 +1173,7 @@ export default function App() {
 
           {/* Backoffice Footer */}
           <footer className="mt-14 pt-6 border-t border-[#9A90CC]/30 dark:border-slate-800 text-center text-slate-500 text-xs print:hidden">
-            <p className="font-semibold text-[#3C3365] dark:text-slate-300">ARVÃ‰A &bull; Financial Management System BUMKam Mekar Sari</p>
+            <p className="font-semibold text-[#3C3365] dark:text-slate-300">ARVÉA &bull; Financial Management System BUMKam Mekar Sari</p>
             <p className="italic text-[#64589F] dark:text-[#C4B9E5] text-[11px] mt-0.5">&ldquo;Satu Nilai, Satu Tujuan, Bertumbuh Bersama&rdquo;</p>
             <p className="mt-1 text-slate-500 text-[11px]">Kampung Sabron Sari, Distrik Sentani Barat, Kabupaten Jayapura &bull; Standar SAK EMKM</p>
             <p className="mt-1 text-slate-400 text-[10px]">Teknologi Digital Akuntansi (TDA) Kelompok 3C &bull; S1 Akuntansi FEB Uncen</p>

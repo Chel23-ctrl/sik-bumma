@@ -583,6 +583,7 @@ async def change_initial_credentials(body: InitialCredentialBody, request: Reque
         'password_hash': hash_password(new_pwd),
         'must_change_password': False,
         'password_changed_at': now(),
+        'is_default_account': False,
         'updated_at': now()
     }
 
@@ -735,11 +736,16 @@ async def reset_user_password(user_id: str, body: ResetPasswordBody, admin=Depen
             'password_hash': hash_password(new_pwd),
             'must_change_password': bool(body.must_change_password),
             'password_changed_at': None if body.must_change_password else now(),
+            'is_default_account': False,
             'updated_at': now()
         }}
     )
     updated = await db.users.find_one({'id': user_id}, {'_id': 0})
-    return public(updated)
+    return {
+        'ok': True,
+        'message': 'Password berhasil diperbarui',
+        **public(updated)
+    }
 
 @api.patch('/users/{user_id}/status')
 async def toggle_user_status(user_id: str, body: ToggleStatusBody, admin=Depends(require_admin)):

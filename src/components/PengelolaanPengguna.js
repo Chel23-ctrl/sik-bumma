@@ -11,10 +11,13 @@ import {
   EyeOff,
   RefreshCw,
   RotateCcw,
-  Lock
+  Lock,
+  Copy,
+  Check
 } from 'lucide-react';
 import { toast } from 'sonner';
-import apiClient from '../utils/apiClient';
+import apiClient, { hasExplicitRemoteApi, parseAuthError } from '../utils/apiClient';
+import { hashPasswordLocal, writeStoredUsers } from '../utils/passwordAuth';
 
 export const USER_ROLE_OPTIONS = [
   { value: 'Administrator', label: 'Administrator (Super Admin)', defaultUnit: 'Kantor Pengelola BUMKam', badge: 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-950/70 dark:text-emerald-300 dark:border-emerald-800' },
@@ -204,6 +207,8 @@ export default function PengelolaanPengguna({
   const [resetPwd, setResetPwd] = useState('');
   const [resetForceChange, setResetForceChange] = useState(true);
   const [showResetPwd, setShowResetPwd] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+  const [copiedResetPwd, setCopiedResetPwd] = useState(false);
 
   // Summary metrics
   const summary = useMemo(() => {
@@ -310,8 +315,8 @@ export default function PengelolaanPengguna({
         unit_kerja: userForm.unit_kerja.trim() || 'BUMKam Mekar Sari'
       }).catch(() => {});
 
-      setUsers(prev =>
-        prev.map(u =>
+      setUsers(prev => {
+        const next = prev.map(u =>
           u.id === editingUserId
             ? {
                 ...u,
@@ -325,8 +330,10 @@ export default function PengelolaanPengguna({
                 updated_at: new Date().toISOString()
               }
             : u
-        )
-      );
+        );
+        writeStoredUsers(next);
+        return next;
+      });
       toast.success(`Data pengurus "${fullName}" berhasil diperbarui!`);
     } else {
       const tempPwd = userForm.temp_password.trim();
@@ -354,14 +361,18 @@ export default function PengelolaanPengguna({
         role: userForm.role,
         unit_kerja: userForm.unit_kerja.trim() || 'BUMKam Mekar Sari',
         initials: getInitials(fullName),
-        password: tempPwd,
+        password_hash: hashPasswordLocal(tempPwd),
         is_active: true,
         must_change_password: Boolean(userForm.must_change_password),
         password_changed_at: userForm.must_change_password ? null : new Date().toISOString(),
         is_default_account: false,
         created_at: new Date().toISOString()
       };
-      setUsers(prev => [...prev, newUser]);
+      setUsers(prev => {
+        const next = [...prev, newUser];
+        writeStoredUsers(next);
+        return next;
+      });
       toast.success(
         `Akun pengurus "${fullName}" (${username}) berhasil dibuat!${
           newUser.must_change_password ? ' User wajib mengganti password saat login perdana.' : ''
@@ -378,42 +389,89 @@ export default function PengelolaanPengguna({
     setResetPwd(generateTempPassword());
     setResetForceChange(true);
     setShowResetPwd(true);
+    setCopiedResetPwd(false);
+    setIsResetting(false);
   };
 
-  // Confirm Reset Password
-  const handleConfirmReset = (e) => {
+  const handleCopyResetPwd = () => {
+    const clean = (resetPwd || '').trim();
+    if (!clean) return;
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(clean).then(() => {
+        setCopiedResetPwd(true);
+        toast.success('Password sementara disalin ke clipboard.');
+        setTimeout(() => setCopiedResetPwd(false), 2000);
+      }).catch(() => {
+        toast.info('Silakan blok dan salin password secara manual.');
+      });
+    }
+  };
+
+  // Confirm Reset Password (await backend bcrypt update + immediate hashed localStorage persistence)
+  const handleConfirmReset = async (e) => {
     e.preventDefault();
-    if (!resetTarget) return;
-    const pwd = resetPwd.trim();
+    if (!resetTarget || isResetting) return;
+    const pwd = (resetPwd || '').trim();
     if (pwd.length < 6) {
       toast.error('Password baru sementara minimal 6 karakter.');
       return;
     }
 
-    apiClient.post(`/users/${resetTarget.id}/reset-password`, {
-      new_password: pwd,
-      must_change_password: Boolean(resetForceChange)
-    }).catch(() => {});
+    setIsResetting(true);
+    try {
+      // 1. Kirim pembaruan password (di-hash bcrypt di server) bila backend API tersedia
+      try {
+        await apiClient.post(`/users/${resetTarget.id}/reset-password`, {
+          new_password: pwd,
+          must_change_password: Boolean(resetForceChange)
+        });
+      } catch (apiErr) {
+        const httpStatus = apiErr?.response?.status;
+        if ((httpStatus && httpStatus !== 404 && httpStatus !== 405) || hasExplicitRemoteApi) {
+          const parsed = parseAuthError(apiErr);
+          toast.error(parsed.message || 'Gagal menyimpan password baru ke server.');
+          return;
+        }
+        // Static SPA mode tanpa remote API: lanjutkan penyimpanan lokal terenkripsi
+      }
 
-    setUsers(prev =>
-      prev.map(u =>
-        u.id === resetTarget.id
-          ? {
-              ...u,
-              password: pwd,
-              must_change_password: Boolean(resetForceChange),
-              password_changed_at: resetForceChange ? null : new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            }
-          : u
-      )
-    );
-    toast.success(
-      `Password akun "${resetTarget.full_name || resetTarget.name}" berhasil direset.${
-        resetForceChange ? ' User akan diminta mengganti password saat login berikutnya.' : ''
-      }`
-    );
-    setResetTarget(null);
+      // 2. Hash password baru & simpan secara sinkron ke state + localStorage (hapus plaintext lama)
+      const hashedPwd = hashPasswordLocal(pwd);
+      const nowIso = new Date().toISOString();
+      const targetId = resetTarget.id;
+      const targetUsername = (resetTarget.username || '').toLowerCase();
+
+      setUsers(prev => {
+        const next = prev.map(u => {
+          const isMatch =
+            u.id === targetId ||
+            (targetUsername && (u.username || '').toLowerCase() === targetUsername);
+          if (!isMatch) return u;
+          const updated = {
+            ...u,
+            password_hash: hashedPwd,
+            must_change_password: Boolean(resetForceChange),
+            password_changed_at: resetForceChange ? null : nowIso,
+            is_default_account: false,
+            updated_at: nowIso
+          };
+          delete updated.password;
+          return updated;
+        });
+        writeStoredUsers(next);
+        return next;
+      });
+
+      toast.success('Password berhasil diperbarui', {
+        description: `Akun @${resetTarget.username} (${resetTarget.full_name || resetTarget.name}) kini menggunakan password baru.${
+          resetForceChange ? ' User wajib mengganti password saat login berikutnya.' : ''
+        }`
+      });
+      setResetTarget(null);
+      setResetPwd('');
+    } finally {
+      setIsResetting(false);
+    }
   };
 
   // Toggle Active / Inactive (Soft Disable Ã¢â‚¬â€ Never Hard Delete!)
@@ -443,8 +501,8 @@ export default function PengelolaanPengguna({
 
     const nextStatus = !currentlyActive;
     apiClient.patch(`/users/${u.id}/status`, { is_active: nextStatus }).catch(() => {});
-    setUsers(prev =>
-      prev.map(item =>
+    setUsers(prev => {
+      const next = prev.map(item =>
         item.id === u.id
           ? {
               ...item,
@@ -453,8 +511,10 @@ export default function PengelolaanPengguna({
               updated_at: new Date().toISOString()
             }
           : item
-      )
-    );
+      );
+      writeStoredUsers(next);
+      return next;
+    });
 
     if (nextStatus) {
       toast.success(`Akun "${u.full_name || u.name}" telah diaktifkan kembali.`);
@@ -935,21 +995,47 @@ export default function PengelolaanPengguna({
                     <RefreshCw className="w-3 h-3" /> Generate Acak
                   </button>
                 </div>
-                <div className="relative">
-                  <input
-                    type={showResetPwd ? 'text' : 'password'}
-                    value={resetPwd}
-                    onChange={(e) => setResetPwd(e.target.value)}
-                    placeholder="Minimal 6 karakter"
-                    className="w-full pr-9 p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 font-mono font-bold"
-                    required
-                  />
+                <div className="relative flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <input
+                      type={showResetPwd ? 'text' : 'password'}
+                      value={resetPwd}
+                      onChange={(e) => {
+                        setResetPwd(e.target.value);
+                        setCopiedResetPwd(false);
+                      }}
+                      placeholder="Minimal 6 karakter"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      autoComplete="new-password"
+                      className="w-full pr-9 p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 font-mono font-bold"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowResetPwd(!showResetPwd)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                      title={showResetPwd ? 'Sembunyikan sandi' : 'Tampilkan sandi'}
+                    >
+                      {showResetPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                   <button
                     type="button"
-                    onClick={() => setShowResetPwd(!showResetPwd)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    onClick={handleCopyResetPwd}
+                    className="px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold flex items-center gap-1 shrink-0 transition"
+                    title="Salin password baru sementara"
                   >
-                    {showResetPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {copiedResetPwd ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-emerald-600" /> Disalin
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5" /> Salin
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
@@ -969,16 +1055,18 @@ export default function PengelolaanPengguna({
               <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2">
                 <button
                   type="button"
+                  disabled={isResetting}
                   onClick={() => setResetTarget(null)}
-                  className="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-semibold"
+                  className="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-semibold disabled:opacity-50"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold flex items-center gap-1.5 shadow"
+                  disabled={isResetting}
+                  className="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 disabled:opacity-60 text-white font-bold flex items-center gap-1.5 shadow"
                 >
-                  <KeyRound className="w-3.5 h-3.5" /> Terapkan Password Baru
+                  <KeyRound className="w-3.5 h-3.5" /> {isResetting ? 'Menyimpan...' : 'Terapkan Password Baru'}
                 </button>
               </div>
             </form>
