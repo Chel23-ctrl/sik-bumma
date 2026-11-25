@@ -191,9 +191,9 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
           {/* Foto Pertama (Atas) */}
           <div className="relative flex-1 w-full overflow-hidden">
             <img
-              src={`${process.env.PUBLIC_URL || ''}/assets/images/foto-bersama-1.jpg`}
+              src={`${process.env.PUBLIC_URL || ''}/assets/images/foto-bersama-1.jpg?v=2`}
               alt=""
-              className="w-full h-full object-cover object-[center_72%] opacity-[0.28] mix-blend-luminosity"
+              className="w-full h-full object-cover object-center opacity-[0.28] mix-blend-luminosity"
             />
             <div
               className="absolute inset-x-0 bottom-0 h-12"
