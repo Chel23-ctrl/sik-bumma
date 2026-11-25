@@ -1,14 +1,21 @@
 import React, { useState } from 'react';
-import { ShieldCheck, Lock, Sparkles, Eye, EyeOff } from 'lucide-react';
+import { ShieldCheck, Lock, Sparkles, Eye, EyeOff, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import SectorBackground from './SectorBackground';
 import ArveaLogo from './ArveaLogo';
+import apiClient, {
+  setAuthToken,
+  isJsonApiResponse,
+  parseAuthError,
+  hasExplicitRemoteApi
+} from '../utils/apiClient';
 
 export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
-  const [email, setEmail] = useState('administrator');
-  const [password, setPassword] = useState('BummaMekarSari2026!');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loginError, setLoginError] = useState(null);
 
   const legacyDefaultPasswords = [
     'bummamekarsari2026!',
@@ -35,36 +42,122 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isSubmitting) return;
-    const em = email.trim().toLowerCase();
-    const pwRaw = password.trim();
-    const pwLower = pwRaw.toLowerCase();
+    setLoginError(null);
 
-    const managed = findManagedUser(em);
+    // Trim spasi tersembunyi dari keyboard HP / copy-paste & normalisasi huruf kecil untuk username/email
+    const cleanIdentifier = (email || '').trim().toLowerCase();
+    const cleanPassword = (password || '').trim();
+    const pwLower = cleanPassword.toLowerCase();
 
-    if (!managed) {
-      toast.error('Akun tidak ditemukan. Periksa kembali username atau email Anda.');
-      return;
-    }
-
-    // Tolak akun yang dinonaktifkan (soft-disable)
-    if (managed.is_active === false) {
-      toast.error('Akun Anda telah dinonaktifkan. Silakan hubungi Administrator.');
-      return;
-    }
-
-    const storedPwd = (managed.password || '').trim();
-    const isDefaultUnchanged = managed.is_default_account && managed.must_change_password;
-    const passwordMatches =
-      (storedPwd && pwRaw === storedPwd) ||
-      (isDefaultUnchanged && legacyDefaultPasswords.includes(pwLower));
-
-    if (!passwordMatches) {
-      toast.error('Kata sandi tidak valid. Silakan periksa kembali kata sandi Anda.');
+    if (!cleanIdentifier || !cleanPassword) {
+      const errObj = {
+        code: 'EMPTY_FIELDS',
+        title: 'Form Belum Lengkap',
+        message: 'Harap masukkan Email/Username dan Kata Sandi terlebih dahulu.'
+      };
+      setLoginError(errObj);
+      toast.error(errObj.message);
       return;
     }
 
     setIsSubmitting(true);
     try {
+      // 1. Coba autentikasi ke Backend API terlebih dahulu (sinkronisasi multi-device & Bearer Token)
+      let apiHandled = false;
+      try {
+        const res = await apiClient.post('/auth/login', {
+          email: cleanIdentifier,
+          password: cleanPassword
+        });
+        if (isJsonApiResponse(res) && res.data?.id) {
+          apiHandled = true;
+          if (res.data.access_token) {
+            setAuthToken(res.data.access_token);
+          }
+          const serverUser = res.data;
+          await onLogin({
+            id: serverUser.id,
+            username: serverUser.username || cleanIdentifier,
+            email: serverUser.email || cleanIdentifier,
+            name: serverUser.full_name || serverUser.name,
+            full_name: serverUser.full_name || serverUser.name,
+            role: serverUser.role,
+            unit_kerja: serverUser.unit_kerja,
+            initials: serverUser.initials,
+            is_active: serverUser.is_active !== false,
+            must_change_password: Boolean(serverUser.must_change_password),
+            password_changed_at: serverUser.password_changed_at || null,
+            auth_source: 'api'
+          });
+          if (serverUser.must_change_password || !serverUser.password_changed_at) {
+            toast.info('Login perdana terdeteksi. Silakan ubah kredensial awal Anda terlebih dahulu.');
+          } else {
+            toast.success(`Selamat datang, ${serverUser.full_name || serverUser.name} (${serverUser.role})`);
+          }
+          return;
+        }
+      } catch (apiErr) {
+        const httpStatus = apiErr?.response?.status;
+        // Jika server API merespons eksplisit (400/401/403/419/5xx) ATAU remote API dikonfigurasi, tampilkan error spesifik
+        if ((httpStatus && httpStatus !== 404 && httpStatus !== 405) || hasExplicitRemoteApi) {
+          const parsed = parseAuthError(apiErr);
+          setLoginError(parsed);
+          toast.error(parsed.message);
+          return;
+        }
+        // Jika 404/405/HTML dari static Vercel hosting tanpa backend terpisah, lanjut ke verifikasi penyimpanan lokal SPA
+      }
+
+      if (apiHandled) return;
+
+      // 2. Fallback autentikasi penyimpanan lokal SPA (dengan pesan diagnostik jelas lintas perangkat)
+      const managed = findManagedUser(cleanIdentifier);
+
+      if (!managed) {
+        const errObj = {
+          code: 'USER_NOT_FOUND',
+          title: 'Akun Tidak Ditemukan di Perangkat Ini',
+          message: `Username/email "${cleanIdentifier}" tidak ditemukan.`,
+          hint: 'Pastikan ejaan benar tanpa spasi. Jika akun baru dibuat di perangkat lain (mode penyimpanan lokal), sinkronkan data akun terlebih dahulu lewat menu Pengelolaan Pengguna atau hubungkan database server.'
+        };
+        setLoginError(errObj);
+        toast.error(errObj.message);
+        return;
+      }
+
+      // Tolak akun yang dinonaktifkan (soft-disable)
+      if (managed.is_active === false) {
+        const errObj = {
+          code: 'ACCOUNT_DEACTIVATED',
+          title: 'Akun Dinonaktifkan',
+          message: 'Akun Anda telah dinonaktifkan. Silakan hubungi Administrator.'
+        };
+        setLoginError(errObj);
+        toast.error(errObj.message);
+        return;
+      }
+
+      const storedPwd = (managed.password || '').trim();
+      const isDefaultUnchanged = managed.is_default_account && managed.must_change_password;
+      const passwordMatches =
+        (storedPwd && cleanPassword === storedPwd) ||
+        (isDefaultUnchanged && legacyDefaultPasswords.includes(pwLower));
+
+      if (!passwordMatches) {
+        const looksLikeGeneratedReset = cleanPassword.startsWith('Arvea#');
+        const errObj = {
+          code: 'INVALID_PASSWORD',
+          title: 'Kata Sandi Tidak Cocok',
+          message: 'Kata sandi tidak valid. Silakan periksa kembali huruf besar/kecil dan spasi.',
+          hint: looksLikeGeneratedReset
+            ? 'Terdeteksi password sementara hasil Reset Sandi (Arvea#...). Jika reset dilakukan di perangkat lain tanpa database cloud terhubung, password di perangkat ini belum ikut tersinkronisasi — gunakan "Impor Kode Sinkronisasi" dari Admin atau hubungkan MONGO_URI di server.'
+            : 'Periksa tombol Caps Lock dan pastikan keyboard tidak menambahkan spasi otomatis di akhir kata sandi.'
+        };
+        setLoginError(errObj);
+        toast.error(errObj.message);
+        return;
+      }
+
       await onLogin({
         id: managed.id,
         username: managed.username,
@@ -76,8 +169,10 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
         initials: managed.initials,
         is_active: managed.is_active !== false,
         must_change_password: Boolean(managed.must_change_password),
-        password_changed_at: managed.password_changed_at || null
+        password_changed_at: managed.password_changed_at || null,
+        auth_source: 'local'
       });
+
       if (managed.must_change_password || !managed.password_changed_at) {
         toast.info('Login perdana terdeteksi. Silakan ubah kredensial awal Anda terlebih dahulu.');
       } else {
@@ -97,7 +192,6 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
           background: 'linear-gradient(145deg, #5F539C 0%, #8377BC 48%, #9A90CC 100%)'
         }}
       >
-        {/* Animated Background Mesh & Sector Motifs */}
         <SectorBackground variant="dark" />
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-white/15 rounded-full blur-3xl pointer-events-none animate-pulse-glow" />
         <div
@@ -136,7 +230,6 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
 
           {/* 3 Animated Sector Feature Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-            {/* Unit 1: Peternakan */}
             <div className="bg-white/15 backdrop-blur-md border border-white/25 rounded-2xl p-3 hover:bg-white/25 transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden animate-float">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-base">🥚</span>
@@ -155,7 +248,6 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
               </div>
             </div>
 
-            {/* Unit 2: Tenda */}
             <div className="bg-white/15 backdrop-blur-md border border-white/25 rounded-2xl p-3 hover:bg-white/25 transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden animate-float-delayed">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-base">⛺</span>
@@ -174,7 +266,6 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
               </div>
             </div>
 
-            {/* Unit 3: Gedung */}
             <div className="bg-white/15 backdrop-blur-md border border-white/25 rounded-2xl p-3 hover:bg-white/25 transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden animate-float">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-base">🏛️</span>
@@ -194,7 +285,6 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
             </div>
           </div>
 
-          {/* Quick Metrics (Clean, without 6 Peran RBAC) */}
           <div className="grid grid-cols-3 gap-4 pt-5 border-t border-white/25">
             <div>
               <p className="text-lg md:text-xl font-black text-white">SAK EMKM</p>
@@ -211,16 +301,15 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
           </div>
         </div>
 
-        {/* Bottom Tagline */}
         <div className="z-10 text-xs text-white/85 border-t border-white/20 pt-4 flex items-center justify-between">
           <span>BUMKam Mekar Sari &bull; Kampung Sabron Sari, Sentani Barat</span>
           <span className="text-[10px] text-white/75 font-semibold">TDA Kelompok 3C</span>
         </div>
       </div>
 
-      {/* Right Side: Clean Lilac-Tinted Authentication Card (No 6 Peran Pengguna Box) */}
+      {/* Right Side: Clean Lilac-Tinted Authentication Card */}
       <div className="md:w-7/12 lg:w-1/2 p-6 md:p-10 lg:p-12 flex flex-col justify-center items-center overflow-y-auto">
-        <div className="max-w-md w-full bg-white/95 backdrop-blur-md rounded-3xl border border-[#9A90CC]/35 shadow-xl p-7 sm:p-8 space-y-6">
+        <div className="max-w-md w-full bg-white/95 backdrop-blur-md rounded-3xl border border-[#9A90CC]/35 shadow-xl p-7 sm:p-8 space-y-5">
           <div>
             {onBackToStore && (
               <button
@@ -233,7 +322,7 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
             )}
 
             <div className="flex flex-col items-center text-center mb-5">
-              <ArveaLogo variant="stacked" theme="lilac" size="md" showTagline />
+              <ArveaLogo variant="stacked" theme="periwinkle" size="md" showTagline />
             </div>
 
             <div className="flex justify-center mb-3">
@@ -250,7 +339,35 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Inline Specific Error Banner (never fails silently) */}
+          {loginError && (
+            <div
+              role="alert"
+              className="rounded-2xl bg-rose-50 border border-rose-200 p-3.5 text-xs text-rose-900 space-y-1.5"
+            >
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-extrabold text-rose-800">{loginError.title}</p>
+                    <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700">
+                      {loginError.code}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-rose-700 mt-0.5 leading-relaxed">
+                    {loginError.message}
+                  </p>
+                  {loginError.hint && (
+                    <p className="text-[10px] text-rose-600/90 mt-1.5 pt-1.5 border-t border-rose-200/80 leading-relaxed">
+                      <strong>Saran:</strong> {loginError.hint}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <div>
               <label className="block text-xs font-bold text-[#3C3365] uppercase tracking-wider mb-1.5">
                 Email / Username
@@ -258,8 +375,17 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
               <input
                 type="text"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (loginError) setLoginError(null);
+                }}
+                onBlur={(e) => setEmail(e.target.value.trim())}
                 placeholder="Masukkan username atau email"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                autoComplete="username"
+                inputMode="email"
                 className="w-full px-4 py-2.5 rounded-xl border border-[#9A90CC]/50 bg-[#FAF9FD] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#9A90CC] text-xs text-[#1E1B2E] font-semibold"
                 required
               />
@@ -273,8 +399,15 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (loginError) setLoginError(null);
+                  }}
                   placeholder="••••••••••••"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  autoComplete="current-password"
                   className="w-full px-4 pr-10 py-2.5 rounded-xl border border-[#9A90CC]/50 bg-[#FAF9FD] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#9A90CC] text-xs text-[#1E1B2E] font-medium"
                   required
                 />

@@ -3,23 +3,37 @@ from datetime import datetime, timezone, timedelta
 from typing import Optional, Any
 from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from motor.motor_asyncio import AsyncIOMotorClient
 from mongomock_motor import AsyncMongoMockClient
 from pydantic import BaseModel, Field
 
 DB_NAME = os.environ.get('DB_NAME', 'bumma_db')
 JWT_SECRET = os.environ.get('JWT_SECRET', 'bumma-mekar-sari-secret-2026')
-client = AsyncMongoMockClient()
+MONGO_URI = os.environ.get('MONGO_URI') or os.environ.get('MONGODB_URI') or ''
+
+# Gunakan MongoDB Atlas bila MONGO_URI dikonfigurasi (sinkronisasi multi-device),
+# atau fallback ke in-memory mock untuk preview lokal.
+if MONGO_URI.strip():
+    client = AsyncIOMotorClient(MONGO_URI.strip())
+    STORAGE_MODE = 'mongodb'
+else:
+    client = AsyncMongoMockClient()
+    STORAGE_MODE = 'memory'
+
 db = client[DB_NAME]
 
-app = FastAPI(title='SIK-BUMMA Mekar Sari API', version='2.0.0')
+app = FastAPI(title='ARVÉA BUMKam Mekar Sari API', version='2.2.0')
 api = APIRouter(prefix='/api')
 
+# CORS aman lintas device & IP lokal: gunakan allow_origin_regex (bukan '*')
+# agar allow_credentials=True tidak ditolak oleh Chrome/Safari/Edge.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=['*'],
+    allow_origin_regex=r'^https?://.*$',
     allow_credentials=True,
     allow_methods=['*'],
     allow_headers=['*'],
+    expose_headers=['Authorization'],
 )
 
 def now(): return datetime.now(timezone.utc).isoformat()
@@ -28,8 +42,35 @@ def rupiah(v): return int(float(v or 0))
 def public(doc):
     if not doc: return None
     d = dict(doc); d.pop('_id', None); d.pop('password_hash', None); return d
+
 def token(user):
-    return jwt.encode({'sub': user['id'], 'email': user['email'], 'role': user.get('role', 'Administrator'), 'exp': datetime.now(timezone.utc)+timedelta(days=7)}, JWT_SECRET, algorithm='HS256')
+    # Multi-device stateless JWT (jti unik per sesi, tanpa single-session lock)
+    return jwt.encode(
+        {
+            'jti': uuid.uuid4().hex,
+            'sub': user['id'],
+            'username': user.get('username', user.get('email', '')),
+            'email': user.get('email', ''),
+            'role': user.get('role', 'Administrator'),
+            'exp': datetime.now(timezone.utc) + timedelta(days=7)
+        },
+        JWT_SECRET,
+        algorithm='HS256'
+    )
+
+def set_auth_cookie(response: Response, request: Request, jwt_token: str):
+    # Deteksi otomatis HTTPS (Vercel/Render proxy) vs HTTP (IP lokal/localhost)
+    forwarded_proto = (request.headers.get('x-forwarded-proto') or '').split(',')[0].strip().lower()
+    is_https = forwarded_proto == 'https' or request.url.scheme == 'https'
+    response.set_cookie(
+        key='access_token',
+        value=jwt_token,
+        httponly=True,
+        secure=is_https,
+        samesite='none' if is_https else 'lax',
+        path='/',
+        max_age=86400 * 7
+    )
 
 def hash_password(raw: str) -> str:
     return bcrypt.hashpw(raw.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
@@ -42,19 +83,39 @@ def verify_password(raw: str, hashed: str) -> bool:
 
 async def current_user(request: Request):
     await seed_data()
-    val = request.cookies.get('access_token') or request.headers.get('Authorization', '').replace('Bearer ', '')
+    # Prioritaskan Bearer Token (kebal blokir cookie Safari/Chrome/IP lokal), fallback ke cookie
+    auth_header = request.headers.get('Authorization', '').strip()
+    bearer_val = auth_header[7:].strip() if auth_header.lower().startswith('bearer ') else ''
+    val = bearer_val or request.cookies.get('access_token') or ''
     if not val:
-        raise HTTPException(401, 'Silakan login terlebih dahulu.')
+        raise HTTPException(
+            status_code=401,
+            detail={'code': 'AUTH_REQUIRED', 'message': 'Silakan login terlebih dahulu.'}
+        )
     try:
         payload = jwt.decode(val, JWT_SECRET, algorithms=['HS256'])
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=401,
+            detail={'code': 'SESSION_EXPIRED', 'message': 'Sesi login telah berakhir. Silakan masuk kembali.'}
+        )
     except Exception:
-        raise HTTPException(401, 'Sesi login telah berakhir.')
+        raise HTTPException(
+            status_code=401,
+            detail={'code': 'INVALID_TOKEN', 'message': 'Token autentikasi tidak valid.'}
+        )
     user = await db.users.find_one({'id': payload['sub']}, {'_id': 0})
     if not user:
-        raise HTTPException(401, 'Pengguna tidak ditemukan.')
+        raise HTTPException(
+            status_code=401,
+            detail={'code': 'USER_NOT_FOUND', 'message': 'Pengguna tidak ditemukan.'}
+        )
     # Route Guard 1: Cegat akun nonaktif (soft-disabled)
     if not user.get('is_active', True):
-        raise HTTPException(403, 'Akun Anda telah dinonaktifkan. Silakan hubungi Administrator.')
+        raise HTTPException(
+            status_code=403,
+            detail={'code': 'ACCOUNT_DEACTIVATED', 'message': 'Akun Anda telah dinonaktifkan. Silakan hubungi Administrator.'}
+        )
     return user
 
 async def require_password_changed(user=Depends(current_user)):
@@ -455,11 +516,21 @@ async def seed_data():
     if await db.profile.count_documents({}) == 0:
         await db.profile.insert_one(DEFAULT_PROFILE)
 
+@api.get('/health')
+async def health_check():
+    return {'ok': True, 'storage': STORAGE_MODE, 'multi_device': True}
+
 @api.post('/auth/login')
-async def login(body: LoginBody, response: Response):
+async def login(body: LoginBody, request: Request, response: Response):
     await seed_data()
-    ident = body.email.strip().lower()
-    pwd = body.password.strip()
+    ident = (body.email or '').strip().lower()
+    pwd = (body.password or '').strip()
+
+    if not ident or not pwd:
+        raise HTTPException(
+            status_code=400,
+            detail={'code': 'MISSING_CREDENTIALS', 'message': 'Username/email dan kata sandi wajib diisi.'}
+        )
 
     found = await db.users.find_one(
         {'$or': [{'username': ident}, {'email': ident}]},
@@ -469,26 +540,36 @@ async def login(body: LoginBody, response: Response):
         found = await db.users.find_one({'id': 'usr_admin'}, {'_id': 0})
 
     if not found:
-        raise HTTPException(401, 'Username atau kata sandi tidak valid.')
+        raise HTTPException(
+            status_code=401,
+            detail={'code': 'USER_NOT_FOUND', 'message': 'Username atau email tidak ditemukan.'}
+        )
 
     # Tolak akun yang sudah dinonaktifkan (soft-disabled)
     if not found.get('is_active', True):
-        raise HTTPException(403, 'Akun Anda telah dinonaktifkan. Silakan hubungi Administrator.')
+        raise HTTPException(
+            status_code=403,
+            detail={'code': 'ACCOUNT_DEACTIVATED', 'message': 'Akun Anda telah dinonaktifkan. Silakan hubungi Administrator.'}
+        )
 
     # Verifikasi kata sandi tersimpan (hash bcrypt)
     if not verify_password(pwd, found.get('password_hash', '')):
-        raise HTTPException(401, 'Kata sandi tidak valid. Silakan periksa kembali kata sandi Anda.')
+        raise HTTPException(
+            status_code=401,
+            detail={'code': 'INVALID_PASSWORD', 'message': 'Kata sandi tidak valid. Silakan periksa kembali huruf besar/kecil atau spasi.'}
+        )
 
     t = token(found)
-    response.set_cookie('access_token', t, httponly=True, samesite='lax', max_age=86400*7)
+    set_auth_cookie(response, request, t)
     return {
         **public(found),
         'access_token': t,
+        'storage_mode': STORAGE_MODE,
         'requires_password_change': bool(found.get('must_change_password') or found.get('password_changed_at') is None)
     }
 
 @api.post('/auth/change-initial-credentials')
-async def change_initial_credentials(body: InitialCredentialBody, response: Response, user=Depends(current_user)):
+async def change_initial_credentials(body: InitialCredentialBody, request: Request, response: Response, user=Depends(current_user)):
     new_pwd = body.new_password.strip()
     confirm_pwd = body.confirm_password.strip()
     if len(new_pwd) < 8:
@@ -517,7 +598,7 @@ async def change_initial_credentials(body: InitialCredentialBody, response: Resp
     await db.users.update_one({'id': user['id']}, {'$set': update_fields})
     updated = await db.users.find_one({'id': user['id']}, {'_id': 0})
     t = token(updated)
-    response.set_cookie('access_token', t, httponly=True, samesite='lax', max_age=86400*7)
+    set_auth_cookie(response, request, t)
     return {**public(updated), 'access_token': t, 'requires_password_change': False}
 
 @api.get('/auth/me')
@@ -528,8 +609,10 @@ async def me(user=Depends(current_user)):
     }
 
 @api.post('/auth/logout')
-async def logout(response: Response):
-    response.delete_cookie('access_token')
+async def logout(request: Request, response: Response):
+    forwarded_proto = (request.headers.get('x-forwarded-proto') or '').split(',')[0].strip().lower()
+    is_https = forwarded_proto == 'https' or request.url.scheme == 'https'
+    response.delete_cookie('access_token', path='/', secure=is_https, samesite='none' if is_https else 'lax')
     return {'ok': True}
 
 # ============================================================================

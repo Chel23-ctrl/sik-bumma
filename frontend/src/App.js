@@ -49,6 +49,7 @@ import ProfilBUMMA from './components/ProfilBUMMA';
 import StorefrontUlambox, { DEFAULT_CORE_PRODUCTS } from './components/StorefrontUlambox';
 import ScrollToTopButton from './components/ScrollToTopButton';
 import LoadingScreen from './components/LoadingScreen';
+import apiClient, { clearAuthToken, setAuthToken, isJsonApiResponse } from './utils/apiClient';
 
 const getStorage = (key, defaultVal) => {
   try {
@@ -253,6 +254,7 @@ export default function App() {
   // Sync active user with managed users store (detect deactivation or password reset)
   const activeUserRecord = useMemo(() => {
     if (!user) return null;
+    if (user.auth_source === 'api') return user;
     const found = users.find(
       u =>
         (user.id && u.id === user.id) ||
@@ -280,8 +282,18 @@ export default function App() {
   const handleCompleteInitialCredentials = ({ newUsername, newPassword }) =>
     runWithLoader(
       'Menyimpan kredensial baru & membuka Dashboard...',
-      () => {
+      async () => {
         const changedAt = new Date().toISOString();
+        if (activeUserRecord?.auth_source === 'api') {
+          const res = await apiClient.post('/auth/change-initial-credentials', {
+            new_username: newUsername,
+            new_password: newPassword,
+            confirm_password: newPassword
+          });
+          if (isJsonApiResponse(res) && res.data?.access_token) {
+            setAuthToken(res.data.access_token);
+          }
+        }
         setUsers(prev =>
           prev.map(u =>
             u.id === activeUserRecord.id ||
@@ -451,6 +463,8 @@ export default function App() {
 
   const handleLogout = () => {
     runWithLoader('Mengakhiri sesi...', () => {
+      clearAuthToken();
+      apiClient.post('/auth/logout').catch(() => {});
       setUser(null);
     }, 480).then(() => {
       toast.info('Anda telah keluar.');

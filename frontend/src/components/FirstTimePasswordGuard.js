@@ -126,6 +126,10 @@ export default function FirstTimePasswordGuard({
                 value={newUsername}
                 onChange={(e) => setNewUsername(e.target.value)}
                 placeholder="misal: admin_mekarsari"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                autoComplete="username"
                 className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-700 font-mono font-semibold text-slate-900"
                 required
               />
@@ -147,6 +151,10 @@ export default function FirstTimePasswordGuard({
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="Minimal 8 karakter yang kuat"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                autoComplete="new-password"
                 className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-700 text-slate-900 font-medium"
                 required
               />
@@ -172,6 +180,10 @@ export default function FirstTimePasswordGuard({
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Ketik ulang password baru"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                autoComplete="new-password"
                 className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-700 text-slate-900 font-medium"
                 required
               />

@@ -14,6 +14,7 @@ import {
   Lock
 } from 'lucide-react';
 import { toast } from 'sonner';
+import apiClient from '../utils/apiClient';
 
 export const USER_ROLE_OPTIONS = [
   { value: 'Administrator', label: 'Administrator (Super Admin)', defaultUnit: 'Kantor Pengelola BUMKam', badge: 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-950/70 dark:text-emerald-300 dark:border-emerald-800' },
@@ -301,6 +302,14 @@ export default function PengelolaanPengguna({
     }
 
     if (editingUserId) {
+      apiClient.put(`/users/${editingUserId}`, {
+        full_name: fullName,
+        username,
+        email,
+        role: userForm.role,
+        unit_kerja: userForm.unit_kerja.trim() || 'BUMKam Mekar Sari'
+      }).catch(() => {});
+
       setUsers(prev =>
         prev.map(u =>
           u.id === editingUserId
@@ -325,6 +334,16 @@ export default function PengelolaanPengguna({
         toast.error('Password sementara minimal 6 karakter.');
         return;
       }
+
+      apiClient.post('/users', {
+        full_name: fullName,
+        username,
+        email,
+        role: userForm.role,
+        unit_kerja: userForm.unit_kerja.trim() || 'BUMKam Mekar Sari',
+        temp_password: tempPwd,
+        must_change_password: Boolean(userForm.must_change_password)
+      }).catch(() => {});
 
       const newUser = {
         id: 'usr_' + Date.now(),
@@ -370,6 +389,11 @@ export default function PengelolaanPengguna({
       toast.error('Password baru sementara minimal 6 karakter.');
       return;
     }
+
+    apiClient.post(`/users/${resetTarget.id}/reset-password`, {
+      new_password: pwd,
+      must_change_password: Boolean(resetForceChange)
+    }).catch(() => {});
 
     setUsers(prev =>
       prev.map(u =>
@@ -418,6 +442,7 @@ export default function PengelolaanPengguna({
     }
 
     const nextStatus = !currentlyActive;
+    apiClient.patch(`/users/${u.id}/status`, { is_active: nextStatus }).catch(() => {});
     setUsers(prev =>
       prev.map(item =>
         item.id === u.id
@@ -750,6 +775,9 @@ export default function PengelolaanPengguna({
                     value={userForm.username}
                     onChange={(e) => setUserForm({ ...userForm, username: e.target.value })}
                     placeholder="contoh: maria_perdagangan"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
                     className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 font-mono font-bold"
                     required
                   />
@@ -762,6 +790,9 @@ export default function PengelolaanPengguna({
                     value={userForm.email}
                     onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
                     placeholder="maria@arvea-mekarsari.id"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
                     className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800"
                     required
                   />
