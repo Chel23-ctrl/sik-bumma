@@ -175,43 +175,23 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
   };
 
   return (
-    <div
-      className="min-h-screen flex flex-col md:flex-row relative overflow-hidden bg-[#8377BC] text-[#1E1B2E]"
-      style={{
-        background: 'linear-gradient(115deg, #5A4E98 0%, #7C6FB8 45%, #9A90CC 72%, #C9BFE8 100%)'
-      }}
-    >
-      {/* Full-Width Background Layer (z-0): Foto Bersama Tim memanjang penuh dari kiri ke kanan agar seluruh wajah terlihat */}
-      <img
-        src={`${process.env.PUBLIC_URL || ''}/assets/images/foto-bersama.jpg`}
-        alt=""
-        aria-hidden="true"
-        className="absolute inset-0 z-0 w-full h-full object-cover object-[center_55%] opacity-[0.30] mix-blend-luminosity select-none pointer-events-none"
-      />
-
-      {/* Full-Width Lilac Overlay Tint (z-0): Ungu lilac lebih pekat di kiri (kontras teks putih) & lembut transparan di kanan */}
+    <div className="min-h-screen flex flex-col md:flex-row bg-gradient-to-br from-[#F2EFFA] via-[#E8E2F6] to-[#DCD4F0] text-[#1E1B2E]">
+      {/* Left Side: Lilac Brand Hero Panel (#9A90CC) with Neat Uncropped Framed Team Photo */}
       <div
-        aria-hidden="true"
-        className="absolute inset-0 z-0 pointer-events-none"
+        className="md:w-5/12 lg:w-1/2 text-white p-6 sm:p-8 md:p-10 lg:p-12 flex flex-col justify-between relative overflow-hidden bg-[#8377BC]"
         style={{
-          background:
-            'linear-gradient(105deg, rgba(82, 70, 146, 0.58) 0%, rgba(114, 101, 178, 0.44) 46%, rgba(154, 144, 204, 0.34) 68%, rgba(235, 230, 248, 0.50) 100%)'
+          background: 'linear-gradient(145deg, #5F539C 0%, #8377BC 48%, #9A90CC 100%)'
         }}
-      />
-
-      {/* Soft Ambient Orbs & Dot Texture (z-0) */}
-      <div className="absolute top-1/4 left-1/4 z-0 w-96 h-96 bg-white/15 rounded-full blur-3xl pointer-events-none animate-pulse-glow" />
-      <div
-        className="absolute bottom-10 right-10 z-0 w-80 h-80 bg-[#C4B9E5]/25 rounded-full blur-3xl pointer-events-none animate-pulse-glow"
-        style={{ animationDelay: '2s' }}
-      />
-      <div className="absolute inset-0 z-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
-
-      {/* Left Side: Lilac Brand Hero Content (Transparan menyatu dengan foto penuh) */}
-      <div className="md:w-5/12 lg:w-1/2 text-white p-6 sm:p-8 md:p-12 lg:p-14 flex flex-col justify-between relative z-10 overflow-hidden">
+      >
         <div className="absolute inset-0 z-0 pointer-events-none">
           <SectorBackground variant="dark" />
         </div>
+        <div className="absolute top-1/4 left-1/4 z-0 w-96 h-96 bg-white/15 rounded-full blur-3xl pointer-events-none animate-pulse-glow" />
+        <div
+          className="absolute bottom-10 right-10 z-0 w-80 h-80 bg-[#C4B9E5]/25 rounded-full blur-3xl pointer-events-none animate-pulse-glow"
+          style={{ animationDelay: '2s' }}
+        />
+        <div className="absolute inset-0 z-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
 
         {/* Top Brand Logo ARVÉA */}
         <div className="relative z-10 flex items-center justify-between gap-3">
@@ -229,20 +209,43 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
         </div>
 
         {/* Main Hero Pitch */}
-        <div className="relative z-10 my-8 max-w-xl">
-          <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#4B3F82]/45 border border-white/40 text-white text-xs font-semibold tracking-[0.05em] mb-4 backdrop-blur-md shadow-sm arvea-slogan-light">
+        <div className="relative z-10 my-6 max-w-xl">
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#4B3F82]/45 border border-white/40 text-white text-xs font-semibold tracking-[0.05em] mb-3.5 backdrop-blur-md shadow-sm arvea-slogan-light">
             <Sparkles className="w-3.5 h-3.5 text-amber-200 shrink-0" /> &ldquo;Satu Nilai, Satu Tujuan, Bertumbuh Bersama&rdquo;
           </div>
 
-          <h2 className="text-2xl md:text-3xl lg:text-4xl font-black tracking-tight text-white leading-tight mb-4 drop-shadow-sm">
+          <h2 className="text-2xl md:text-[28px] lg:text-[34px] font-black tracking-tight text-white leading-tight mb-3 drop-shadow-sm">
             Kelola akuntansi &amp; aset BUMKam dengan akuntabel dan transparan.
           </h2>
-          <p className="text-white/95 text-xs md:text-sm leading-relaxed mb-6 drop-shadow-xs">
+          <p className="text-white/95 text-xs md:text-sm leading-relaxed mb-5 drop-shadow-xs">
             Standar pelaporan keuangan berbasis <strong>SAK EMKM</strong> terpadu, inventarisasi aset tetap &amp; operasional, jurnal penyesuaian, penggajian karyawan, dan pembukuan berpasangan digital.
           </p>
 
+          {/* Compact Framed Team Photo: Rasio asli 994:613 + object-contain agar semua anggota terlihat utuh tanpa terpotong */}
+          <div className="mb-5 w-full max-w-md">
+            <div className="rounded-2xl p-1.5 bg-white/15 backdrop-blur-md border border-white/35 shadow-xl overflow-hidden">
+              <div className="relative w-full aspect-[994/613] rounded-xl overflow-hidden bg-[#4B3F82]/35">
+                <img
+                  src={`${process.env.PUBLIC_URL || ''}/assets/images/foto-bersama.jpg`}
+                  alt="Tim Pengembang & Pengelola ARVÉA BUMKam Mekar Sari"
+                  className="w-full h-full object-contain object-center"
+                />
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-[#362B66]/85 via-[#362B66]/30 to-transparent"
+                />
+                <div className="absolute bottom-1.5 left-2.5 right-2.5 flex items-center justify-between gap-2 text-[10px] text-white arvea-slogan-light">
+                  <span className="truncate">Tim ARVÉA &bull; BUMKam Mekar Sari</span>
+                  <span className="px-1.5 py-0.5 rounded bg-white/20 backdrop-blur-xs text-[9px] font-bold shrink-0">
+                    TDA Kelompok 3C
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* 3 Animated Sector Feature Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-5">
             <div className="bg-[#4B3F82]/35 backdrop-blur-md border border-white/30 rounded-2xl p-3 hover:bg-[#4B3F82]/45 transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden animate-float shadow-sm">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-base">🥚</span>
@@ -298,7 +301,7 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4 pt-5 border-t border-white/30">
+          <div className="grid grid-cols-3 gap-4 pt-4 border-t border-white/30">
             <div>
               <p className="text-lg md:text-xl font-black text-white drop-shadow-xs">SAK EMKM</p>
               <p className="text-[11px] text-white/90 font-medium">Standar Pelaporan</p>
@@ -320,9 +323,9 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
         </div>
       </div>
 
-      {/* Right Side: Clean Frosted-Glass Authentication Card over Continuous Full-Width Team Photo */}
+      {/* Right Side: Clean Authentication Card */}
       <div className="md:w-7/12 lg:w-1/2 p-6 md:p-10 lg:p-12 flex flex-col justify-center items-center overflow-y-auto relative z-10">
-        <div className="max-w-md w-full bg-white/82 backdrop-blur-md rounded-3xl border border-white/65 shadow-2xl p-7 sm:p-8 space-y-5">
+        <div className="max-w-md w-full bg-white/95 backdrop-blur-md rounded-3xl border border-[#9A90CC]/35 shadow-xl p-7 sm:p-8 space-y-5">
           <div>
             {onBackToStore && (
               <button
