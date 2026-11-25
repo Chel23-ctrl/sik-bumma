@@ -34,7 +34,7 @@ export const PERLAKUAN_OPTIONS = [
 export const SATUAN_OPTIONS = [
   'Pcs', 'Unit', 'Buah', 'Set', 'Paket', 'Lusin', 'Rim', 'Lembar',
   'Batang', 'Gulung', 'Milimeter (mm)', 'Centimeter (cm)', 'Meter (m)',
-  'Meter Persegi (mÂ²)', 'Meter Kubik (mÂ³)', 'Gram (g)', 'Kilogram (kg)',
+  'Meter Persegi (mÃ‚Â²)', 'Meter Kubik (mÃ‚Â³)', 'Gram (g)', 'Kilogram (kg)',
   'Ton', 'Mililiter (mL)', 'Liter (L)', 'Kaleng', 'Botol', 'Jerigen',
   'Karton', 'Box', 'Karung', 'Sak', 'Butir', 'Tray', 'Rak', 'Ekor',
   'Jam', 'Hari'
@@ -454,7 +454,7 @@ export default function MasterData({
             { id: 'customers', label: 'Pelanggan', icon: Users, count: customers.length },
             { id: 'suppliers', label: 'Pemasok / Supplier', icon: Truck, count: suppliers.length },
             { id: 'accounts', label: 'Bagan Akun (COA)', icon: Layers, count: accounts.length },
-            { id: 'landing_showcase', label: 'ðŸŒŸ Showcase Landing Page', icon: Sparkles, count: 3 }
+            { id: 'landing_showcase', label: 'Ã°Å¸Å’Å¸ Showcase Landing Page', icon: Sparkles, count: 3 }
           ].map(t => {
             const Icon = t.icon;
             const isActive = tab === t.id;
@@ -545,7 +545,7 @@ export default function MasterData({
       {/* Printable Official Kop Surat Header */}
       {tab !== 'landing_showcase' && (
         <div className="hidden print:block mb-4 pb-3 border-b-2 border-slate-900 text-center kop-surat">
-          <h2 className="text-base font-black uppercase text-slate-900 tracking-wide">ARVEA &bull; BUMKAM MEKAR SARI</h2>
+          <h2 className="text-base font-black uppercase text-slate-900 tracking-wide">ARVÉA &bull; BUMKAM MEKAR SARI</h2>
           <p className="text-[11px] font-semibold text-slate-700">Financial Management System &bull; Standar SAK EMKM</p>
           <p className="text-[10px] text-slate-500">Kampung Sabron Sari, Distrik Sentani Barat, Kabupaten Jayapura, Papua</p>
           <h3 className="text-xs font-black uppercase mt-2 text-slate-900 underline">

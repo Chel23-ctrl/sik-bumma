@@ -23,7 +23,7 @@ export default function ProfilBUMMA({ profile, setProfile }) {
             <label className="block font-bold text-emerald-900 dark:text-emerald-300 mb-1">Nama Aplikasi / Sistem</label>
             <input
               type="text"
-              value={pForm.systemName || 'ARVEA'}
+              value={pForm.systemName || 'ARVÉA'}
               onChange={(e) => setPForm({ ...pForm, systemName: e.target.value })}
               className="w-full p-2.5 rounded-lg border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-slate-900 font-extrabold text-emerald-800 dark:text-emerald-300"
               required

@@ -1,7 +1,7 @@
 import * as XLSX from 'xlsx';
 
 /**
- * Universal Excel Exporter for SIK-BUMMA / ARVEA
+ * Universal Excel Exporter for SIK-BUMMA / ARVÉA
  * Exports JSON array data to a real .xlsx spreadsheet file with auto-fitting column widths
  * so no headers, descriptions, or numbers are cut off or truncated with ###.
  */

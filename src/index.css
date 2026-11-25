@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ARVÉA Lilac Theme Variables (#9A90CC) */
+/* ARVÉA Lilac Theme (#9A90CC) & Periwinkle Wordmark (#9DB5DC) Variables */
 :root {
   --arvea-lilac: #9A90CC;
   --arvea-lilac-light: #EDE9F7;
@@ -10,7 +10,15 @@
   --arvea-lilac-mid: #7C6FB8;
   --arvea-lilac-deep: #64589F;
   --arvea-lilac-dark: #4E4380;
+  --arvea-periwinkle: #9DB5DC;
   --arvea-ink: #1E1B2E;
+}
+
+.arvea-wordmark-text {
+  font-family: 'Bodoni Moda', 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
+  letter-spacing: 0.14em;
+  font-weight: 600;
+  color: var(--arvea-periwinkle);
 }
 
 html,

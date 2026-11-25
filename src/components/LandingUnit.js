@@ -17,7 +17,7 @@ export default function LandingUnit({
       <div className="bg-gradient-to-r from-[#64589F] to-[#125940] rounded-2xl p-6 md:p-8 text-white shadow-md relative overflow-hidden">
         <div className="relative z-10">
           <div className="inline-flex items-center gap-2 bg-emerald-500/20 text-emerald-200 px-3 py-1 rounded-full text-xs font-semibold mb-3 border border-emerald-400/30">
-            <ShieldCheck className="w-3.5 h-3.5" /> ARVEA &bull; Portal Siklus Akuntansi SAK EMKM
+            <ShieldCheck className="w-3.5 h-3.5" /> ARVÉA &bull; Portal Siklus Akuntansi SAK EMKM
           </div>
           <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
             Selamat Datang di {profile.name}

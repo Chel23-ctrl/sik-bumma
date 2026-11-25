@@ -124,7 +124,7 @@ const INITIAL_EMPLOYEES = [
 
 const INITIAL_PROFILE = {
   name: 'BUMKAM MEKAR SARI',
-  systemName: 'ARVEA',
+  systemName: 'ARVÉA',
   tagline: 'Satu Nilai, Satu Tujuan, Bertumbuh Bersama',
   standard: 'SAK EMKM',
   legalName: 'Badan Usaha Milik Kampung Mekar Sari',
@@ -189,7 +189,7 @@ export default function App() {
 
   // Global Fullscreen Loading Screen (CoreTaxify-style)
   const [globalLoading, setGlobalLoading] = useState(true);
-  const [loadingMessage, setLoadingMessage] = useState('Menyiapkan sistem ARVEA...');
+  const [loadingMessage, setLoadingMessage] = useState('Menyiapkan sistem ARVÉA...');
   const loaderTimerRef = useRef(null);
 
   useEffect(() => {
@@ -307,7 +307,7 @@ export default function App() {
       },
       520
     ).then(() => {
-      toast.success('Kredensial awal berhasil diperbarui! Selamat datang di ARVEA.');
+      toast.success('Kredensial awal berhasil diperbarui! Selamat datang di ARVÉA.');
     });
 
   // Current page
@@ -670,7 +670,7 @@ export default function App() {
         products={products}
         coreProducts={coreProducts}
         onOpenBackoffice={() =>
-          runWithLoader('Membuka Portal ARVEA...', () => setAppMode('backoffice'), 480)
+          runWithLoader('Membuka Portal ARVÉA...', () => setAppMode('backoffice'), 480)
         }
         onDirectOrder={handleDirectOrder}
         profile={profile}
@@ -1117,7 +1117,7 @@ export default function App() {
 
           {/* Backoffice Footer */}
           <footer className="mt-14 pt-6 border-t border-[#9A90CC]/30 dark:border-slate-800 text-center text-slate-500 text-xs print:hidden">
-            <p className="font-semibold text-[#3C3365] dark:text-slate-300">ARVÉA &bull; Financial Management System BUMKam Mekar Sari</p>
+            <p className="font-semibold text-[#3C3365] dark:text-slate-300">ARVÃ‰A &bull; Financial Management System BUMKam Mekar Sari</p>
             <p className="italic text-[#64589F] dark:text-[#C4B9E5] text-[11px] mt-0.5">&ldquo;Satu Nilai, Satu Tujuan, Bertumbuh Bersama&rdquo;</p>
             <p className="mt-1 text-slate-500 text-[11px]">Kampung Sabron Sari, Distrik Sentani Barat, Kabupaten Jayapura &bull; Standar SAK EMKM</p>
             <p className="mt-1 text-slate-400 text-[10px]">Teknologi Digital Akuntansi (TDA) Kelompok 3C &bull; S1 Akuntansi FEB Uncen</p>

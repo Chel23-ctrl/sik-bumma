@@ -142,7 +142,7 @@ export const INITIAL_ASSETS = [
     pic: 'Rita Fanghoi',
     condition: 'Baik',
     status: 'Aktif/Digunakan',
-    notes: 'Komputer utama pencatatan aplikasi akuntansi SAK EMKM ARVEA'
+    notes: 'Komputer utama pencatatan aplikasi akuntansi SAK EMKM ARVÉA'
   },
   {
     id: 'ast_3',
@@ -1279,7 +1279,7 @@ export default function InventarisasiAset({
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm print:border-none print:shadow-none">
           {/* Printable Official Header */}
           <div className="hidden print:block mb-4 pb-3 border-b-2 border-slate-900 text-center kop-surat">
-            <h2 className="text-base font-black uppercase text-slate-900 tracking-wide">ARVEA &bull; BUMKAM MEKAR SARI</h2>
+            <h2 className="text-base font-black uppercase text-slate-900 tracking-wide">ARVÉA &bull; BUMKAM MEKAR SARI</h2>
             <p className="text-[11px] font-semibold text-slate-700">Financial Management System &bull; Standar SAK EMKM</p>
             <p className="text-[10px] text-slate-500">Kampung Sabron Sari, Distrik Sentani Barat, Kabupaten Jayapura, Papua</p>
             <h3 className="text-xs font-black uppercase mt-2 text-slate-900 underline">LAPORAN INVENTARISASI ASET TETAP &amp; OPERASIONAL</h3>
@@ -1612,7 +1612,7 @@ export default function InventarisasiAset({
                 </select>
                 {availableMasterProducts.length === 0 && (
                   <p className="text-[11px] text-amber-700 dark:text-amber-300 mt-1.5">
-                    âš ï¸ Belum ada produk dengan Perlakuan Produk "{formData.asset_type}" di Master Data. Silakan tambahkan atau ubah perlakuan produk di menu Master Data terlebih dahulu.
+                    Ã¢Å¡Â Ã¯Â¸Â Belum ada produk dengan Perlakuan Produk "{formData.asset_type}" di Master Data. Silakan tambahkan atau ubah perlakuan produk di menu Master Data terlebih dahulu.
                   </p>
                 )}
               </div>
@@ -1941,9 +1941,9 @@ export default function InventarisasiAset({
                     onChange={(e) => setFormData({ ...formData, condition: e.target.value })}
                     className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 font-semibold"
                   >
-                    <option value="Baik">ðŸŸ¢ Baik</option>
-                    <option value="Rusak Ringan">ðŸŸ¡ Rusak Ringan</option>
-                    <option value="Rusak Berat">ðŸ”´ Rusak Berat</option>
+                    <option value="Baik">Ã°Å¸Å¸Â¢ Baik</option>
+                    <option value="Rusak Ringan">Ã°Å¸Å¸Â¡ Rusak Ringan</option>
+                    <option value="Rusak Berat">Ã°Å¸â€Â´ Rusak Berat</option>
                   </select>
                 </div>
 

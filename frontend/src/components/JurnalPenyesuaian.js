@@ -110,7 +110,7 @@ export const INITIAL_ADJUSTING_JOURNALS = [
     total_debit: 116667,
     total_credit: 116667,
     status: 'Posted',
-    created_by: 'Administrator ARVEA',
+    created_by: 'Administrator ARVÉA',
     created_at: '2026-11-30T08:00:00Z',
     lines: [
       {
@@ -622,7 +622,7 @@ export default function JurnalPenyesuaian({
       {printVoucherEntry && (
         <div className="hidden print:block p-2 text-slate-900">
           <div className="mb-4 pb-3 border-b-2 border-slate-900 text-center kop-surat">
-            <h2 className="text-base font-black uppercase tracking-wide">ARVEA &bull; BUMKAM MEKAR SARI</h2>
+            <h2 className="text-base font-black uppercase tracking-wide">ARVÉA &bull; BUMKAM MEKAR SARI</h2>
             <p className="text-[11px] font-semibold">Financial Management System &bull; Standar SAK EMKM</p>
             <p className="text-[10px] text-slate-600">Kampung Sabron Sari, Distrik Sentani Barat, Kabupaten Jayapura, Papua</p>
             <h3 className="text-xs font-black uppercase mt-2 underline">BUKTI MEMORIAL / JURNAL PENYESUAIAN (AJE)</h3>
@@ -940,7 +940,7 @@ export default function JurnalPenyesuaian({
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm print:border-none print:shadow-none">
           {/* Printable Recap Kop Surat */}
           <div className="hidden print:block mb-4 pb-3 border-b-2 border-slate-900 text-center kop-surat">
-            <h2 className="text-base font-black uppercase text-slate-900 tracking-wide">ARVEA &bull; BUMKAM MEKAR SARI</h2>
+            <h2 className="text-base font-black uppercase text-slate-900 tracking-wide">ARVÉA &bull; BUMKAM MEKAR SARI</h2>
             <p className="text-[11px] font-semibold text-slate-700">Financial Management System &bull; Standar SAK EMKM</p>
             <h3 className="text-xs font-black uppercase mt-2 text-slate-900 underline">REKAPITULASI JURNAL PENYESUAIAN (AJE)</h3>
             <p className="text-[10px] text-slate-500">
@@ -1292,7 +1292,7 @@ export default function JurnalPenyesuaian({
                         <span className="text-rose-700 dark:text-rose-300">
                           {formTotals.totalDebit === 0 && formTotals.totalCredit === 0
                             ? 'Isi nominal Debit & Kredit terlebih dahulu'
-                            : 'BELUM SEIMBANG â€” Total Debit harus sama dengan Total Kredit'}
+                            : 'BELUM SEIMBANG Ã¢â‚¬â€ Total Debit harus sama dengan Total Kredit'}
                         </span>
                       </>
                     )}

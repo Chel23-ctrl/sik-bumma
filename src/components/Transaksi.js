@@ -530,7 +530,7 @@ export default function Transaksi({
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden print:overflow-visible print:border-none print:shadow-none">
           {/* Printable Official Kop Surat Header */}
           <div className="hidden print:block mb-4 pb-3 border-b-2 border-slate-900 text-center kop-surat">
-            <h2 className="text-base font-black uppercase text-slate-900 tracking-wide">ARVEA &bull; BUMKAM MEKAR SARI</h2>
+            <h2 className="text-base font-black uppercase text-slate-900 tracking-wide">ARVÉA &bull; BUMKAM MEKAR SARI</h2>
             <p className="text-[11px] font-semibold text-slate-700">Financial Management System &bull; Standar SAK EMKM</p>
             <p className="text-[10px] text-slate-500">Kampung Sabron Sari, Distrik Sentani Barat, Kabupaten Jayapura, Papua</p>
             <h3 className="text-xs font-black uppercase mt-2 text-slate-900 underline">REKAPITULASI BUKTI TRANSAKSI KEUANGAN</h3>
@@ -730,7 +730,7 @@ export default function Transaksi({
                           : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300'
                       }`}
                     >
-                      {m === 'Offline' ? 'ðŸ¬ Offline (Langsung / Fisik)' : 'ðŸŒ Online (Toko Digital / WA)'}
+                      {m === 'Offline' ? 'Ã°Å¸ÂÂ¬ Offline (Langsung / Fisik)' : 'Ã°Å¸Å’Â Online (Toko Digital / WA)'}
                     </button>
                   ))}
                 </div>

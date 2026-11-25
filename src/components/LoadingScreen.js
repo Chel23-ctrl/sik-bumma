@@ -173,17 +173,17 @@ export default function LoadingScreen({
         }}
       />
 
-      {/* Hero Center: New ARVÉA Diamond Logo + Thin Indeterminate Lilac Shimmer Progress Bar */}
+      {/* Hero Center: New ARVÉA Diamond + Exact Wordmark (#9DB5DC) + Thin Indeterminate Progress Bar */}
       <div className="relative z-10 flex flex-col items-center justify-center px-6 text-center animate-arvea-logo">
-        <ArveaLogo variant="stacked" theme="lilac" size="lg" />
+        <ArveaLogo variant="stacked" theme="periwinkle" size="lg" showTagline />
 
-        {/* Thin Indeterminate Lilac Loading Bar */}
-        <div className="mt-4 w-48 sm:w-56 h-[3px] rounded-full bg-[#64589F]/15 overflow-hidden relative">
+        {/* Thin Indeterminate Periwinkle-Lilac Loading Bar */}
+        <div className="mt-4 w-48 sm:w-56 h-[3px] rounded-full bg-[#9DB5DC]/25 overflow-hidden relative">
           <div
             className="absolute inset-y-0 left-0 w-1/2 rounded-full animate-arvea-progress"
             style={{
               backgroundImage:
-                'linear-gradient(90deg, transparent 0%, #524788 22%, #9A90CC 55%, #C4B9E5 82%, transparent 100%)'
+                'linear-gradient(90deg, transparent 0%, #64589F 20%, #9DB5DC 55%, #B6C9E8 82%, transparent 100%)'
             }}
           />
         </div>

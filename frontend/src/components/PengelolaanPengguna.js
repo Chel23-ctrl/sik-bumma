@@ -30,8 +30,8 @@ export const USER_ROLE_OPTIONS = [
 export const INITIAL_USERS = [
   {
     id: 'usr_admin',
-    full_name: 'Administrator ARVEA',
-    name: 'Administrator ARVEA',
+    full_name: 'Administrator ARVÉA',
+    name: 'Administrator ARVÉA',
     username: 'administrator',
     email: 'admin@arvea-mekarsari.id',
     role: 'Administrator',
@@ -392,7 +392,7 @@ export default function PengelolaanPengguna({
     setResetTarget(null);
   };
 
-  // Toggle Active / Inactive (Soft Disable â€” Never Hard Delete!)
+  // Toggle Active / Inactive (Soft Disable Ã¢â‚¬â€ Never Hard Delete!)
   const handleToggleStatus = (u) => {
     const currentlyActive = u.is_active !== false;
     const isSelf =
@@ -479,7 +479,7 @@ export default function PengelolaanPengguna({
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs">
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Akun Pengurus</span>
           <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">{summary.total}</p>
-          <span className="text-[10px] text-slate-500 font-medium">Terdaftar di ARVEA</span>
+          <span className="text-[10px] text-slate-500 font-medium">Terdaftar di ARVÉA</span>
         </div>
 
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-emerald-200/80 dark:border-emerald-900/50 p-4 shadow-xs">

@@ -18,10 +18,15 @@ module.exports = {
           800: '#4E4380',
           900: '#3C3365',
           950: '#251F42'
+        },
+        periwinkle: {
+          DEFAULT: '#9DB5DC',
+          light: '#B6C9E8',
+          dark: '#7995C7'
         }
       },
       fontFamily: {
-        brand: ["'Playfair Display'", 'Georgia', 'serif']
+        brand: ["'Bodoni Moda'", "'Playfair Display'", "'Cormorant Garamond'", 'Georgia', 'serif']
       }
     },
   },
