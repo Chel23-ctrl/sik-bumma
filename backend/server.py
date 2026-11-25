@@ -31,18 +31,80 @@ def public(doc):
 def token(user):
     return jwt.encode({'sub': user['id'], 'email': user['email'], 'role': user.get('role', 'Administrator'), 'exp': datetime.now(timezone.utc)+timedelta(days=7)}, JWT_SECRET, algorithm='HS256')
 
+def hash_password(raw: str) -> str:
+    return bcrypt.hashpw(raw.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+def verify_password(raw: str, hashed: str) -> bool:
+    try:
+        return bcrypt.checkpw(raw.encode('utf-8'), hashed.encode('utf-8'))
+    except Exception:
+        return False
+
 async def current_user(request: Request):
+    await seed_data()
     val = request.cookies.get('access_token') or request.headers.get('Authorization', '').replace('Bearer ', '')
-    if not val: raise HTTPException(401, 'Silakan login terlebih dahulu.')
-    try: payload = jwt.decode(val, JWT_SECRET, algorithms=['HS256'])
-    except Exception: raise HTTPException(401, 'Sesi login telah berakhir.')
+    if not val:
+        raise HTTPException(401, 'Silakan login terlebih dahulu.')
+    try:
+        payload = jwt.decode(val, JWT_SECRET, algorithms=['HS256'])
+    except Exception:
+        raise HTTPException(401, 'Sesi login telah berakhir.')
     user = await db.users.find_one({'id': payload['sub']}, {'_id': 0})
-    if not user: raise HTTPException(401, 'Pengguna tidak ditemukan.')
+    if not user:
+        raise HTTPException(401, 'Pengguna tidak ditemukan.')
+    # Route Guard 1: Cegat akun nonaktif (soft-disabled)
+    if not user.get('is_active', True):
+        raise HTTPException(403, 'Akun Anda telah dinonaktifkan. Silakan hubungi Administrator.')
+    return user
+
+async def require_password_changed(user=Depends(current_user)):
+    # Route Guard 2: Cegat user yang wajib ubah kredensial awal (first-time login)
+    if user.get('must_change_password', False) or user.get('password_changed_at') is None:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                'code': 'MUST_CHANGE_PASSWORD',
+                'message': 'Wajib ubah kredensial awal sebelum mengakses menu lain.'
+            }
+        )
+    return user
+
+async def require_admin(user=Depends(require_password_changed)):
+    if user.get('role') not in ('Administrator', 'Admin BUMKam'):
+        raise HTTPException(403, 'Akses ditolak. Hanya Administrator / Admin BUMKam yang diizinkan mengelola pengguna.')
     return user
 
 class LoginBody(BaseModel):
     email: str
     password: str
+
+class InitialCredentialBody(BaseModel):
+    new_username: Optional[str] = None
+    new_password: str
+    confirm_password: str
+
+class CreateUserBody(BaseModel):
+    full_name: str
+    username: str
+    email: str
+    role: str = 'Pengurus Unit Perdagangan'
+    unit_kerja: str = 'BUMKam Mekar Sari'
+    temp_password: str
+    must_change_password: bool = True
+
+class UpdateUserBody(BaseModel):
+    full_name: Optional[str] = None
+    username: Optional[str] = None
+    email: Optional[str] = None
+    role: Optional[str] = None
+    unit_kerja: Optional[str] = None
+
+class ResetPasswordBody(BaseModel):
+    new_password: str
+    must_change_password: bool = True
+
+class ToggleStatusBody(BaseModel):
+    is_active: bool
 
 class RecordBody(BaseModel):
     data: dict[str, Any] = Field(default_factory=dict)
@@ -235,19 +297,131 @@ DEFAULT_PROFILE = {
     ]
 }
 
+DEFAULT_INITIAL_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'BummaMekarSari2026!')
+
 DEMO_USERS = [
-    {'id': 'usr_admin', 'email': 'admin_bumma', 'name': 'Pengelola BUMMA', 'role': 'Administrator'},
-    {'id': 'usr_admin_demo', 'email': 'admin@bumma-demo.id', 'name': 'Pengelola BUMMA', 'role': 'Administrator'},
-    {'id': 'usr_acc', 'email': 'accounting@bumma-demo.id', 'name': 'Rita Fanghoi', 'role': 'Akuntansi'},
-    {'id': 'usr_fin', 'email': 'finance@bumma-demo.id', 'name': 'Lukas Wenda', 'role': 'Keuangan'},
-    {'id': 'usr_sales', 'email': 'sales@bumma-demo.id', 'name': 'Yohanes Tabuni', 'role': 'Sales'},
-    {'id': 'usr_pur', 'email': 'purchasing@bumma-demo.id', 'name': 'Markus Krey', 'role': 'Pembelian'},
-    {'id': 'usr_wh', 'email': 'warehouse@bumma-demo.id', 'name': 'Silas Kogoya', 'role': 'Gudang'},
-    {'id': 'usr_mgr', 'email': 'manager@bumma-demo.id', 'name': 'Eko L Wibowo', 'role': 'Manajer'},
-    {'id': 'usr_aud', 'email': 'auditor@bumma-demo.id', 'name': 'Dra. Sarah Rumbiak', 'role': 'Auditor'}
+    {
+        'id': 'usr_admin',
+        'full_name': 'Administrator ARVEA',
+        'name': 'Administrator ARVEA',
+        'username': 'administrator',
+        'email': 'admin@arvea-mekarsari.id',
+        'role': 'Administrator',
+        'unit_kerja': 'Kantor Pengelola BUMKam',
+        'initials': 'AD',
+        'is_active': True,
+        'must_change_password': True,
+        'password_changed_at': None,
+        'is_default_account': True
+    },
+    {
+        'id': 'usr_ketua',
+        'full_name': 'Eko L Wibowo',
+        'name': 'Eko L Wibowo',
+        'username': 'ketua_bumkam',
+        'email': 'ketua@arvea-mekarsari.id',
+        'role': 'Ketua BUMKam',
+        'unit_kerja': 'BUMKam Mekar Sari',
+        'initials': 'KB',
+        'is_active': True,
+        'must_change_password': False,
+        'password_changed_at': '2026-01-15T08:00:00+00:00',
+        'is_default_account': False
+    },
+    {
+        'id': 'usr_sekretaris',
+        'full_name': 'Sekretaris BUMKam',
+        'name': 'Sekretaris BUMKam',
+        'username': 'sekretaris_bumkam',
+        'email': 'sekretaris@arvea-mekarsari.id',
+        'role': 'Sekretaris BUMKam',
+        'unit_kerja': 'Kantor Pengelola BUMKam',
+        'initials': 'SB',
+        'is_active': True,
+        'must_change_password': False,
+        'password_changed_at': '2026-01-15T08:00:00+00:00',
+        'is_default_account': False
+    },
+    {
+        'id': 'usr_bendahara',
+        'full_name': 'Rita Fanghoi',
+        'name': 'Rita Fanghoi',
+        'username': 'bendahara_bumkam',
+        'email': 'bendahara@arvea-mekarsari.id',
+        'role': 'Bendahara',
+        'unit_kerja': 'Keuangan & Akuntansi',
+        'initials': 'BD',
+        'is_active': True,
+        'must_change_password': False,
+        'password_changed_at': '2026-01-15T08:00:00+00:00',
+        'is_default_account': False
+    },
+    {
+        'id': 'usr_perdagangan',
+        'full_name': 'Yohanis Wenda',
+        'name': 'Yohanis Wenda',
+        'username': 'unit_perdagangan',
+        'email': 'perdagangan@arvea-mekarsari.id',
+        'role': 'Pengurus Unit Perdagangan',
+        'unit_kerja': 'Unit Perdagangan',
+        'initials': 'YW',
+        'is_active': True,
+        'must_change_password': False,
+        'password_changed_at': '2026-01-15T08:00:00+00:00',
+        'is_default_account': False
+    },
+    {
+        'id': 'usr_jasa',
+        'full_name': 'Markus Krey',
+        'name': 'Markus Krey',
+        'username': 'unit_jasa',
+        'email': 'jasa@arvea-mekarsari.id',
+        'role': 'Pengurus Unit Jasa',
+        'unit_kerja': 'Unit Jasa',
+        'initials': 'MK',
+        'is_active': True,
+        'must_change_password': False,
+        'password_changed_at': '2026-01-15T08:00:00+00:00',
+        'is_default_account': False
+    },
+    {
+        'id': 'usr_auditor',
+        'full_name': 'Auditor Pengawas',
+        'name': 'Auditor Pengawas',
+        'username': 'auditor',
+        'email': 'auditor@arvea-mekarsari.id',
+        'role': 'Auditor',
+        'unit_kerja': 'Pengawas Independen',
+        'initials': 'AU',
+        'is_active': True,
+        'must_change_password': False,
+        'password_changed_at': '2026-01-15T08:00:00+00:00',
+        'is_default_account': False
+    },
+    {
+        'id': 'usr_umum',
+        'full_name': 'Masyarakat & Publik',
+        'name': 'Masyarakat & Publik',
+        'username': 'umum',
+        'email': 'publik@arvea-mekarsari.id',
+        'role': 'Umum',
+        'unit_kerja': 'Transparansi Kampung',
+        'initials': 'UM',
+        'is_active': True,
+        'must_change_password': False,
+        'password_changed_at': '2026-01-15T08:00:00+00:00',
+        'is_default_account': False
+    }
 ]
 
 async def seed_data():
+    if await db.users.count_documents({}) == 0:
+        default_hash = hash_password(DEFAULT_INITIAL_PASSWORD)
+        seed_docs = [
+            {**u, 'password_hash': default_hash, 'created_at': now(), 'updated_at': now(), 'deactivated_at': None}
+            for u in DEMO_USERS
+        ]
+        await db.users.insert_many(seed_docs)
     if await db.accounts.count_documents({}) == 0:
         await db.accounts.insert_many(DEFAULT_ACCOUNTS)
     if await db.products.count_documents({}) == 0:
@@ -284,36 +458,250 @@ async def seed_data():
 @api.post('/auth/login')
 async def login(body: LoginBody, response: Response):
     await seed_data()
-    email = body.email.strip().lower()
+    ident = body.email.strip().lower()
     pwd = body.password.strip()
 
-    valid_pwds = ['bummamekarsari2026!', 'bumma123!', 'admin123', 'admin']
-    if pwd.lower() not in valid_pwds:
-        raise HTTPException(401, 'Kata sandi tidak sesuai.')
-
-    found = None
-    for u in DEMO_USERS:
-        if u['email'].lower() == email:
-            found = u
-            break
-    if not found and email in ['admin', 'admin_bumma', 'admin@bumma.local', 'admin@bumma-demo.id']:
-        found = DEMO_USERS[0]
+    found = await db.users.find_one(
+        {'$or': [{'username': ident}, {'email': ident}]},
+        {'_id': 0}
+    )
+    if not found and ident in ('admin', 'admin_bumma', 'admin@bumma.local', 'admin@bumma-demo.id'):
+        found = await db.users.find_one({'id': 'usr_admin'}, {'_id': 0})
 
     if not found:
-        found = {'id': uid('usr'), 'email': email, 'name': email.split('@')[0].capitalize(), 'role': 'Staf Keuangan'}
+        raise HTTPException(401, 'Username atau kata sandi tidak valid.')
+
+    # Tolak akun yang sudah dinonaktifkan (soft-disabled)
+    if not found.get('is_active', True):
+        raise HTTPException(403, 'Akun Anda telah dinonaktifkan. Silakan hubungi Administrator.')
+
+    # Verifikasi kata sandi tersimpan (hash bcrypt)
+    if not verify_password(pwd, found.get('password_hash', '')):
+        raise HTTPException(401, 'Kata sandi tidak valid. Silakan periksa kembali kata sandi Anda.')
 
     t = token(found)
     response.set_cookie('access_token', t, httponly=True, samesite='lax', max_age=86400*7)
-    return public(found)
+    return {
+        **public(found),
+        'access_token': t,
+        'requires_password_change': bool(found.get('must_change_password') or found.get('password_changed_at') is None)
+    }
+
+@api.post('/auth/change-initial-credentials')
+async def change_initial_credentials(body: InitialCredentialBody, response: Response, user=Depends(current_user)):
+    new_pwd = body.new_password.strip()
+    confirm_pwd = body.confirm_password.strip()
+    if len(new_pwd) < 8:
+        raise HTTPException(400, 'Password baru minimal terdiri dari 8 karakter.')
+    if new_pwd != confirm_pwd:
+        raise HTTPException(400, 'Konfirmasi password baru tidak cocok.')
+    if new_pwd.lower() == DEFAULT_INITIAL_PASSWORD.lower():
+        raise HTTPException(400, 'Password baru tidak boleh sama dengan password bawaan sistem.')
+
+    update_fields = {
+        'password_hash': hash_password(new_pwd),
+        'must_change_password': False,
+        'password_changed_at': now(),
+        'updated_at': now()
+    }
+
+    if body.new_username and body.new_username.strip():
+        clean_username = body.new_username.strip().lower()
+        if len(clean_username) < 4:
+            raise HTTPException(400, 'Username baru minimal 4 karakter.')
+        dup = await db.users.find_one({'username': clean_username, 'id': {'$ne': user['id']}})
+        if dup:
+            raise HTTPException(409, f'Username "{clean_username}" sudah digunakan akun lain.')
+        update_fields['username'] = clean_username
+
+    await db.users.update_one({'id': user['id']}, {'$set': update_fields})
+    updated = await db.users.find_one({'id': user['id']}, {'_id': 0})
+    t = token(updated)
+    response.set_cookie('access_token', t, httponly=True, samesite='lax', max_age=86400*7)
+    return {**public(updated), 'access_token': t, 'requires_password_change': False}
 
 @api.get('/auth/me')
 async def me(user=Depends(current_user)):
-    return public(user)
+    return {
+        **public(user),
+        'requires_password_change': bool(user.get('must_change_password') or user.get('password_changed_at') is None)
+    }
 
 @api.post('/auth/logout')
 async def logout(response: Response):
     response.delete_cookie('access_token')
     return {'ok': True}
+
+# ============================================================================
+# USER MANAGEMENT (PENGELOLAAN PENGGUNA) CONTROLLER
+# ============================================================================
+@api.get('/users')
+async def list_users(search: str = '', status: str = 'all', role: str = 'all', admin=Depends(require_admin)):
+    all_users = await db.users.find({}, {'_id': 0}).sort('created_at', 1).to_list(500)
+    sanitized = [public(u) for u in all_users]
+
+    summary = {
+        'total': len(sanitized),
+        'active': sum(1 for u in sanitized if u.get('is_active', True)),
+        'inactive': sum(1 for u in sanitized if not u.get('is_active', True)),
+        'must_change_password': sum(1 for u in sanitized if u.get('must_change_password') or not u.get('password_changed_at'))
+    }
+
+    filtered = sanitized
+    if status == 'active':
+        filtered = [u for u in filtered if u.get('is_active', True)]
+    elif status == 'inactive':
+        filtered = [u for u in filtered if not u.get('is_active', True)]
+
+    if role and role != 'all':
+        filtered = [u for u in filtered if u.get('role') == role]
+
+    if search.strip():
+        q = search.strip().lower()
+        filtered = [
+            u for u in filtered
+            if q in str(u.get('full_name', '')).lower()
+            or q in str(u.get('username', '')).lower()
+            or q in str(u.get('email', '')).lower()
+            or q in str(u.get('role', '')).lower()
+            or q in str(u.get('unit_kerja', '')).lower()
+        ]
+
+    return {'items': filtered, 'summary': summary}
+
+@api.post('/users')
+async def create_user(body: CreateUserBody, admin=Depends(require_admin)):
+    username = body.username.strip().lower()
+    email = body.email.strip().lower()
+    if len(username) < 4:
+        raise HTTPException(400, 'Username minimal 4 karakter.')
+    if len(body.temp_password.strip()) < 6:
+        raise HTTPException(400, 'Password sementara minimal 6 karakter.')
+
+    dup = await db.users.find_one({'$or': [{'username': username}, {'email': email}]})
+    if dup:
+        raise HTTPException(409, 'Username atau email sudah terdaftar.')
+
+    parts = [p for p in body.full_name.strip().split(' ') if p]
+    initials = (parts[0][0] + (parts[1][0] if len(parts) > 1 else parts[0][1:2])).upper() if parts else 'US'
+
+    new_doc = {
+        'id': uid('usr'),
+        'full_name': body.full_name.strip(),
+        'name': body.full_name.strip(),
+        'username': username,
+        'email': email,
+        'role': body.role.strip(),
+        'unit_kerja': body.unit_kerja.strip() or 'BUMKam Mekar Sari',
+        'initials': initials[:2],
+        'password_hash': hash_password(body.temp_password.strip()),
+        'is_active': True,
+        'must_change_password': bool(body.must_change_password),
+        'password_changed_at': None if body.must_change_password else now(),
+        'is_default_account': False,
+        'created_at': now(),
+        'updated_at': now(),
+        'deactivated_at': None
+    }
+    await db.users.insert_one(new_doc)
+    return public(new_doc)
+
+@api.put('/users/{user_id}')
+async def update_user(user_id: str, body: UpdateUserBody, admin=Depends(require_admin)):
+    target = await db.users.find_one({'id': user_id}, {'_id': 0})
+    if not target:
+        raise HTTPException(404, 'Akun pengguna tidak ditemukan.')
+
+    updates = {'updated_at': now()}
+    if body.full_name is not None and body.full_name.strip():
+        updates['full_name'] = body.full_name.strip()
+        updates['name'] = body.full_name.strip()
+    if body.username is not None and body.username.strip():
+        uname = body.username.strip().lower()
+        dup = await db.users.find_one({'username': uname, 'id': {'$ne': user_id}})
+        if dup:
+            raise HTTPException(409, f'Username "{uname}" sudah digunakan.')
+        updates['username'] = uname
+    if body.email is not None and body.email.strip():
+        em = body.email.strip().lower()
+        dup = await db.users.find_one({'email': em, 'id': {'$ne': user_id}})
+        if dup:
+            raise HTTPException(409, f'Email "{em}" sudah digunakan.')
+        updates['email'] = em
+    if body.role is not None and body.role.strip():
+        updates['role'] = body.role.strip()
+    if body.unit_kerja is not None and body.unit_kerja.strip():
+        updates['unit_kerja'] = body.unit_kerja.strip()
+
+    await db.users.update_one({'id': user_id}, {'$set': updates})
+    updated = await db.users.find_one({'id': user_id}, {'_id': 0})
+    return public(updated)
+
+@api.post('/users/{user_id}/reset-password')
+async def reset_user_password(user_id: str, body: ResetPasswordBody, admin=Depends(require_admin)):
+    target = await db.users.find_one({'id': user_id}, {'_id': 0})
+    if not target:
+        raise HTTPException(404, 'Akun pengguna tidak ditemukan.')
+    new_pwd = body.new_password.strip()
+    if len(new_pwd) < 6:
+        raise HTTPException(400, 'Password baru sementara minimal 6 karakter.')
+
+    await db.users.update_one(
+        {'id': user_id},
+        {'$set': {
+            'password_hash': hash_password(new_pwd),
+            'must_change_password': bool(body.must_change_password),
+            'password_changed_at': None if body.must_change_password else now(),
+            'updated_at': now()
+        }}
+    )
+    updated = await db.users.find_one({'id': user_id}, {'_id': 0})
+    return public(updated)
+
+@api.patch('/users/{user_id}/status')
+async def toggle_user_status(user_id: str, body: ToggleStatusBody, admin=Depends(require_admin)):
+    target = await db.users.find_one({'id': user_id}, {'_id': 0})
+    if not target:
+        raise HTTPException(404, 'Akun pengguna tidak ditemukan.')
+    if user_id == admin['id'] and not body.is_active:
+        raise HTTPException(400, 'Anda tidak dapat menonaktifkan akun yang sedang digunakan login.')
+
+    if not body.is_active and target.get('role') in ('Administrator', 'Admin BUMKam'):
+        active_admins = await db.users.count_documents({
+            'role': {'$in': ['Administrator', 'Admin BUMKam']},
+            'is_active': True,
+            'id': {'$ne': user_id}
+        })
+        if active_admins == 0:
+            raise HTTPException(400, 'Minimal harus ada 1 akun Administrator aktif di sistem.')
+
+    # Soft-disable (is_active = False): riwayat transaksi & audit tetap aman
+    await db.users.update_one(
+        {'id': user_id},
+        {'$set': {
+            'is_active': bool(body.is_active),
+            'deactivated_at': None if body.is_active else now(),
+            'updated_at': now()
+        }}
+    )
+    updated = await db.users.find_one({'id': user_id}, {'_id': 0})
+    return public(updated)
+
+@api.put('/users/me/profile')
+async def update_my_profile(body: UpdateUserBody, user=Depends(require_password_changed)):
+    updates = {'updated_at': now()}
+    if body.full_name and body.full_name.strip():
+        updates['full_name'] = body.full_name.strip()
+        updates['name'] = body.full_name.strip()
+    if body.email and body.email.strip():
+        em = body.email.strip().lower()
+        dup = await db.users.find_one({'email': em, 'id': {'$ne': user['id']}})
+        if dup:
+            raise HTTPException(409, 'Email sudah digunakan akun lain.')
+        updates['email'] = em
+    await db.users.update_one({'id': user['id']}, {'$set': updates})
+    updated = await db.users.find_one({'id': user['id']}, {'_id': 0})
+    return public(updated)
 
 @api.get('/profile')
 async def get_profile():
@@ -322,7 +710,7 @@ async def get_profile():
     return prof or DEFAULT_PROFILE
 
 @api.put('/profile')
-async def update_profile(body: RecordBody, user=Depends(current_user)):
+async def update_profile(body: RecordBody, user=Depends(require_password_changed)):
     data = body.data
     await db.profile.update_one({'id': 'profile'}, {'$set': data}, upsert=True)
     prof = await db.profile.find_one({'id': 'profile'}, {'_id': 0})
@@ -334,7 +722,7 @@ async def list_transactions():
     return txs
 
 @api.post('/transactions')
-async def create_transaction(body: RecordBody, user=Depends(current_user)):
+async def create_transaction(body: RecordBody, user=Depends(require_password_changed)):
     data = body.data
     tx_type = data.get('type', 'penjualan')
     cnt = await db.transactions.count_documents({}) + 1
@@ -477,7 +865,7 @@ async def list_assets(unit: str = 'all', search: str = ''):
     return {'items': filtered, 'summary': summary}
 
 @api.post('/assets')
-async def create_asset(body: RecordBody, user=Depends(current_user)):
+async def create_asset(body: RecordBody, user=Depends(require_password_changed)):
     await seed_data()
     data = dict(body.data or {})
     unit_usaha = normalize_asset_unit(data.get('unit_usaha'))
@@ -502,7 +890,7 @@ async def create_asset(body: RecordBody, user=Depends(current_user)):
     return public(item)
 
 @api.put('/assets/{asset_id}')
-async def update_asset(asset_id: str, body: RecordBody, user=Depends(current_user)):
+async def update_asset(asset_id: str, body: RecordBody, user=Depends(require_password_changed)):
     await seed_data()
     data = dict(body.data or {})
     unit_usaha = normalize_asset_unit(data.get('unit_usaha'))
@@ -527,7 +915,7 @@ async def update_asset(asset_id: str, body: RecordBody, user=Depends(current_use
     return updated
 
 @api.delete('/assets/{asset_id}')
-async def delete_asset(asset_id: str, user=Depends(current_user)):
+async def delete_asset(asset_id: str, user=Depends(require_password_changed)):
     await seed_data()
     result = await db.assets.delete_one({'id': asset_id})
     if result.deleted_count == 0:
@@ -759,7 +1147,7 @@ async def list_adjusting_journals(
     return {'items': filtered, 'summary': summary}
 
 @api.post('/adjusting-journals')
-async def create_adjusting_journal(body: RecordBody, user=Depends(current_user)):
+async def create_adjusting_journal(body: RecordBody, user=Depends(require_password_changed)):
     await seed_data()
     data = dict(body.data or {})
     unit_usaha, clean_lines, total_debit, total_credit = validate_aje_payload(data)
@@ -805,7 +1193,7 @@ async def create_adjusting_journal(body: RecordBody, user=Depends(current_user))
     return full_doc
 
 @api.put('/adjusting-journals/{aje_id}')
-async def update_adjusting_journal(aje_id: str, body: RecordBody, user=Depends(current_user)):
+async def update_adjusting_journal(aje_id: str, body: RecordBody, user=Depends(require_password_changed)):
     await seed_data()
     existing = await db.adjusting_journals.find_one({'id': aje_id}, {'_id': 0})
     if not existing:
@@ -847,7 +1235,7 @@ async def update_adjusting_journal(aje_id: str, body: RecordBody, user=Depends(c
     return full_doc
 
 @api.post('/adjusting-journals/{aje_id}/post')
-async def post_adjusting_journal(aje_id: str, user=Depends(current_user)):
+async def post_adjusting_journal(aje_id: str, user=Depends(require_password_changed)):
     await seed_data()
     existing = await db.adjusting_journals.find_one({'id': aje_id}, {'_id': 0})
     if not existing:
@@ -864,7 +1252,7 @@ async def post_adjusting_journal(aje_id: str, user=Depends(current_user)):
     return full_doc
 
 @api.delete('/adjusting-journals/{aje_id}')
-async def delete_adjusting_journal(aje_id: str, user=Depends(current_user)):
+async def delete_adjusting_journal(aje_id: str, user=Depends(require_password_changed)):
     await seed_data()
     res = await db.adjusting_journals.delete_one({'id': aje_id})
     if res.deleted_count == 0:
@@ -883,7 +1271,7 @@ async def get_master(resource: str):
     return items
 
 @api.post('/master/{resource}')
-async def add_master(resource: str, body: RecordBody, user=Depends(current_user)):
+async def add_master(resource: str, body: RecordBody, user=Depends(require_password_changed)):
     col = getattr(db, resource, None)
     if col is None: raise HTTPException(404, 'Sumber daya tidak ditemukan')
     item = {'id': uid(resource[:3]), **body.data}
@@ -891,7 +1279,7 @@ async def add_master(resource: str, body: RecordBody, user=Depends(current_user)
     return public(item)
 
 @api.delete('/master/{resource}/{item_id}')
-async def delete_master(resource: str, item_id: str, user=Depends(current_user)):
+async def delete_master(resource: str, item_id: str, user=Depends(require_password_changed)):
     col = getattr(db, resource, None)
     if col is None: raise HTTPException(404, 'Sumber daya tidak ditemukan')
     await col.delete_one({'id': item_id})

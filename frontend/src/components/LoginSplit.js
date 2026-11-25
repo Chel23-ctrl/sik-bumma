@@ -48,12 +48,12 @@ export const DEMO_ACCOUNTS = [
   }
 ];
 
-export default function LoginSplit({ onLogin, onBackToStore }) {
+export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
   const [email, setEmail] = useState('administrator');
   const [password, setPassword] = useState('BummaMekarSari2026!');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const validPasswords = [
+  const legacyDefaultPasswords = [
     'bummamekarsari2026!',
     'bumma123!',
     'admin123',
@@ -61,19 +61,79 @@ export default function LoginSplit({ onLogin, onBackToStore }) {
     'arvea123'
   ];
 
+  const findManagedUser = (identifier) => {
+    const idn = (identifier || '').trim().toLowerCase();
+    if (!idn || !Array.isArray(users) || users.length === 0) return null;
+    return (
+      users.find(
+        u =>
+          (u.username || '').toLowerCase() === idn ||
+          (u.email || '').toLowerCase() === idn ||
+          (u.full_name || u.name || '').toLowerCase() === idn ||
+          (idn === 'admin_bumma' && u.id === 'usr_admin')
+      ) || null
+    );
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isSubmitting) return;
     const em = email.trim().toLowerCase();
-    const pw = password.trim().toLowerCase();
+    const pwRaw = password.trim();
+    const pwLower = pwRaw.toLowerCase();
 
-    // Check if password is valid
-    if (!validPasswords.includes(pw)) {
+    const managed = findManagedUser(em);
+
+    // 1. Cek akun di daftar User Management (termasuk proteksi nonaktif & password terbaru)
+    if (managed) {
+      if (managed.is_active === false) {
+        toast.error('Akun Anda telah dinonaktifkan. Silakan hubungi Administrator.');
+        return;
+      }
+
+      const storedPwd = (managed.password || '').trim();
+      const isDefaultUnchanged = managed.is_default_account && managed.must_change_password;
+      const passwordMatches =
+        (storedPwd && pwRaw === storedPwd) ||
+        (isDefaultUnchanged && legacyDefaultPasswords.includes(pwLower));
+
+      if (!passwordMatches) {
+        toast.error('Kata sandi tidak valid. Silakan periksa kembali kata sandi Anda.');
+        return;
+      }
+
+      setIsSubmitting(true);
+      try {
+        await onLogin({
+          id: managed.id,
+          username: managed.username,
+          email: managed.email,
+          name: managed.full_name || managed.name,
+          full_name: managed.full_name || managed.name,
+          role: managed.role,
+          unit_kerja: managed.unit_kerja,
+          initials: managed.initials,
+          is_active: managed.is_active !== false,
+          must_change_password: Boolean(managed.must_change_password),
+          password_changed_at: managed.password_changed_at || null
+        });
+        if (managed.must_change_password || !managed.password_changed_at) {
+          toast.info('Login perdana terdeteksi. Silakan ubah kredensial awal Anda terlebih dahulu.');
+        } else {
+          toast.success(`Selamat datang, ${managed.full_name || managed.name} (${managed.role})`);
+        }
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
+
+    // 2. Fallback demo account jika belum ada di users
+    if (!legacyDefaultPasswords.includes(pwLower)) {
       toast.error('Kata sandi tidak valid. Silakan periksa kembali kata sandi Anda.');
       return;
     }
 
-    // Match demo account or legacy names
     const matched = DEMO_ACCOUNTS.find(
       acc => acc.username.toLowerCase() === em || 
              acc.title.toLowerCase() === em ||
@@ -85,21 +145,18 @@ export default function LoginSplit({ onLogin, onBackToStore }) {
     try {
       if (matched) {
         await onLogin({
+          username: matched.username,
           email: matched.username,
           name: matched.name,
           role: matched.role,
-          initials: matched.initials
+          initials: matched.initials,
+          is_active: true,
+          must_change_password: false,
+          password_changed_at: new Date().toISOString()
         });
         toast.success(`Selamat datang, ${matched.name} (${matched.role})`);
       } else {
-        // Default fallback
-        await onLogin({
-          email: email,
-          name: email.split('@')[0].toUpperCase(),
-          role: 'Administrator',
-          initials: 'AD'
-        });
-        toast.success(`Selamat datang, ${email}`);
+        toast.error('Akun tidak ditemukan. Periksa kembali username atau email Anda.');
       }
     } finally {
       setIsSubmitting(false);
@@ -108,17 +165,53 @@ export default function LoginSplit({ onLogin, onBackToStore }) {
 
   const handleQuickLogin = async (acc) => {
     if (isSubmitting) return;
-    setEmail(acc.username);
-    setPassword('BummaMekarSari2026!');
+    const managed =
+      users.find(
+        u =>
+          (u.username || '').toLowerCase() === acc.username.toLowerCase() ||
+          (acc.username === 'administrator' && u.id === 'usr_admin') ||
+          u.role === acc.role
+      ) || null;
+
+    if (managed && managed.is_active === false) {
+      toast.error('Akun Anda telah dinonaktifkan. Silakan hubungi Administrator.');
+      return;
+    }
+
+    const target = managed || {
+      username: acc.username,
+      email: acc.username,
+      name: acc.name,
+      full_name: acc.name,
+      role: acc.role,
+      initials: acc.initials,
+      is_active: true,
+      must_change_password: false,
+      password_changed_at: new Date().toISOString()
+    };
+
+    setEmail(target.username || acc.username);
+    setPassword(target.password || 'BummaMekarSari2026!');
     setIsSubmitting(true);
     try {
       await onLogin({
-        email: acc.username,
-        name: acc.name,
-        role: acc.role,
-        initials: acc.initials
+        id: target.id,
+        username: target.username,
+        email: target.email || target.username,
+        name: target.full_name || target.name,
+        full_name: target.full_name || target.name,
+        role: target.role,
+        unit_kerja: target.unit_kerja,
+        initials: target.initials,
+        is_active: target.is_active !== false,
+        must_change_password: Boolean(target.must_change_password),
+        password_changed_at: target.password_changed_at || null
       });
-      toast.success(`Berhasil masuk sebagai ${acc.title} (${acc.role})`);
+      if (target.must_change_password || !target.password_changed_at) {
+        toast.info('Login perdana terdeteksi. Silakan ubah kredensial awal Anda terlebih dahulu.');
+      } else {
+        toast.success(`Berhasil masuk sebagai ${target.full_name || acc.title} (${target.role})`);
+      }
     } finally {
       setIsSubmitting(false);
     }

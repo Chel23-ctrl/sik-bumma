@@ -23,11 +23,14 @@ import {
   Unlock,
   Users,
   Boxes,
-  FileEdit
+  FileEdit,
+  UserCog
 } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
 
 import LoginSplit, { DEMO_ACCOUNTS } from './components/LoginSplit';
+import FirstTimePasswordGuard from './components/FirstTimePasswordGuard';
+import PengelolaanPengguna, { INITIAL_USERS } from './components/PengelolaanPengguna';
 import LandingUnit from './components/LandingUnit';
 import DashboardView from './components/DashboardView';
 import Transaksi from './components/Transaksi';
@@ -140,7 +143,12 @@ const INITIAL_PROFILE = {
 
 export const ROLE_PERMISSIONS = {
   'Administrator': [
-    'dashboard', 'profil', 'master', 'aset', 'landing_unit', 'transaksi', 
+    'dashboard', 'profil', 'pengguna', 'master', 'aset', 'landing_unit', 'transaksi', 
+    'kas_bank', 'jurnal', 'jurnal_penyesuaian', 'buku_besar', 'neraca_saldo', 'laporan', 
+    'analisis', 'operasional', 'penggajian'
+  ],
+  'Admin BUMKam': [
+    'dashboard', 'profil', 'pengguna', 'master', 'aset', 'landing_unit', 'transaksi', 
     'kas_bank', 'jurnal', 'jurnal_penyesuaian', 'buku_besar', 'neraca_saldo', 'laporan', 
     'analisis', 'operasional', 'penggajian'
   ],
@@ -156,6 +164,12 @@ export const ROLE_PERMISSIONS = {
     'dashboard', 'master', 'aset', 'landing_unit', 'transaksi', 
     'kas_bank', 'jurnal', 'jurnal_penyesuaian', 'buku_besar', 'neraca_saldo', 'laporan', 
     'analisis', 'operasional', 'penggajian'
+  ],
+  'Pengurus Unit Perdagangan': [
+    'dashboard', 'master', 'aset', 'landing_unit', 'transaksi', 'kas_bank', 'operasional'
+  ],
+  'Pengurus Unit Jasa': [
+    'dashboard', 'master', 'aset', 'landing_unit', 'transaksi', 'kas_bank', 'operasional'
   ],
   'Auditor': [
     'dashboard', 'landing_unit', 'jurnal', 'jurnal_penyesuaian', 'buku_besar', 'neraca_saldo'
@@ -221,8 +235,79 @@ export default function App() {
   const [appMode, setAppMode] = useState(() => getStorage('app_mode', 'storefront'));
   useEffect(() => { setStorage('app_mode', appMode); }, [appMode]);
 
-  // Auth
+  // Auth & Managed Users (User Management + First-Time Password Guard)
+  const [users, setUsers] = useState(() => {
+    const stored = getStorage('users', INITIAL_USERS);
+    if (Array.isArray(stored) && stored.length > 0) {
+      return stored.map(u => ({
+        ...u,
+        is_active: u.is_active !== false
+      }));
+    }
+    return INITIAL_USERS;
+  });
+  useEffect(() => { setStorage('users', users); }, [users]);
+
   const [user, setUser] = useState(() => getStorage('user', null));
+
+  // Sync active user with managed users store (detect deactivation or password reset)
+  const activeUserRecord = useMemo(() => {
+    if (!user) return null;
+    const found = users.find(
+      u =>
+        (user.id && u.id === user.id) ||
+        (user.username && u.username === user.username) ||
+        (user.email && (u.email === user.email || u.username === user.email))
+    );
+    return found ? { ...user, ...found, name: found.full_name || found.name } : user;
+  }, [user, users]);
+
+  // Route Guard 1: Kick out immediately if account was deactivated
+  useEffect(() => {
+    if (activeUserRecord && activeUserRecord.is_active === false) {
+      setUser(null);
+      toast.error('Akun Anda telah dinonaktifkan. Silakan hubungi Administrator.');
+    }
+  }, [activeUserRecord]);
+
+  // Route Guard 2: Detect mandatory first-time password change
+  const requiresInitialPasswordChange = Boolean(
+    activeUserRecord &&
+      (activeUserRecord.must_change_password === true || !activeUserRecord.password_changed_at)
+  );
+
+  const handleCompleteInitialCredentials = ({ newUsername, newPassword }) =>
+    runWithLoader(
+      'Menyimpan kredensial baru & membuka Dashboard...',
+      () => {
+        const changedAt = new Date().toISOString();
+        setUsers(prev =>
+          prev.map(u =>
+            u.id === activeUserRecord.id ||
+            (u.username && u.username === activeUserRecord.username)
+              ? {
+                  ...u,
+                  username: newUsername || u.username,
+                  password: newPassword,
+                  must_change_password: false,
+                  password_changed_at: changedAt,
+                  updated_at: changedAt
+                }
+              : u
+          )
+        );
+        setUser(prev => ({
+          ...prev,
+          username: newUsername || prev.username,
+          must_change_password: false,
+          password_changed_at: changedAt
+        }));
+        setActiveMenu('dashboard');
+      },
+      520
+    ).then(() => {
+      toast.success('Kredensial awal berhasil diperbarui! Selamat datang di ARVEA.');
+    });
 
   // Current page
   const [activeMenu, setActiveMenu] = useState('dashboard');
@@ -235,7 +320,7 @@ export default function App() {
   const allowedMenus = useMemo(() => {
     if (!rbacStrict) {
       return [
-        'dashboard', 'profil', 'master', 'aset', 'landing_unit', 'transaksi', 
+        'dashboard', 'profil', 'pengguna', 'master', 'aset', 'landing_unit', 'transaksi', 
         'kas_bank', 'jurnal', 'jurnal_penyesuaian', 'buku_besar', 'neraca_saldo', 'laporan', 
         'analisis', 'operasional', 'penggajian'
       ];
@@ -526,6 +611,7 @@ export default function App() {
   const menuTitles = {
     dashboard: 'Dashboard',
     profil: 'Profil BUMKam',
+    pengguna: 'Pengelolaan Pengguna',
     master: 'Master Data',
     aset: 'Inventarisasi Aset',
     landing_unit: 'Profil Unit Usaha',
@@ -593,6 +679,7 @@ export default function App() {
     viewContent = (
       <>
         <LoginSplit
+          users={users}
           onLogin={handleLogin}
           onBackToStore={() =>
             runWithLoader('Membuka Toko Digital...', () => setAppMode('storefront'), 450)
@@ -600,6 +687,15 @@ export default function App() {
         />
         <ScrollToTopButton />
       </>
+    );
+  } else if (requiresInitialPasswordChange) {
+    viewContent = (
+      <FirstTimePasswordGuard
+        user={activeUserRecord}
+        users={users}
+        onCompleteChange={handleCompleteInitialCredentials}
+        onLogout={handleLogout}
+      />
     );
   } else {
     viewContent = (
@@ -669,17 +765,26 @@ export default function App() {
               value={userRole}
               onChange={(e) => {
                 const targetRole = e.target.value;
-                const matched = DEMO_ACCOUNTS.find(acc => acc.role === targetRole);
+                const matchedUser = users.find(u => u.role === targetRole && u.is_active !== false);
+                const matchedDemo = DEMO_ACCOUNTS.find(acc => acc.role === targetRole);
+                const matched = matchedUser || matchedDemo;
                 if (matched) {
                   runWithLoader(`Beralih ke peran ${matched.role}...`, () => {
                     setUser({
-                      email: matched.username,
-                      name: matched.name,
+                      id: matched.id,
+                      username: matched.username,
+                      email: matched.email || matched.username,
+                      name: matched.full_name || matched.name,
+                      full_name: matched.full_name || matched.name,
                       role: matched.role,
-                      initials: matched.initials
+                      unit_kerja: matched.unit_kerja,
+                      initials: matched.initials,
+                      is_active: matched.is_active !== false,
+                      must_change_password: Boolean(matched.must_change_password),
+                      password_changed_at: matched.password_changed_at || new Date().toISOString()
                     });
                   }, 420).then(() => {
-                    toast.success(`Beralih ke peran: ${matched.role} (${matched.name})`);
+                    toast.success(`Beralih ke peran: ${matched.role} (${matched.full_name || matched.name})`);
                   });
                 }
               }}
@@ -775,6 +880,7 @@ export default function App() {
               {[
                 { id: 'dashboard', label: 'Dashboard', icon: Store },
                 { id: 'profil', label: 'Profil BUMKam', icon: Building2 },
+                { id: 'pengguna', label: 'Pengelolaan Pengguna', icon: UserCog, badge: String(users.filter(u => u.is_active !== false).length) },
                 { id: 'master', label: 'Master Data', icon: Package },
                 { id: 'aset', label: 'Inventarisasi Aset', icon: Boxes },
                 { id: 'landing_unit', label: 'Profil Unit Usaha', icon: Building2 },
@@ -1036,6 +1142,14 @@ export default function App() {
             <ProfilBUMMA
               profile={profile}
               setProfile={setProfile}
+            />
+          )}
+
+          {activeMenu === 'pengguna' && (
+            <PengelolaanPengguna
+              users={users}
+              setUsers={setUsers}
+              currentUser={activeUserRecord}
             />
           )}
             </>
