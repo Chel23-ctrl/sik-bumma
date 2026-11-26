@@ -1,29 +1,13 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
-  Building2,
-  Wallet,
-  TrendingUp,
-  Receipt,
-  FileText,
-  BookOpen,
-  Scale,
-  Package,
-  Layers,
   Moon,
   Sun,
   Menu,
-  DollarSign,
   LogOut,
   Store,
-  Calendar,
-  ClipboardList,
-  ArrowUp,
   ShieldCheck,
   Lock,
-  Eye,
-  Boxes,
-  FileEdit,
-  UserCog
+  Eye
 } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
 
@@ -50,6 +34,7 @@ import StorefrontUlambox, { DEFAULT_CORE_PRODUCTS } from './components/Storefron
 import ScrollToTopButton from './components/ScrollToTopButton';
 import LoadingScreen from './components/LoadingScreen';
 import RoleSwitcherDropdown from './components/RoleSwitcherDropdown';
+import SidebarNav from './components/SidebarNav';
 import apiClient, { clearAuthToken, setAuthToken, isJsonApiResponse } from './utils/apiClient';
 import { hashPasswordLocal, readStoredUsers, writeStoredUsers, USERS_STORAGE_KEY } from './utils/passwordAuth';
 import {
@@ -57,8 +42,11 @@ import {
   ROLE_PERMISSIONS,
   normalizeRole,
   getRoleMeta,
-  isDeprecatedUnitRoleAccount
-} from './utils/roles';
+  isDeprecatedUnitRoleAccount,
+  canRoleAccessMenu,
+  getPathForMenu,
+  resolveMenuFromPath
+} from './utils/permissions';
 import {
   isSupabaseConfigured,
   ensureSupabaseConfig,
@@ -209,8 +197,14 @@ export default function App() {
     });
   };
 
-  // App Mode ('storefront' | 'backoffice')
-  const [appMode, setAppMode] = useState(() => getStorage('app_mode', 'storefront'));
+  // App Mode ('storefront' | 'backoffice') — bila user mengetik langsung path modul (misal /jurnal-umum), langsung arahkan ke backoffice agar Route Guard bekerja
+  const [appMode, setAppMode] = useState(() => {
+    const requested = resolveMenuFromPath(window.location.pathname);
+    if (requested && window.location.pathname !== '/') {
+      return 'backoffice';
+    }
+    return getStorage('app_mode', 'storefront');
+  });
   useEffect(() => { setStorage('app_mode', appMode); }, [appMode]);
 
   const [supabaseEnabled, setSupabaseEnabled] = useState(() => isSupabaseConfigured());
@@ -445,8 +439,32 @@ export default function App() {
       toast.success('Kredensial awal berhasil diperbarui! Selamat datang di ARVÉA.');
     });
 
-  // Current page
-  const [activeMenu, setActiveMenu] = useState('dashboard');
+  // Current page (disinkronkan dengan URL address bar agar Route Guard dapat mencegat akses URL langsung)
+  const syncBrowserUrl = (menuId, replace = false) => {
+    try {
+      const targetPath = getPathForMenu(menuId);
+      if (window.location.pathname !== targetPath) {
+        if (replace) window.history.replaceState({ menuId }, '', targetPath);
+        else window.history.pushState({ menuId }, '', targetPath);
+      }
+    } catch (e) {}
+  };
+
+  const [activeMenu, setActiveMenu] = useState(() => {
+    return resolveMenuFromPath(window.location.pathname) || 'dashboard';
+  });
+
+  // Tangkap tombol Back/Forward browser agar proteksi Route Guard tetap berjalan pada perubahan URL
+  useEffect(() => {
+    const handlePopState = () => {
+      const fromUrl = resolveMenuFromPath(window.location.pathname);
+      if (fromUrl) {
+        setActiveMenu(fromUrl);
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   // Refresh daftar pengguna langsung dari Supabase setiap kali membuka menu Pengelolaan Pengguna
   useEffect(() => {
@@ -515,7 +533,9 @@ export default function App() {
 
     const nextMenus = ROLE_PERMISSIONS[cleanRole] || ROLE_PERMISSIONS[USER_ROLES.UMUM];
     if (!nextMenus.includes(activeMenu)) {
-      setActiveMenu(nextMenus[0] || 'profil');
+      const fallbackMenu = nextMenus[0] || 'dashboard';
+      setActiveMenu(fallbackMenu);
+      syncBrowserUrl(fallbackMenu, true);
     }
     toast.success(`Role akses diganti ke "${cleanRole}"`, {
       description: `${nextMenus.length} menu aktif sesuai wewenang ${cleanRole}.`
@@ -536,10 +556,27 @@ export default function App() {
     if (prevUserRoleRef.current !== userRole) {
       prevUserRoleRef.current = userRole;
       if (allowedMenus && !allowedMenus.includes(activeMenu)) {
-        setActiveMenu(allowedMenus[0] || 'profil');
+        const fallbackMenu = allowedMenus[0] || 'dashboard';
+        setActiveMenu(fallbackMenu);
+        syncBrowserUrl(fallbackMenu, true);
       }
     }
   }, [userRole, allowedMenus, activeMenu]);
+
+  // Notifikasi Route Guard bila user mengetik langsung URL terlarang di address bar (403 Akses Ditolak)
+  const lastBlockedToastRef = useRef('');
+  useEffect(() => {
+    if (!user || appMode !== 'backoffice' || requiresInitialPasswordChange) return;
+    if (!canRoleAccessMenu(userRole, activeMenu)) {
+      const key = `${userRole}:${activeMenu}`;
+      if (lastBlockedToastRef.current !== key) {
+        lastBlockedToastRef.current = key;
+        toast.error(`403 Akses Ditolak: Peran "${userRole}" tidak memiliki izin membuka ${getPathForMenu(activeMenu)}.`);
+      }
+    } else {
+      lastBlockedToastRef.current = '';
+    }
+  }, [user, appMode, requiresInitialPasswordChange, userRole, activeMenu]);
 
   // Backoffice Scroll-to-Top
   const mainRef = useRef(null);
@@ -665,9 +702,14 @@ export default function App() {
   };
 
   const handleNavigateMenu = (menuId, label) => {
+    if (!canRoleAccessMenu(userRole, menuId)) {
+      toast.error(`403 Akses Ditolak: Peran "${userRole}" tidak memiliki izin mengakses ${label || menuId}.`);
+      return;
+    }
     if (menuId === activeMenu) return;
-    runWithLoader(`Memuat ${label}...`, () => {
+    runWithLoader(`Memuat ${label || menuTitles[menuId] || menuId}...`, () => {
       setActiveMenu(menuId);
+      syncBrowserUrl(menuId);
       if (mainRef.current) {
         mainRef.current.scrollTo({ top: 0 });
       }
@@ -870,7 +912,12 @@ export default function App() {
         } catch (e) {}
         setUser({ ...u, role: normalizedRole });
         const startMenus = ROLE_PERMISSIONS[normalizedRole] || ROLE_PERMISSIONS[USER_ROLES.UMUM];
-        setActiveMenu(startMenus[0] || 'dashboard');
+        const requested = resolveMenuFromPath(window.location.pathname);
+        const initialTarget = requested && window.location.pathname !== '/' ? requested : (startMenus[0] || 'dashboard');
+        setActiveMenu(initialTarget);
+        if (canRoleAccessMenu(normalizedRole, initialTarget)) {
+          syncBrowserUrl(initialTarget, true);
+        }
       },
       650
     );
@@ -1006,108 +1053,20 @@ export default function App() {
       </header>
 
       <div className="flex-1 flex overflow-hidden print:overflow-visible print:block">
-        {/* SIDEBAR */}
-        <aside
-          className={`${
-            sidebarOpen ? 'w-64' : 'w-20'
-          } transition-all duration-200 border-r border-[#9A90CC]/30 dark:border-[#9A90CC]/20 bg-white/95 dark:bg-[#251F42] backdrop-blur flex flex-col justify-between shrink-0 print:hidden overflow-y-auto`}
-        >
-          <div>
-            <div className={`p-4 flex items-center ${sidebarOpen ? 'justify-start' : 'justify-center'} border-b border-[#9A90CC]/20 dark:border-[#9A90CC]/15`}>
-              {sidebarOpen ? (
-                <ArveaLogo
-                  variant="horizontal"
-                  theme={darkMode ? 'light' : 'lilac'}
-                  size="sm"
-                  subtitle="BUMKam Mekar Sari"
-                />
-              ) : (
-                <ArveaLogo variant="mark" theme={darkMode ? 'light' : 'lilac'} size="sm" />
-              )}
-            </div>
-
-            {/* Role Indicator & Menu Count Pill */}
-            {sidebarOpen && (
-              <div className="px-3 py-1.5 mx-3 my-2 rounded-xl bg-[#F4F1FA] dark:bg-[#332B59]/80 border border-[#9A90CC]/30 text-[10px] flex items-center justify-between gap-2">
-                <span className="text-slate-600 dark:text-slate-300 font-semibold truncate">
-                  Role: <strong className="text-[#524788] dark:text-[#DDD6F0]">{userRole}</strong>
-                </span>
-                <span className={`px-1.5 py-0.5 rounded-md font-bold shrink-0 ${
-                  isSimulatingRole
-                    ? 'bg-[#64589F] text-white'
-                    : 'bg-[#9A90CC]/25 text-[#4E4380] dark:text-[#EDE9F7]'
-                }`}>
-                  {allowedMenus.length} Menu
-                </span>
-              </div>
-            )}
-
-            <div className="p-3 space-y-1">
-              {[
-                { id: 'dashboard', label: 'Dashboard', icon: Store },
-                { id: 'profil', label: 'Profil BUMKam', icon: Building2 },
-                { id: 'pengguna', label: 'Pengelolaan Pengguna', icon: UserCog, badge: String(users.filter(u => u.is_active !== false).length) },
-                { id: 'master', label: 'Master Data', icon: Package },
-                { id: 'aset', label: 'Inventarisasi Aset', icon: Boxes },
-                { id: 'landing_unit', label: 'Profil Unit Usaha', icon: Building2 },
-                { id: 'transaksi', label: 'Transaksi', icon: Receipt, badge: transactions.length ? String(transactions.length) : null },
-                { id: 'kas_bank', label: 'Kas & Bank', icon: Wallet },
-                { id: 'jurnal', label: 'Jurnal Umum', icon: BookOpen },
-                { id: 'jurnal_penyesuaian', label: 'Jurnal Penyesuaian', icon: FileEdit, badge: adjustingJournals.length ? String(adjustingJournals.length) : null },
-                { id: 'buku_besar', label: 'Buku Besar', icon: Layers },
-                { id: 'neraca_saldo', label: 'Neraca Saldo', icon: Scale },
-                { id: 'laporan', label: 'Laporan Keuangan', icon: FileText, highlight: true },
-                { id: 'analisis', label: 'Analisis Kinerja', icon: TrendingUp },
-                { id: 'operasional', label: 'Laporan Operasional', icon: ClipboardList },
-                { id: 'penggajian', label: 'Penggajian', icon: DollarSign }
-              ]
-                .filter(item => allowedMenus.includes(item.id))
-                .map((item) => {
-                const Icon = item.icon;
-                const isActive = activeMenu === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => handleNavigateMenu(item.id, item.label)}
-                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition ${
-                      isActive
-                        ? 'bg-[#64589F] text-white shadow-sm font-bold'
-                        : item.highlight
-                        ? 'text-[#524788] dark:text-[#C4B9E5] hover:bg-[#F2EFFA] dark:hover:bg-[#332B59]/50'
-                        : 'text-slate-700 dark:text-slate-300 hover:bg-[#F2EFFA] dark:hover:bg-[#332B59]/50'
-                    }`}
-                    title={item.label}
-                  >
-                    <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : item.highlight ? 'text-[#7C6FB8]' : 'text-[#9A90CC]'}`} />
-                    {sidebarOpen && <span className="flex-1 text-left truncate">{item.label}</span>}
-                    {sidebarOpen && item.badge && (
-                      <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${isActive ? 'bg-white/20 text-white' : 'bg-[#EDE9F7] dark:bg-[#332B59] text-[#4E4380] dark:text-[#DDD6F0]'}`}>
-                        {item.badge}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {sidebarOpen && (
-            <div className="p-4 border-t border-[#9A90CC]/20 dark:border-slate-800 flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-full bg-[#64589F] text-white font-bold flex items-center justify-center text-xs shrink-0">
-                  {effectiveUser?.initials || (effectiveUser?.name ? effectiveUser.name.slice(0, 2).toUpperCase() : 'AD')}
-                </div>
-                <div className="min-w-0">
-                  <p className="font-bold text-[#1E1B2E] dark:text-white leading-tight truncate">{effectiveUser?.name || 'Administrator ARVÉA'}</p>
-                  <p className="text-[10px] text-[#64589F] dark:text-[#C4B9E5] font-semibold leading-tight truncate">{effectiveUser?.role || userRole}</p>
-                </div>
-              </div>
-              <button onClick={handleLogout} className="text-slate-400 hover:text-red-600 p-1 shrink-0">
-                <LogOut className="w-4 h-4" />
-              </button>
-            </div>
-          )}
-        </aside>
+        {/* SIDEBAR DINAMIS BERBASIS 6 ROLE RESMI */}
+        <SidebarNav
+          sidebarOpen={sidebarOpen}
+          darkMode={darkMode}
+          userRole={userRole}
+          isSimulatingRole={isSimulatingRole}
+          activeMenu={activeMenu}
+          onNavigate={handleNavigateMenu}
+          effectiveUser={effectiveUser}
+          onLogout={handleLogout}
+          activeUsersCount={users.filter(u => u.is_active !== false).length}
+          transactionsCount={transactions.length}
+          adjustingJournalsCount={adjustingJournals.length}
+        />
 
         {/* WORKSPACE CONTENT */}
         <main ref={mainRef} onScroll={handleMainScroll} className="flex-1 overflow-y-auto p-5 md:p-8 relative print:overflow-visible print:p-0 print:m-0 print:block">
@@ -1153,31 +1112,33 @@ export default function App() {
             </div>
           )}
 
-          {!allowedMenus.includes(activeMenu) ? (
+          {!canRoleAccessMenu(userRole, activeMenu) ? (
             <div className="max-w-xl mx-auto my-12 p-8 bg-white dark:bg-slate-900 rounded-3xl border border-rose-200 dark:border-rose-900/50 shadow-xl text-center">
               <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-600 flex items-center justify-center shadow-inner">
                 <Lock className="w-8 h-8" />
               </div>
               <span className="px-3 py-1 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 text-[11px] font-bold uppercase tracking-wider inline-block mb-3">
-                Hak Akses Terbatas (RBAC)
+                403 &bull; Akses Ditolak (RBAC Route Guard)
               </span>
               <h2 className="text-xl font-extrabold text-slate-900 dark:text-white mb-2">
-                Modul Dibatasi untuk Peran &ldquo;{userRole}&rdquo;
+                Halaman Dibatasi untuk Peran &ldquo;{userRole}&rdquo;
               </h2>
               <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-6">
-                Berdasarkan prinsip tata kelola akuntansi dan pemisahan fungsi (<em>Segregation of Duties</em>), 
-                peran <strong className="text-[#524788] dark:text-[#C4B9E5]">{userRole}</strong> tidak memiliki izin mengakses modul <strong className="text-slate-900 dark:text-white">{menuTitles[activeMenu] || activeMenu}</strong>.
+                Berdasarkan pemisahan wewenang (<em>Segregation of Duties</em>), peran{' '}
+                <strong className="text-[#524788] dark:text-[#C4B9E5]">{userRole}</strong> tidak memiliki izin mengakses halaman{' '}
+                <strong className="text-slate-900 dark:text-white">{menuTitles[activeMenu] || activeMenu}</strong>{' '}
+                (<code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-mono text-[11px]">{getPathForMenu(activeMenu)}</code>).
               </p>
 
               <div className="bg-slate-50 dark:bg-slate-800/60 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700/60 mb-6 text-left">
                 <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#64589F]" /> Modul Resmi yang Dapat Diakses:
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#64589F]" /> Modul Resmi yang Dapat Diakses ({allowedMenus.length} Menu):
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   {allowedMenus.map(m => (
                     <button
                       key={m}
-                      onClick={() => setActiveMenu(m)}
+                      onClick={() => handleNavigateMenu(m, menuTitles[m])}
                       className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-[#64589F] text-[11px] font-semibold text-slate-700 dark:text-slate-300 transition cursor-pointer"
                     >
                       {menuTitles[m] || m} &rarr;
@@ -1188,10 +1149,14 @@ export default function App() {
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                 <button
-                  onClick={() => setActiveMenu(allowedMenus[0] || 'profil')}
+                  onClick={() => {
+                    const fallback = allowedMenus[0] || 'dashboard';
+                    setActiveMenu(fallback);
+                    syncBrowserUrl(fallback, true);
+                  }}
                   className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition shadow-xs cursor-pointer"
                 >
-                  Buka Menu Utama ({menuTitles[allowedMenus[0]] || 'Profil'})
+                  Kembali ke Dashboard
                 </button>
                 {isSimulatingRole && (
                   <button
@@ -1211,7 +1176,7 @@ export default function App() {
               transactions={transactions}
               user={effectiveUser}
               profile={profile}
-              onNavigate={(menu) => setActiveMenu(menu)}
+              onNavigate={(menu) => handleNavigateMenu(menu, menuTitles[menu])}
             />
           )}
 
@@ -1233,7 +1198,7 @@ export default function App() {
               selectedYear={selectedYear}
               setSelectedYear={setSelectedYear}
               availableYears={availableYears}
-              onNavigate={(menu) => setActiveMenu(menu)}
+              onNavigate={(menu) => handleNavigateMenu(menu, menuTitles[menu])}
               stats={stats}
             />
           )}

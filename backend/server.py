@@ -151,21 +151,20 @@ ROLE_PERMISSIONS = {
         'analisis', 'operasional', 'penggajian'
     ],
     UserRole.KETUA_BUMKAM.value: [
-        'dashboard', 'profil', 'landing_unit', 'kas_bank', 'laporan', 'analisis', 'operasional'
+        'dashboard', 'profil', 'aset', 'landing_unit', 'kas_bank', 'laporan', 'analisis', 'operasional'
     ],
     UserRole.SEKRETARIS_BUMKAM.value: [
-        'dashboard', 'profil', 'master', 'aset', 'landing_unit', 'operasional'
+        'dashboard', 'profil', 'aset', 'landing_unit', 'kas_bank', 'laporan', 'analisis', 'operasional'
     ],
     UserRole.BENDAHARA_BUMKAM.value: [
         'dashboard', 'master', 'aset', 'landing_unit', 'transaksi', 'kas_bank', 'jurnal',
-        'jurnal_penyesuaian', 'buku_besar', 'neraca_saldo', 'laporan', 'analisis', 'operasional', 'penggajian'
+        'buku_besar', 'neraca_saldo', 'laporan', 'analisis', 'operasional', 'penggajian'
     ],
     UserRole.AUDITOR.value: [
-        'dashboard', 'landing_unit', 'transaksi', 'kas_bank', 'jurnal', 'jurnal_penyesuaian',
-        'buku_besar', 'neraca_saldo', 'laporan', 'analisis', 'operasional'
+        'dashboard', 'aset', 'landing_unit', 'jurnal', 'buku_besar', 'neraca_saldo'
     ],
     UserRole.UMUM.value: [
-        'profil', 'landing_unit'
+        'dashboard', 'profil', 'landing_unit', 'laporan'
     ]
 }
 
