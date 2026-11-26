@@ -236,7 +236,8 @@ export default function InventarisasiAset({
   products = [],
   profile = {},
   selectedYear = '2026',
-  selectedUnit = 'all'
+  selectedUnit = 'all',
+  readOnly = false
 }) {
   const [assets, setAssets] = useState(() => {
     try {
@@ -609,6 +610,10 @@ export default function InventarisasiAset({
   // Save Asset Form
   const handleSaveAsset = (e) => {
     e.preventDefault();
+    if (readOnly) {
+      toast.error('Mode Read-Only: Peran Anda tidak diizinkan menambah atau mengubah data aset.');
+      return;
+    }
 
     if (!formData.unit_usaha || !UNIT_USAHA_META[formData.unit_usaha]) {
       toast.error('Harap pilih Unit Usaha (Unit Perdagangan atau Unit Jasa) terlebih dahulu.');
@@ -709,6 +714,10 @@ export default function InventarisasiAset({
 
   // Delete Asset
   const handleDeleteAsset = (ast) => {
+    if (readOnly) {
+      toast.error('Mode Read-Only: Peran Anda tidak diizinkan menghapus data aset.');
+      return;
+    }
     if (window.confirm(`Yakin ingin menghapus aset "${ast.product_name}" (${ast.inv_number}) dari daftar inventarisasi? Data riwayat akan tetap disimpan.`)) {
       const remaining = assets.filter(a => a.id !== ast.id);
       saveAssets(remaining);
@@ -935,12 +944,14 @@ export default function InventarisasiAset({
             <Printer className="w-4 h-4 text-slate-500" /> Cetak / PDF
           </button>
 
-          <button
-            onClick={handleOpenAdd}
-            className="px-4 py-2 bg-[#64589F] hover:bg-[#4E4380] text-white rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5"
-          >
-            <Plus className="w-4 h-4" /> + Tambah Aset
-          </button>
+          {!readOnly && (
+            <button
+              onClick={handleOpenAdd}
+              className="px-4 py-2 bg-[#64589F] hover:bg-[#4E4380] text-white rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5"
+            >
+              <Plus className="w-4 h-4" /> + Tambah Aset
+            </button>
+          )}
         </div>
       </div>
 
@@ -1398,7 +1409,7 @@ export default function InventarisasiAset({
                             </button>
 
                             {/* Pecah Menjadi Individual (For Kelompok Assets) */}
-                            {ast.model_type === 'Kelompok' && ast.qty > 1 && (
+                            {!readOnly && ast.model_type === 'Kelompok' && ast.qty > 1 && (
                               <button
                                 onClick={() => {
                                   setShowSplitModal(ast);
@@ -1411,21 +1422,25 @@ export default function InventarisasiAset({
                               </button>
                             )}
 
-                            <button
-                              onClick={() => handleOpenEdit(ast)}
-                              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-100 text-slate-600 hover:text-emerald-700 transition"
-                              title="Edit Aset"
-                            >
-                              <Edit2 className="w-3.5 h-3.5" />
-                            </button>
+                            {!readOnly && (
+                              <button
+                                onClick={() => handleOpenEdit(ast)}
+                                className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-100 text-slate-600 hover:text-emerald-700 transition"
+                                title="Edit Aset"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
 
-                            <button
-                              onClick={() => handleDeleteAsset(ast)}
-                              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-red-100 text-slate-600 hover:text-red-600 transition"
-                              title="Hapus Aset"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
+                            {!readOnly && (
+                              <button
+                                onClick={() => handleDeleteAsset(ast)}
+                                className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-red-100 text-slate-600 hover:text-red-600 transition"
+                                title="Hapus Aset"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>

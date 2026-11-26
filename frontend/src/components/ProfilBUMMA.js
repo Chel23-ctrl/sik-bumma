@@ -1,23 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Lock } from 'lucide-react';
 import { toast } from 'sonner';
 
-export default function ProfilBUMMA({ profile, setProfile }) {
+export default function ProfilBUMMA({ profile, setProfile, readOnly = false }) {
   const [pForm, setPForm] = useState({ ...profile });
+
+  useEffect(() => {
+    setPForm({ ...profile });
+  }, [profile]);
 
   const handleSave = (e) => {
     e.preventDefault();
+    if (readOnly) {
+      toast.error('Mode Read-Only: Peran Anda hanya dapat melihat Profil BUMKam dan tidak diizinkan mengubah data.');
+      return;
+    }
     setProfile({ ...pForm });
     toast.success('Profil BUMKam berhasil diperbarui!');
   };
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      <div>
-        <h1 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">Profil Lembaga BUMKam</h1>
-        <p className="text-xs text-slate-500 mt-0.5">Identitas resmi yang tercetak pada kop surat dan laporan keuangan</p>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h1 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">Profil Lembaga BUMKam</h1>
+          <p className="text-xs text-slate-500 mt-0.5">Identitas resmi yang tercetak pada kop surat dan laporan keuangan</p>
+        </div>
+        {readOnly && (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-100 dark:bg-purple-950/70 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800 text-[11px] font-bold">
+            <Lock className="w-3.5 h-3.5" /> Mode Lihat Saja (Read-Only)
+          </span>
+        )}
       </div>
 
       <form onSubmit={handleSave} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-4 text-xs">
+        <fieldset disabled={readOnly} className="space-y-4 border-0 p-0 m-0 disabled:[&_input]:bg-slate-50 disabled:[&_input]:dark:bg-slate-800/60 disabled:[&_input]:cursor-not-allowed disabled:[&_input]:text-slate-700 disabled:[&_input]:dark:text-slate-300">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-emerald-50/50 dark:bg-emerald-950/20 p-4 rounded-xl border border-emerald-200/60 dark:border-emerald-800/40">
           <div>
             <label className="block font-bold text-emerald-900 dark:text-emerald-300 mb-1">Nama Aplikasi / Sistem</label>
@@ -156,13 +173,22 @@ export default function ProfilBUMMA({ profile, setProfile }) {
           </div>
         </div>
 
+        </fieldset>
+
         <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
-          <button
-            type="submit"
-            className="bg-[#64589F] text-white px-6 py-2.5 rounded-xl font-bold hover:bg-[#4E4380] shadow transition"
-          >
-            Simpan Perubahan Profil
-          </button>
+          {readOnly ? (
+            <div className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold text-xs border border-slate-200 dark:border-slate-700">
+              <Lock className="w-3.5 h-3.5 text-[#64589F]" />
+              <span>Akses Read-Only: Perubahan data profil hanya dapat dilakukan oleh pengurus berwenang.</span>
+            </div>
+          ) : (
+            <button
+              type="submit"
+              className="bg-[#64589F] text-white px-6 py-2.5 rounded-xl font-bold hover:bg-[#4E4380] shadow transition"
+            >
+              Simpan Perubahan Profil
+            </button>
+          )}
         </div>
       </form>
     </div>
