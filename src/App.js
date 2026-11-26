@@ -1019,7 +1019,6 @@ export default function App() {
               <option value="all" className="text-slate-900 bg-white">Semua Unit</option>
               <option value="perdagangan" className="text-slate-900 bg-white">Unit Perdagangan</option>
               <option value="jasa" className="text-slate-900 bg-white">Unit Jasa</option>
-              <option value="kantor" className="text-slate-900 bg-white">Kantor Pengelola</option>
             </select>
           </div>
 
