@@ -59,6 +59,13 @@ import {
   getRoleMeta,
   isDeprecatedUnitRoleAccount
 } from './utils/roles';
+import {
+  isSupabaseConfigured,
+  fetchSupabaseUsers,
+  fetchSupabaseUserById,
+  completeSupabaseInitialCredentials,
+  formatSupabaseError
+} from './utils/supabaseUsers';
 
 export { ROLE_PERMISSIONS };
 
@@ -205,8 +212,15 @@ export default function App() {
   const [appMode, setAppMode] = useState(() => getStorage('app_mode', 'storefront'));
   useEffect(() => { setStorage('app_mode', appMode); }, [appMode]);
 
-  // Auth & Managed Users (User Management + First-Time Password Guard)
+  const supabaseEnabled = isSupabaseConfigured();
+
+  // Auth & Managed Users (Cloud Supabase sebagai sumber utama, fallback localStorage hanya bila offline dev)
   const [users, setUsers] = useState(() => {
+    if (supabaseEnabled) {
+      // Hapus cache kredensial lama dari localStorage agar sumber kebenaran 100% dari Supabase
+      try { localStorage.removeItem(USERS_STORAGE_KEY); } catch (e) {}
+      return [];
+    }
     const stored = readStoredUsers(INITIAL_USERS);
     const source = Array.isArray(stored) && stored.length > 0 ? stored : INITIAL_USERS;
     let migratedAny = false;
@@ -244,10 +258,30 @@ export default function App() {
     }
     return normalized;
   });
-  useEffect(() => { writeStoredUsers(users); }, [users]);
 
-  // Sinkronisasi otomatis lintas tab browser (misal reset password di Tab 1, login di Tab 2)
   useEffect(() => {
+    if (!supabaseEnabled) {
+      writeStoredUsers(users);
+    }
+  }, [users, supabaseEnabled]);
+
+  // Sinkronisasi otomatis daftar pengguna dari Supabase saat aplikasi dibuka
+  useEffect(() => {
+    if (!supabaseEnabled) return;
+    let active = true;
+    fetchSupabaseUsers(INITIAL_USERS)
+      .then(cloudUsers => {
+        if (active && Array.isArray(cloudUsers)) {
+          setUsers(cloudUsers);
+        }
+      })
+      .catch(() => {});
+    return () => { active = false; };
+  }, [supabaseEnabled]);
+
+  // Sinkronisasi otomatis lintas tab browser (hanya untuk mode fallback lokal)
+  useEffect(() => {
+    if (supabaseEnabled) return;
     const handleStorageSync = (event) => {
       if (event.key === USERS_STORAGE_KEY && event.newValue) {
         try {
@@ -260,9 +294,41 @@ export default function App() {
     };
     window.addEventListener('storage', handleStorageSync);
     return () => window.removeEventListener('storage', handleStorageSync);
-  }, []);
+  }, [supabaseEnabled]);
 
   const [user, setUser] = useState(() => getStorage('user', null));
+
+  // Validasi live status akun yang sedang login terhadap database Supabase (lintas perangkat)
+  useEffect(() => {
+    if (!supabaseEnabled || !user?.id) return;
+    let active = true;
+    fetchSupabaseUserById(user.id)
+      .then(fresh => {
+        if (!active || !fresh) return;
+        if (fresh.is_active === false) {
+          setUser(null);
+          toast.error('Akun Anda telah dinonaktifkan. Silakan hubungi Administrator.');
+          return;
+        }
+        setUser(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            username: fresh.username || prev.username,
+            email: fresh.email || prev.email,
+            name: fresh.full_name || prev.name,
+            full_name: fresh.full_name || prev.full_name,
+            role: normalizeRole(fresh.role),
+            unit_kerja: fresh.unit_kerja || prev.unit_kerja,
+            initials: fresh.initials || prev.initials,
+            is_active: fresh.is_active !== false,
+            auth_source: 'supabase'
+          };
+        });
+      })
+      .catch(() => {});
+    return () => { active = false; };
+  }, [supabaseEnabled, user?.id]);
 
   // Sync active user profile/status with managed users store (detect live deactivation)
   const activeUserRecord = useMemo(() => {
@@ -298,7 +364,20 @@ export default function App() {
       'Menyimpan kredensial baru & membuka Dashboard...',
       async () => {
         const changedAt = new Date().toISOString();
-        if (activeUserRecord?.auth_source === 'api') {
+        let savedRow = null;
+
+        if (supabaseEnabled) {
+          try {
+            savedRow = await completeSupabaseInitialCredentials(activeUserRecord.id, {
+              newUsername,
+              newPassword
+            });
+          } catch (sbErr) {
+            const parsed = formatSupabaseError(sbErr, 'Gagal menyimpan kredensial baru ke Supabase.');
+            toast.error(parsed.message);
+            throw sbErr;
+          }
+        } else if (activeUserRecord?.auth_source === 'api') {
           const res = await apiClient.post('/auth/change-initial-credentials', {
             new_username: newUsername,
             new_password: newPassword,
@@ -308,7 +387,11 @@ export default function App() {
             setAuthToken(res.data.access_token);
           }
         }
-        const hashedNewPwd = hashPasswordLocal(newPassword);
+
+        const hashedNewPwd = savedRow?.password_hash || hashPasswordLocal(newPassword);
+        const finalChangedAt = savedRow?.password_changed_at || changedAt;
+        const finalUsername = savedRow?.username || newUsername || activeUserRecord.username;
+
         setUsers(prev => {
           const next = prev.map(u => {
             if (
@@ -317,28 +400,32 @@ export default function App() {
             ) {
               const updated = {
                 ...u,
-                username: newUsername || u.username,
+                ...(savedRow || {}),
+                username: finalUsername,
                 password_hash: hashedNewPwd,
                 must_change_password: false,
-                password_changed_at: changedAt,
+                password_changed_at: finalChangedAt,
                 is_default_account: false,
-                updated_at: changedAt
+                updated_at: savedRow?.updated_at || changedAt
               };
               delete updated.password;
               return updated;
             }
             return u;
           });
-          writeStoredUsers(next);
+          if (!supabaseEnabled) {
+            writeStoredUsers(next);
+          }
           return next;
         });
         setUser(prev => ({
           ...prev,
-          username: newUsername || prev.username,
+          username: finalUsername,
           must_change_password: false,
-          password_changed_at: changedAt
+          password_changed_at: finalChangedAt
         }));
-        setActiveMenu('dashboard');
+        const startMenus = ROLE_PERMISSIONS[userRole] || ROLE_PERMISSIONS[USER_ROLES.UMUM];
+        setActiveMenu(startMenus[0] || 'dashboard');
       },
       520
     ).then(() => {
@@ -347,6 +434,20 @@ export default function App() {
 
   // Current page
   const [activeMenu, setActiveMenu] = useState('dashboard');
+
+  // Refresh daftar pengguna langsung dari Supabase setiap kali membuka menu Pengelolaan Pengguna
+  useEffect(() => {
+    if (!supabaseEnabled || activeMenu !== 'pengguna') return;
+    let active = true;
+    fetchSupabaseUsers(INITIAL_USERS)
+      .then(cloudUsers => {
+        if (active && Array.isArray(cloudUsers)) {
+          setUsers(cloudUsers);
+        }
+      })
+      .catch(() => {});
+    return () => { active = false; };
+  }, [supabaseEnabled, activeMenu]);
 
   // Role Switcher State (6 Peran Resmi ARVÉA — tersimpan per sesi untuk simulasi real-time)
   const [simulatedRole, setSimulatedRole] = useState(() => {
@@ -780,6 +881,7 @@ export default function App() {
       <>
         <LoginSplit
           users={users}
+          onSyncUsers={setUsers}
           onLogin={handleLogin}
           onBackToStore={() =>
             runWithLoader('Membuka Toko Digital...', () => setAppMode('storefront'), 450)

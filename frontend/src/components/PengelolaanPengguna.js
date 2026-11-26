@@ -19,6 +19,14 @@ import { toast } from 'sonner';
 import apiClient, { hasExplicitRemoteApi, parseAuthError } from '../utils/apiClient';
 import { hashPasswordLocal, writeStoredUsers } from '../utils/passwordAuth';
 import { OFFICIAL_ROLE_DEFINITIONS, USER_ROLES, normalizeRole } from '../utils/roles';
+import {
+  isSupabaseConfigured,
+  createSupabaseUser,
+  updateSupabaseUser,
+  resetSupabaseUserPassword,
+  toggleSupabaseUserStatus,
+  formatSupabaseError
+} from '../utils/supabaseUsers';
 
 // Hanya 6 peran resmi ARVÉA BUMKam
 export const USER_ROLE_OPTIONS = OFFICIAL_ROLE_DEFINITIONS;
@@ -152,6 +160,7 @@ export default function PengelolaanPengguna({
   const [showUserModal, setShowUserModal] = useState(false);
   const [editingUserId, setEditingUserId] = useState(null);
   const [showTempPwd, setShowTempPwd] = useState(false);
+  const [isSavingUser, setIsSavingUser] = useState(false);
   const [userForm, setUserForm] = useState({
     full_name: '',
     username: '',
@@ -230,12 +239,14 @@ export default function PengelolaanPengguna({
     setShowUserModal(true);
   };
 
-  // Save Create / Edit User
-  const handleSaveUser = (e) => {
+  // Save Create / Edit User (Supabase Cloud utama, fallback lokal bila offline)
+  const handleSaveUser = async (e) => {
     e.preventDefault();
+    if (isSavingUser) return;
     const fullName = userForm.full_name.trim();
     const username = userForm.username.trim().toLowerCase();
     const email = userForm.email.trim().toLowerCase();
+    const unitKerja = userForm.unit_kerja.trim() || 'BUMKam Mekar Sari';
 
     if (!fullName) {
       toast.error('Nama Lengkap wajib diisi.');
@@ -266,81 +277,132 @@ export default function PengelolaanPengguna({
       return;
     }
 
-    if (editingUserId) {
-      apiClient.put(`/users/${editingUserId}`, {
-        full_name: fullName,
-        username,
-        email,
-        role: userForm.role,
-        unit_kerja: userForm.unit_kerja.trim() || 'BUMKam Mekar Sari'
-      }).catch(() => {});
+    setIsSavingUser(true);
+    try {
+      if (editingUserId) {
+        if (isSupabaseConfigured()) {
+          try {
+            const updatedRow = await updateSupabaseUser(editingUserId, {
+              full_name: fullName,
+              username,
+              email,
+              role: userForm.role,
+              unit_kerja: unitKerja
+            });
+            setUsers(prev => prev.map(u => (u.id === editingUserId ? { ...u, ...updatedRow } : u)));
+            toast.success(`Data pengurus "${fullName}" berhasil diperbarui di Supabase!`);
+            setShowUserModal(false);
+            return;
+          } catch (sbErr) {
+            const parsed = formatSupabaseError(sbErr, 'Gagal memperbarui data pengurus di Supabase.');
+            toast.error(parsed.message);
+            return;
+          }
+        }
 
-      setUsers(prev => {
-        const next = prev.map(u =>
-          u.id === editingUserId
-            ? {
-                ...u,
-                full_name: fullName,
-                name: fullName,
-                username,
-                email,
-                role: userForm.role,
-                unit_kerja: userForm.unit_kerja.trim() || 'BUMKam Mekar Sari',
-                initials: getInitials(fullName),
-                updated_at: new Date().toISOString()
-              }
-            : u
+        apiClient.put(`/users/${editingUserId}`, {
+          full_name: fullName,
+          username,
+          email,
+          role: userForm.role,
+          unit_kerja: unitKerja
+        }).catch(() => {});
+
+        setUsers(prev => {
+          const next = prev.map(u =>
+            u.id === editingUserId
+              ? {
+                  ...u,
+                  full_name: fullName,
+                  name: fullName,
+                  username,
+                  email,
+                  role: userForm.role,
+                  unit_kerja: unitKerja,
+                  initials: getInitials(fullName),
+                  updated_at: new Date().toISOString()
+                }
+              : u
+          );
+          writeStoredUsers(next);
+          return next;
+        });
+        toast.success(`Data pengurus "${fullName}" berhasil diperbarui!`);
+      } else {
+        const tempPwd = userForm.temp_password.trim();
+        if (tempPwd.length < 6) {
+          toast.error('Password sementara minimal 6 karakter.');
+          return;
+        }
+
+        if (isSupabaseConfigured()) {
+          try {
+            const createdRow = await createSupabaseUser({
+              full_name: fullName,
+              username,
+              email,
+              role: userForm.role,
+              unit_kerja: unitKerja,
+              temp_password: tempPwd,
+              must_change_password: Boolean(userForm.must_change_password)
+            });
+            setUsers(prev => [...prev, createdRow]);
+            toast.success(
+              `Akun pengurus "${fullName}" (${username}) berhasil disimpan ke Supabase!${
+                createdRow.must_change_password ? ' User wajib mengganti password saat login perdana.' : ''
+              }`
+            );
+            setShowUserModal(false);
+            return;
+          } catch (sbErr) {
+            const parsed = formatSupabaseError(sbErr, 'Gagal membuat akun baru di Supabase.');
+            toast.error(parsed.message);
+            return;
+          }
+        }
+
+        apiClient.post('/users', {
+          full_name: fullName,
+          username,
+          email,
+          role: userForm.role,
+          unit_kerja: unitKerja,
+          temp_password: tempPwd,
+          must_change_password: Boolean(userForm.must_change_password)
+        }).catch(() => {});
+
+        const newUser = {
+          id: 'usr_' + Date.now(),
+          full_name: fullName,
+          name: fullName,
+          username,
+          email,
+          role: userForm.role,
+          unit_kerja: unitKerja,
+          initials: getInitials(fullName),
+          password_hash: hashPasswordLocal(tempPwd),
+          is_active: true,
+          must_change_password: Boolean(userForm.must_change_password),
+          password_changed_at: userForm.must_change_password ? null : new Date().toISOString(),
+          is_default_account: false,
+          created_at: new Date().toISOString()
+        };
+        setUsers(prev => {
+          const next = [...prev, newUser];
+          writeStoredUsers(next);
+          return next;
+        });
+        toast.success(
+          `Akun pengurus "${fullName}" (${username}) berhasil dibuat!${
+            newUser.must_change_password ? ' User wajib mengganti password saat login perdana.' : ''
+          }`
         );
-        writeStoredUsers(next);
-        return next;
-      });
-      toast.success(`Data pengurus "${fullName}" berhasil diperbarui!`);
-    } else {
-      const tempPwd = userForm.temp_password.trim();
-      if (tempPwd.length < 6) {
-        toast.error('Password sementara minimal 6 karakter.');
-        return;
       }
 
-      apiClient.post('/users', {
-        full_name: fullName,
-        username,
-        email,
-        role: userForm.role,
-        unit_kerja: userForm.unit_kerja.trim() || 'BUMKam Mekar Sari',
-        temp_password: tempPwd,
-        must_change_password: Boolean(userForm.must_change_password)
-      }).catch(() => {});
-
-      const newUser = {
-        id: 'usr_' + Date.now(),
-        full_name: fullName,
-        name: fullName,
-        username,
-        email,
-        role: userForm.role,
-        unit_kerja: userForm.unit_kerja.trim() || 'BUMKam Mekar Sari',
-        initials: getInitials(fullName),
-        password_hash: hashPasswordLocal(tempPwd),
-        is_active: true,
-        must_change_password: Boolean(userForm.must_change_password),
-        password_changed_at: userForm.must_change_password ? null : new Date().toISOString(),
-        is_default_account: false,
-        created_at: new Date().toISOString()
-      };
-      setUsers(prev => {
-        const next = [...prev, newUser];
-        writeStoredUsers(next);
-        return next;
-      });
-      toast.success(
-        `Akun pengurus "${fullName}" (${username}) berhasil dibuat!${
-          newUser.must_change_password ? ' User wajib mengganti password saat login perdana.' : ''
-        }`
-      );
+      setShowUserModal(false);
+    } finally {
+      setIsSavingUser(false);
     }
-
-    setShowUserModal(false);
   };
 
   // Open Reset Password Modal
@@ -379,9 +441,43 @@ export default function PengelolaanPengguna({
 
     setIsResetting(true);
     try {
+      const targetId = resetTarget.id;
+      const targetUsername = (resetTarget.username || '').toLowerCase();
+
+      // 0. Prioritas Utama: Simpan password baru langsung ke database Supabase
+      if (isSupabaseConfigured()) {
+        try {
+          const updatedRow = await resetSupabaseUserPassword(
+            targetId,
+            pwd,
+            Boolean(resetForceChange)
+          );
+          setUsers(prev =>
+            prev.map(u => {
+              const isMatch =
+                u.id === targetId ||
+                (targetUsername && (u.username || '').toLowerCase() === targetUsername);
+              return isMatch ? { ...u, ...updatedRow } : u;
+            })
+          );
+          toast.success('Password berhasil diperbarui', {
+            description: `Akun @${resetTarget.username} (${resetTarget.full_name || resetTarget.name}) tersimpan permanen di Supabase dan langsung berlaku di semua perangkat.${
+              resetForceChange ? ' User wajib mengganti password saat login berikutnya.' : ''
+            }`
+          });
+          setResetTarget(null);
+          setResetPwd('');
+          return;
+        } catch (sbErr) {
+          const parsed = formatSupabaseError(sbErr, 'Gagal menyimpan password baru ke database Supabase.');
+          toast.error(parsed.message);
+          return;
+        }
+      }
+
       // 1. Kirim pembaruan password (di-hash bcrypt di server) bila backend API tersedia
       try {
-        await apiClient.post(`/users/${resetTarget.id}/reset-password`, {
+        await apiClient.post(`/users/${targetId}/reset-password`, {
           new_password: pwd,
           must_change_password: Boolean(resetForceChange)
         });
@@ -398,8 +494,6 @@ export default function PengelolaanPengguna({
       // 2. Hash password baru & simpan secara sinkron ke state + localStorage (hapus plaintext lama)
       const hashedPwd = hashPasswordLocal(pwd);
       const nowIso = new Date().toISOString();
-      const targetId = resetTarget.id;
-      const targetUsername = (resetTarget.username || '').toLowerCase();
 
       setUsers(prev => {
         const next = prev.map(u => {
@@ -435,7 +529,7 @@ export default function PengelolaanPengguna({
   };
 
   // Toggle Active / Inactive (Soft Disable Ã¢â‚¬â€ Never Hard Delete!)
-  const handleToggleStatus = (u) => {
+  const handleToggleStatus = async (u) => {
     const currentlyActive = u.is_active !== false;
     const isSelf =
       currentUser?.id === u.id ||
@@ -460,6 +554,26 @@ export default function PengelolaanPengguna({
     }
 
     const nextStatus = !currentlyActive;
+
+    if (isSupabaseConfigured()) {
+      try {
+        const updatedRow = await toggleSupabaseUserStatus(u.id, nextStatus);
+        setUsers(prev => prev.map(item => (item.id === u.id ? { ...item, ...updatedRow } : item)));
+        if (nextStatus) {
+          toast.success(`Akun "${u.full_name || u.name}" telah diaktifkan kembali di Supabase.`);
+        } else {
+          toast.info(
+            `Akun "${u.full_name || u.name}" dinonaktifkan (akses login diblokir di semua perangkat). Seluruh riwayat transaksi tetap aman.`
+          );
+        }
+        return;
+      } catch (sbErr) {
+        const parsed = formatSupabaseError(sbErr, 'Gagal mengubah status akun di Supabase.');
+        toast.error(parsed.message);
+        return;
+      }
+    }
+
     apiClient.patch(`/users/${u.id}/status`, { is_active: nextStatus }).catch(() => {});
     setUsers(prev => {
       const next = prev.map(item =>
@@ -911,10 +1025,11 @@ export default function PengelolaanPengguna({
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-[#64589F] hover:bg-[#4E4380] text-white font-bold flex items-center gap-1.5 shadow"
+                  disabled={isSavingUser}
+                  className="px-5 py-2 rounded-xl bg-[#64589F] hover:bg-[#4E4380] disabled:opacity-60 text-white font-bold flex items-center gap-1.5 shadow"
                 >
                   <Save className="w-4 h-4 text-emerald-300" />
-                  {editingUserId ? 'Simpan Perubahan' : 'Buat Akun Pengurus'}
+                  {isSavingUser ? 'Menyimpan...' : (editingUserId ? 'Simpan Perubahan' : 'Buat Akun Pengurus')}
                 </button>
               </div>
             </form>

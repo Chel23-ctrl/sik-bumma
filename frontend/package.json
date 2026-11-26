@@ -12,8 +12,8 @@
     "xlsx": "^0.18.5"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build"
+    "start": "node scripts/run-cra.js start",
+    "build": "node scripts/run-cra.js build"
   },
   "browserslist": {
     "production": [

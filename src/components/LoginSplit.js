@@ -10,8 +10,14 @@ import apiClient, {
   hasExplicitRemoteApi
 } from '../utils/apiClient';
 import { readStoredUsers, verifyPasswordLocal } from '../utils/passwordAuth';
+import {
+  isSupabaseConfigured,
+  authenticateWithSupabase,
+  formatSupabaseError
+} from '../utils/supabaseUsers';
+import { INITIAL_USERS } from './PengelolaanPengguna';
 
-export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
+export default function LoginSplit({ onLogin, onBackToStore, users = [], onSyncUsers }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -56,6 +62,42 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [] }) {
 
     setIsSubmitting(true);
     try {
+      // 0. Prioritas Utama: Autentikasi Cloud Real-Time melalui tabel `users` Supabase
+      if (isSupabaseConfigured()) {
+        try {
+          const sbResult = await authenticateWithSupabase(
+            cleanIdentifier,
+            cleanPassword,
+            INITIAL_USERS
+          );
+          if (!sbResult.ok) {
+            const errObj = sbResult.error || {
+              code: 'AUTH_FAILED',
+              title: 'Gagal Masuk',
+              message: 'Kredensial tidak valid.'
+            };
+            setLoginError(errObj);
+            toast.error(errObj.message);
+            return;
+          }
+          if (typeof onSyncUsers === 'function' && Array.isArray(sbResult.allUsers)) {
+            onSyncUsers(sbResult.allUsers);
+          }
+          await onLogin(sbResult.user);
+          if (sbResult.user.must_change_password || !sbResult.user.password_changed_at) {
+            toast.info('Login perdana terdeteksi. Silakan ubah kredensial awal Anda terlebih dahulu.');
+          } else {
+            toast.success(`Selamat datang, ${sbResult.user.full_name || sbResult.user.name} (${sbResult.user.role})`);
+          }
+          return;
+        } catch (sbErr) {
+          const parsed = formatSupabaseError(sbErr, 'Gagal memverifikasi akun ke database Supabase.');
+          setLoginError(parsed);
+          toast.error(parsed.message);
+          return;
+        }
+      }
+
       // 1. Coba autentikasi ke Backend API terlebih dahulu (sinkronisasi multi-device & Bearer Token)
       let apiHandled = false;
       try {
