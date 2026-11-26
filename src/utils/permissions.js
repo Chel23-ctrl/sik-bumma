@@ -6,7 +6,7 @@
  * 2. Ketua BUMKam      (8 menu)
  * 3. Sekretaris BUMKam (8 menu)
  * 4. Bendahara BUMKam  (13 menu)
- * 5. Auditor           (7 menu — Read Only)
+ * 5. Auditor           (8 menu — Read Only)
  * 6. Umum              (4 menu — Publik / Terbatas)
  */
 
@@ -199,7 +199,7 @@ export const OFFICIAL_ROLE_DEFINITIONS = [
     initials: 'AU',
     defaultUnit: 'Pengawas Independen',
     description:
-      'Pemeriksaan (Read-Only): Dashboard, Inventarisasi Aset, Profil Unit Usaha, Jurnal Umum, Buku Besar, Neraca Saldo, dan Laporan Keuangan (Hanya Lihat & Unduh/Cetak)',
+      'Pemeriksaan (Read-Only): Dashboard, Profil BUMKam, Inventarisasi Aset, Profil Unit Usaha, Jurnal Umum, Buku Besar, Neraca Saldo, dan Laporan Keuangan (Hanya Lihat & Unduh/Cetak)',
     accessTag: 'Read-Only Audit',
     readOnly: true,
     dotColor: 'bg-purple-500',
@@ -207,6 +207,7 @@ export const OFFICIAL_ROLE_DEFINITIONS = [
       'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-950/70 dark:text-purple-300 dark:border-purple-800',
     permissions: [
       'dashboard',
+      'profil',
       'aset',
       'landing_unit',
       'jurnal',

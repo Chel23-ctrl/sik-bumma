@@ -161,7 +161,7 @@ ROLE_PERMISSIONS = {
         'buku_besar', 'neraca_saldo', 'laporan', 'analisis', 'operasional', 'penggajian'
     ],
     UserRole.AUDITOR.value: [
-        'dashboard', 'aset', 'landing_unit', 'jurnal', 'buku_besar', 'neraca_saldo', 'laporan'
+        'dashboard', 'profil', 'aset', 'landing_unit', 'jurnal', 'buku_besar', 'neraca_saldo', 'laporan'
     ],
     UserRole.UMUM.value: [
         'dashboard', 'profil', 'landing_unit', 'laporan'
@@ -200,6 +200,24 @@ def validate_official_role(raw_role: str) -> str:
 async def require_admin(user=Depends(require_password_changed)):
     if normalize_role(user.get('role')) != UserRole.ADMINISTRATOR.value:
         raise HTTPException(403, 'Akses ditolak. Hanya Administrator yang diizinkan mengelola pengguna.')
+    return user
+
+READ_ONLY_ROLES = {UserRole.AUDITOR.value, UserRole.UMUM.value}
+PROFILE_WRITE_ROLES = {
+    UserRole.ADMINISTRATOR.value,
+    UserRole.KETUA_BUMKAM.value,
+    UserRole.SEKRETARIS_BUMKAM.value,
+}
+
+async def require_profile_write_access(user=Depends(require_password_changed)):
+    role = normalize_role(user.get('role'))
+    if role == UserRole.AUDITOR.value:
+        raise HTTPException(status_code=403, detail='Role Auditor hanya memiliki hak akses baca')
+    if role in READ_ONLY_ROLES or role not in PROFILE_WRITE_ROLES:
+        raise HTTPException(
+            status_code=403,
+            detail=f'Akses ditolak. Role {role} tidak memiliki izin mengubah Profil BUMKam.'
+        )
     return user
 
 class LoginBody(BaseModel):
@@ -859,7 +877,7 @@ async def get_profile():
     return prof or DEFAULT_PROFILE
 
 @api.put('/profile')
-async def update_profile(body: RecordBody, user=Depends(require_password_changed)):
+async def update_profile(body: RecordBody, user=Depends(require_profile_write_access)):
     data = body.data
     await db.profile.update_one({'id': 'profile'}, {'$set': data}, upsert=True)
     prof = await db.profile.find_one({'id': 'profile'}, {'_id': 0})

@@ -1314,10 +1314,15 @@ export default function App() {
           {activeMenu === 'profil' && (
             <ProfilBUMMA
               profile={profile}
+              userRole={userRole}
               readOnly={activeRoleMeta.readOnly}
               setProfile={(nextProfile) => {
                 if (activeRoleMeta.readOnly) {
-                  toast.error('Mode Read-Only: Peran Anda tidak diizinkan mengubah Profil BUMKam.');
+                  toast.error(
+                    userRole === USER_ROLES.AUDITOR
+                      ? 'Role Auditor hanya memiliki hak akses baca.'
+                      : 'Mode Read-Only: Peran Anda tidak diizinkan mengubah Profil BUMKam.'
+                  );
                   return;
                 }
                 setProfile(nextProfile);
