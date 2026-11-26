@@ -10,13 +10,23 @@ const env = { ...process.env };
 
 if (!env.REACT_APP_SUPABASE_URL) {
   env.REACT_APP_SUPABASE_URL =
-    env.VITE_SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL || '';
+    env.VITE_SUPABASE_URL ||
+    env.NEXT_PUBLIC_SUPABASE_URL ||
+    env.SUPABASE_URL ||
+    '';
 }
 
 if (!env.REACT_APP_SUPABASE_ANON_KEY) {
   env.REACT_APP_SUPABASE_ANON_KEY =
-    env.VITE_SUPABASE_ANON_KEY || env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+    env.VITE_SUPABASE_ANON_KEY ||
+    env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    env.SUPABASE_ANON_KEY ||
+    '';
 }
+
+console.log(
+  `[ARVEA Build] Supabase env bridge -> URL:${env.REACT_APP_SUPABASE_URL ? 'OK' : 'MISSING'}, ANON_KEY:${env.REACT_APP_SUPABASE_ANON_KEY ? 'OK' : 'MISSING'}`
+);
 
 const scriptPath = require.resolve(`react-scripts/scripts/${mode}`);
 const result = spawnSync(process.execPath, [scriptPath], {

@@ -11,7 +11,7 @@ import { normalizeRole, isDeprecatedUnitRoleAccount } from './roles';
  * langsung tersimpan permanen di Supabase dan berlaku real-time lintas perangkat.
  */
 
-const SUPABASE_URL = (
+let runtimeSupabaseUrl = (
   process.env.REACT_APP_SUPABASE_URL ||
   process.env.VITE_SUPABASE_URL ||
   ''
@@ -19,7 +19,7 @@ const SUPABASE_URL = (
   .trim()
   .replace(/\/+$/, '');
 
-const SUPABASE_ANON_KEY = (
+let runtimeSupabaseAnonKey = (
   process.env.REACT_APP_SUPABASE_ANON_KEY ||
   process.env.VITE_SUPABASE_ANON_KEY ||
   ''
@@ -28,18 +28,53 @@ const SUPABASE_ANON_KEY = (
 const USERS_TABLE = 'users';
 
 export const isSupabaseConfigured = () =>
-  Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
+  Boolean(runtimeSupabaseUrl && runtimeSupabaseAnonKey);
 
 const supabaseRest = axios.create({
-  baseURL: SUPABASE_URL ? `${SUPABASE_URL}/rest/v1` : '',
+  baseURL: runtimeSupabaseUrl ? `${runtimeSupabaseUrl}/rest/v1` : '',
   timeout: 12000,
   headers: {
-    apikey: SUPABASE_ANON_KEY,
-    Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    apikey: runtimeSupabaseAnonKey,
+    Authorization: `Bearer ${runtimeSupabaseAnonKey}`,
     Accept: 'application/json',
     'Content-Type': 'application/json'
   }
 });
+
+const applyRuntimeConfig = (url, anonKey) => {
+  const cleanUrl = String(url || '').trim().replace(/\/+$/, '');
+  const cleanKey = String(anonKey || '').trim();
+  if (!cleanUrl || !cleanKey) return false;
+  runtimeSupabaseUrl = cleanUrl;
+  runtimeSupabaseAnonKey = cleanKey;
+  supabaseRest.defaults.baseURL = `${cleanUrl}/rest/v1`;
+  supabaseRest.defaults.headers.apikey = cleanKey;
+  supabaseRest.defaults.headers.Authorization = `Bearer ${cleanKey}`;
+  return true;
+};
+
+let runtimeConfigPromise = null;
+
+/**
+ * Pastikan konfigurasi Supabase siap (baik dari build-time env bridge `scripts/run-cra.js`
+ * maupun fallback runtime dari Vercel function `/api/supabase-config`).
+ */
+export async function ensureSupabaseConfig() {
+  if (isSupabaseConfigured()) return true;
+  if (!runtimeConfigPromise) {
+    runtimeConfigPromise = axios
+      .get('/api/supabase-config', { timeout: 4000, headers: { Accept: 'application/json' } })
+      .then((res) => {
+        const ct = String(res?.headers?.['content-type'] || '').toLowerCase();
+        if (ct.includes('application/json') && res?.data?.url && res?.data?.anonKey) {
+          return applyRuntimeConfig(res.data.url, res.data.anonKey);
+        }
+        return false;
+      })
+      .catch(() => false);
+  }
+  return runtimeConfigPromise;
+}
 
 const deriveInitials = (fullName = '') => {
   const parts = String(fullName || '')
@@ -177,7 +212,8 @@ const toDbInsertPayload = (u) => {
  * Bila tabel `public.users` masih kosong (0 baris), otomatis mengisi 6 akun awal resmi.
  */
 export async function fetchSupabaseUsers(seedFallbackUsers = []) {
-  if (!isSupabaseConfigured()) {
+  const ready = await ensureSupabaseConfig();
+  if (!ready) {
     throw new Error('SUPABASE_NOT_CONFIGURED');
   }
 
@@ -213,7 +249,8 @@ export async function fetchSupabaseUsers(seedFallbackUsers = []) {
  * Ambil 1 akun terbaru berdasarkan ID langsung dari Supabase (untuk validasi sesi lintas perangkat).
  */
 export async function fetchSupabaseUserById(userId) {
-  if (!isSupabaseConfigured() || !userId) return null;
+  const ready = await ensureSupabaseConfig();
+  if (!ready || !userId) return null;
   const res = await supabaseRest.get(`/${USERS_TABLE}`, {
     params: {
       select: '*',
@@ -229,7 +266,8 @@ export async function fetchSupabaseUserById(userId) {
  * Autentikasi Login real-time langsung terhadap tabel `public.users` di Supabase.
  */
 export async function authenticateWithSupabase(identifier, password, seedFallbackUsers = []) {
-  if (!isSupabaseConfigured()) {
+  const ready = await ensureSupabaseConfig();
+  if (!ready) {
     return { ok: false, notConfigured: true };
   }
 
@@ -303,6 +341,7 @@ export async function createSupabaseUser({
   temp_password,
   must_change_password = true
 }) {
+  await ensureSupabaseConfig();
   const nowIso = new Date().toISOString();
   const payload = {
     id: `usr_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
@@ -332,6 +371,7 @@ export async function createSupabaseUser({
  * Perbarui profil/peran pengguna di tabel `public.users` Supabase.
  */
 export async function updateSupabaseUser(userId, { full_name, username, email, role, unit_kerja }) {
+  await ensureSupabaseConfig();
   const nowIso = new Date().toISOString();
   const payload = {
     full_name: full_name.trim(),
@@ -358,6 +398,7 @@ export async function updateSupabaseUser(userId, { full_name, username, email, r
  * Perubahan segera berlaku secara real-time di seluruh perangkat yang mencoba login.
  */
 export async function resetSupabaseUserPassword(userId, newPassword, mustChangePassword = true) {
+  await ensureSupabaseConfig();
   const nowIso = new Date().toISOString();
   const payload = {
     password_hash: hashPasswordLocal(String(newPassword || '').trim()),
@@ -382,6 +423,7 @@ export async function resetSupabaseUserPassword(userId, newPassword, mustChangeP
  * Aktifkan / nonaktifkan akun pengguna (soft-disable) langsung di Supabase.
  */
 export async function toggleSupabaseUserStatus(userId, nextIsActive) {
+  await ensureSupabaseConfig();
   const nowIso = new Date().toISOString();
   const payload = {
     is_active: Boolean(nextIsActive),
@@ -404,6 +446,7 @@ export async function toggleSupabaseUserStatus(userId, nextIsActive) {
  * Simpan perubahan kredensial awal (First-Time Login / Wajib Ganti Sandi) langsung ke Supabase.
  */
 export async function completeSupabaseInitialCredentials(userId, { newUsername, newPassword }) {
+  await ensureSupabaseConfig();
   const nowIso = new Date().toISOString();
   const payload = {
     password_hash: hashPasswordLocal(String(newPassword || '').trim()),

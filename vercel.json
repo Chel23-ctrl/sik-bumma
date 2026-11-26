@@ -1,7 +1,9 @@
 {
+  "buildCommand": "node scripts/run-cra.js build",
+  "outputDirectory": "build",
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
   ]

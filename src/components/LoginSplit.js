@@ -11,7 +11,7 @@ import apiClient, {
 } from '../utils/apiClient';
 import { readStoredUsers, verifyPasswordLocal } from '../utils/passwordAuth';
 import {
-  isSupabaseConfigured,
+  ensureSupabaseConfig,
   authenticateWithSupabase,
   formatSupabaseError
 } from '../utils/supabaseUsers';
@@ -63,7 +63,8 @@ export default function LoginSplit({ onLogin, onBackToStore, users = [], onSyncU
     setIsSubmitting(true);
     try {
       // 0. Prioritas Utama: Autentikasi Cloud Real-Time melalui tabel `users` Supabase
-      if (isSupabaseConfigured()) {
+      const supabaseReady = await ensureSupabaseConfig();
+      if (supabaseReady) {
         try {
           const sbResult = await authenticateWithSupabase(
             cleanIdentifier,

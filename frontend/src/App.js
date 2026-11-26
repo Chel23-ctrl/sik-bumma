@@ -61,6 +61,7 @@ import {
 } from './utils/roles';
 import {
   isSupabaseConfigured,
+  ensureSupabaseConfig,
   fetchSupabaseUsers,
   fetchSupabaseUserById,
   completeSupabaseInitialCredentials,
@@ -212,7 +213,19 @@ export default function App() {
   const [appMode, setAppMode] = useState(() => getStorage('app_mode', 'storefront'));
   useEffect(() => { setStorage('app_mode', appMode); }, [appMode]);
 
-  const supabaseEnabled = isSupabaseConfigured();
+  const [supabaseEnabled, setSupabaseEnabled] = useState(() => isSupabaseConfigured());
+
+  useEffect(() => {
+    if (supabaseEnabled) return;
+    let active = true;
+    ensureSupabaseConfig().then((ready) => {
+      if (active && ready) {
+        try { localStorage.removeItem(USERS_STORAGE_KEY); } catch (e) {}
+        setSupabaseEnabled(true);
+      }
+    });
+    return () => { active = false; };
+  }, [supabaseEnabled]);
 
   // Auth & Managed Users (Cloud Supabase sebagai sumber utama, fallback localStorage hanya bila offline dev)
   const [users, setUsers] = useState(() => {
