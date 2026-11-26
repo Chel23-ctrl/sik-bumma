@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Printer, FileSpreadsheet } from 'lucide-react';
+import { Printer, FileSpreadsheet, Lock } from 'lucide-react';
 import { formatIDR } from './Transaksi';
 import { exportToExcel } from '../utils/exportUtils';
 import { toast } from 'sonner';
 
-export default function LaporanKeuangan({ journals, accounts, transactions, profile, selectedYear }) {
+export default function LaporanKeuangan({ journals, accounts, transactions, profile, selectedYear, readOnly = false }) {
   const [activeReport, setActiveReport] = useState('laba_rugi');
 
   const accBal = (code) => {
@@ -174,11 +174,16 @@ export default function LaporanKeuangan({ journals, accounts, transactions, prof
       {/* Top Header & Report Switcher (Hidden in Print) */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 print:hidden">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
               LAPORAN KEUANGAN RESMI
             </span>
             <span className="text-xs text-slate-400 font-medium">SAK EMKM</span>
+            {readOnly && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 text-purple-800 border border-purple-200 dark:bg-purple-950/70 dark:text-purple-300 dark:border-purple-800">
+                <Lock className="w-3 h-3" /> Read-Only &bull; Hanya Lihat &amp; Unduh/Cetak
+              </span>
+            )}
           </div>
           <h1 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mt-1">Laporan Keuangan Standar SAK EMKM</h1>
           <p className="text-xs text-slate-500 mt-0.5">Disusun sesuai ketentuan Standar Akuntansi Keuangan Entitas Mikro, Kecil, dan Menengah (SAK EMKM)</p>

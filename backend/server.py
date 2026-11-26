@@ -161,7 +161,7 @@ ROLE_PERMISSIONS = {
         'buku_besar', 'neraca_saldo', 'laporan', 'analisis', 'operasional', 'penggajian'
     ],
     UserRole.AUDITOR.value: [
-        'dashboard', 'aset', 'landing_unit', 'jurnal', 'buku_besar', 'neraca_saldo'
+        'dashboard', 'aset', 'landing_unit', 'jurnal', 'buku_besar', 'neraca_saldo', 'laporan'
     ],
     UserRole.UMUM.value: [
         'dashboard', 'profil', 'landing_unit', 'laporan'

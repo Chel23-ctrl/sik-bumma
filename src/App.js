@@ -1264,6 +1264,7 @@ export default function App() {
               transactions={transactions}
               profile={profile}
               selectedYear={selectedYear}
+              readOnly={activeRoleMeta.readOnly}
             />
           )}
 
