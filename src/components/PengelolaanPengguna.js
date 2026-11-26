@@ -528,7 +528,7 @@ export default function PengelolaanPengguna({
     }
   };
 
-  // Toggle Active / Inactive (Soft Disable Ã¢â‚¬â€ Never Hard Delete!)
+  // Toggle Active / Inactive (Soft Disable — Never Hard Delete!)
   const handleToggleStatus = async (u) => {
     const currentlyActive = u.is_active !== false;
     const isSelf =

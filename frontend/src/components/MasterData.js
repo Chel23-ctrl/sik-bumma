@@ -34,7 +34,7 @@ export const PERLAKUAN_OPTIONS = [
 export const SATUAN_OPTIONS = [
   'Pcs', 'Unit', 'Buah', 'Set', 'Paket', 'Lusin', 'Rim', 'Lembar',
   'Batang', 'Gulung', 'Milimeter (mm)', 'Centimeter (cm)', 'Meter (m)',
-  'Meter Persegi (mÃ‚Â²)', 'Meter Kubik (mÃ‚Â³)', 'Gram (g)', 'Kilogram (kg)',
+  'Meter Persegi (m²)', 'Meter Kubik (m³)', 'Gram (g)', 'Kilogram (kg)',
   'Ton', 'Mililiter (mL)', 'Liter (L)', 'Kaleng', 'Botol', 'Jerigen',
   'Karton', 'Box', 'Karung', 'Sak', 'Butir', 'Tray', 'Rak', 'Ekor',
   'Jam', 'Hari'
@@ -454,7 +454,7 @@ export default function MasterData({
             { id: 'customers', label: 'Pelanggan', icon: Users, count: customers.length },
             { id: 'suppliers', label: 'Pemasok / Supplier', icon: Truck, count: suppliers.length },
             { id: 'accounts', label: 'Bagan Akun (COA)', icon: Layers, count: accounts.length },
-            { id: 'landing_showcase', label: 'Ã°Å¸Å’Å¸ Showcase Landing Page', icon: Sparkles, count: 3 }
+            { id: 'landing_showcase', label: 'Showcase Landing Page', icon: Sparkles, count: 3 }
           ].map(t => {
             const Icon = t.icon;
             const isActive = tab === t.id;

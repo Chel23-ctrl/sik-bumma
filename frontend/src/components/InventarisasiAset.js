@@ -181,7 +181,7 @@ export const INITIAL_ASSETS = [
     asset_type: 'Inventaris Operasional',
     model_type: 'Kelompok',
     unit_usaha: 'jasa',
-    brand: 'Olympic Adat',
+    brand: 'Olympic',
     type_name: 'Meja Lipat 120x60',
     serial_number: '-',
     qty: 20,
@@ -1245,9 +1245,9 @@ export default function InventarisasiAset({
                 className="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-semibold"
               >
                 <option value="all">Semua Kondisi</option>
-                <option value="Baik">Baik</option>
-                <option value="Rusak Ringan">Rusak Ringan</option>
-                <option value="Rusak Berat">Rusak Berat</option>
+                <option value="Baik">🟢 Baik</option>
+                <option value="Rusak Ringan">🟡 Rusak Ringan</option>
+                <option value="Rusak Berat">🔴 Rusak Berat</option>
               </select>
             </div>
 
@@ -1627,7 +1627,7 @@ export default function InventarisasiAset({
                 </select>
                 {availableMasterProducts.length === 0 && (
                   <p className="text-[11px] text-amber-700 dark:text-amber-300 mt-1.5">
-                    Ã¢Å¡Â Ã¯Â¸Â Belum ada produk dengan Perlakuan Produk "{formData.asset_type}" di Master Data. Silakan tambahkan atau ubah perlakuan produk di menu Master Data terlebih dahulu.
+                    ⚠️ Belum ada produk dengan Perlakuan Produk "{formData.asset_type}" di Master Data. Silakan tambahkan atau ubah perlakuan produk di menu Master Data terlebih dahulu.
                   </p>
                 )}
               </div>
@@ -1956,9 +1956,9 @@ export default function InventarisasiAset({
                     onChange={(e) => setFormData({ ...formData, condition: e.target.value })}
                     className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 font-semibold"
                   >
-                    <option value="Baik">Ã°Å¸Å¸Â¢ Baik</option>
-                    <option value="Rusak Ringan">Ã°Å¸Å¸Â¡ Rusak Ringan</option>
-                    <option value="Rusak Berat">Ã°Å¸â€Â´ Rusak Berat</option>
+                    <option value="Baik">🟢 Baik</option>
+                    <option value="Rusak Ringan">🟡 Rusak Ringan</option>
+                    <option value="Rusak Berat">🔴 Rusak Berat</option>
                   </select>
                 </div>
 
@@ -2000,7 +2000,7 @@ export default function InventarisasiAset({
                     <option value="Pembelian">Pembelian Kas / Kredit</option>
                     <option value="Hibah">Hibah</option>
                     <option value="Bantuan">Bantuan Pemerintah / Lembaga</option>
-                    <option value="Penyertaan Modal">Penyertaan Modal Desa / Adat</option>
+                    <option value="Penyertaan Modal">Penyertaan Modal Kampung</option>
                     <option value="Donasi">Donasi</option>
                     <option value="Hasil Produksi/Usaha">Hasil Usaha Sendiri</option>
                     <option value="Lainnya">Lainnya</option>

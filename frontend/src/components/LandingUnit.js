@@ -122,7 +122,7 @@ export default function LandingUnit({
                   <Tent className="w-4 h-4 text-blue-600" /> 2. Sektor Jasa
                 </div>
                 <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
-                  Layanan jasa penyewaan tenda acara, pesta adat, dan penyewaan Gedung Serba Guna BUMKam Mekar Sari.
+                  Layanan jasa penyewaan tenda acara, pesta kampung, dan penyewaan Gedung Serba Guna BUMKam Mekar Sari.
                 </p>
               </div>
             </div>
@@ -174,7 +174,7 @@ export default function LandingUnit({
               <Egg className="w-5 h-5 text-emerald-600" /> Unit Perdagangan &amp; Peternakan
             </h3>
             <p className="text-xs text-slate-500 mt-2 leading-relaxed">
-              Fokus pada produksi dan distribusi telur ayam ras petelur lokal, pakan ternak berkwalitas, beras petani lokal, serta aneka noken anyaman tangan masyarakat adat.
+              Fokus pada produksi dan distribusi telur ayam ras petelur lokal, pakan ternak berkualitas, beras petani lokal, serta aneka noken anyaman tangan masyarakat kampung.
             </p>
 
             <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 text-xs space-y-1.5 text-slate-600 dark:text-slate-400">
@@ -215,7 +215,7 @@ export default function LandingUnit({
               <Tent className="w-5 h-5 text-blue-600" /> Unit Jasa Penyewaan
             </h3>
             <p className="text-xs text-slate-500 mt-2 leading-relaxed">
-              Menyediakan fasilitas perlengkapan pesta (tenda terop, kursi, sound system) serta pengelolaan sewa Gedung Serba Guna BUMMA untuk kegiatan adat, resepsi, dan rapat desa.
+              Menyediakan fasilitas perlengkapan pesta (tenda terop, kursi, sound system) serta pengelolaan sewa Gedung Serba Guna BUMKam untuk kegiatan masyarakat, resepsi, dan rapat kampung.
             </p>
 
             <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 text-xs space-y-1.5 text-slate-600 dark:text-slate-400">

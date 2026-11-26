@@ -113,13 +113,13 @@ const INITIAL_PRODUCTS = [
 
 const INITIAL_CUSTOMERS = [
   { id: 'cus_1', name: 'Koperasi Masyarakat Mamta', phone: '0812-4000-1122', address: 'Kabupaten Jayapura' },
-  { id: 'cus_2', name: 'Toko Harapan Adat', phone: '0812-4000-2233', address: 'Sentani, Jayapura' },
+  { id: 'cus_2', name: 'Toko Harapan Kampung', phone: '0812-4000-2233', address: 'Sentani, Jayapura' },
   { id: 'cus_3', name: 'Panitia Acara Kampung', phone: '0812-4000-3344', address: 'Distrik Nimboran' }
 ];
 
 const INITIAL_SUPPLIERS = [
   { id: 'sup_1', name: 'CV Sumber Pangan Mandiri', contact: '0813-5000-1122', address: 'Jayapura', bank: 'Bank Papua (101-020-3040)' },
-  { id: 'sup_2', name: 'Kelompok Peternak Adat', contact: '0813-5000-2233', address: 'Sentani', bank: 'BRI (4567-01-002345-53-1)' }
+  { id: 'sup_2', name: 'Kelompok Peternak Kampung', contact: '0813-5000-2233', address: 'Sentani', bank: 'BRI (4567-01-002345-53-1)' }
 ];
 
 const INITIAL_EMPLOYEES = [
@@ -635,8 +635,18 @@ export default function App() {
     }
     return INITIAL_PRODUCTS;
   });
-  const [customers, setCustomers] = useState(() => getStorage('customers', INITIAL_CUSTOMERS));
-  const [suppliers, setSuppliers] = useState(() => getStorage('suppliers', INITIAL_SUPPLIERS));
+  const [customers, setCustomers] = useState(() => {
+    const stored = getStorage('customers', INITIAL_CUSTOMERS);
+    return Array.isArray(stored)
+      ? stored.map(c => (c?.name && /adat/i.test(c.name) ? { ...c, name: c.name.replace(/\bAdat\b/gi, 'Kampung') } : c))
+      : INITIAL_CUSTOMERS;
+  });
+  const [suppliers, setSuppliers] = useState(() => {
+    const stored = getStorage('suppliers', INITIAL_SUPPLIERS);
+    return Array.isArray(stored)
+      ? stored.map(s => (s?.name && /adat/i.test(s.name) ? { ...s, name: s.name.replace(/\bAdat\b/gi, 'Kampung') } : s))
+      : INITIAL_SUPPLIERS;
+  });
   const [employees, setEmployees] = useState(() => {
     const stored = getStorage('employees', INITIAL_EMPLOYEES);
     if (Array.isArray(stored) && stored.length > 0) {
@@ -663,7 +673,9 @@ export default function App() {
           )
         )
       );
-      if (hasOutdatedImages) {
+      const serialized = JSON.stringify(stored);
+      const hasLegacyTextOrMojibake = /adat|\u00f0\u0178|\u00e2\u203a|\u00ef\u00b8|\u00c3/i.test(serialized);
+      if (hasOutdatedImages || hasLegacyTextOrMojibake) {
         return DEFAULT_CORE_PRODUCTS;
       }
       return stored;
@@ -672,7 +684,11 @@ export default function App() {
   });
   const [profile, setProfile] = useState(() => {
     const p = getStorage('profile', INITIAL_PROFILE);
-    return { ...INITIAL_PROFILE, ...p, director: 'Eko L Wibowo', treasurer: 'Rita Fanghoi' };
+    const merged = { ...INITIAL_PROFILE, ...p, director: 'Eko L Wibowo', treasurer: 'Rita Fanghoi' };
+    if (/adat/i.test(String(merged.legalName || ''))) merged.legalName = INITIAL_PROFILE.legalName;
+    if (/adat/i.test(String(merged.region || ''))) merged.region = INITIAL_PROFILE.region;
+    if (/adat/i.test(String(merged.address || ''))) merged.address = INITIAL_PROFILE.address;
+    return merged;
   });
 
   useEffect(() => { setStorage('dark_mode', darkMode); }, [darkMode]);

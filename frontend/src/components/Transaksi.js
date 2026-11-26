@@ -436,7 +436,7 @@ export default function Transaksi({
                     type="text"
                     value={posCustomer}
                     onChange={(e) => setPosCustomer(e.target.value)}
-                    placeholder="Contoh: Panitia Acara / Warga Adat"
+                    placeholder="Contoh: Panitia Acara / Warga Kampung"
                     className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-medium"
                   />
                 </div>
@@ -730,7 +730,7 @@ export default function Transaksi({
                           : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300'
                       }`}
                     >
-                      {m === 'Offline' ? 'Ã°Å¸ÂÂ¬ Offline (Langsung / Fisik)' : 'Ã°Å¸Å’Â Online (Toko Digital / WA)'}
+                      {m === 'Offline' ? '🏪 Offline (Langsung / Fisik)' : '🌐 Online (Toko Digital / WA)'}
                     </button>
                   ))}
                 </div>
@@ -768,7 +768,7 @@ export default function Transaksi({
                   type="text"
                   value={formData.contact_name}
                   onChange={(e) => setFormData({ ...formData, contact_name: e.target.value })}
-                  placeholder={formType === 'penjualan' ? 'Contoh: Toko Harapan Adat' : 'Contoh: CV Sumber Pangan Mandiri'}
+                  placeholder={formType === 'penjualan' ? 'Contoh: Toko Harapan Kampung' : 'Contoh: CV Sumber Pangan Mandiri'}
                   className="w-full p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
                   required
                 />
@@ -866,7 +866,7 @@ export default function Transaksi({
                   type="text"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Contoh: Pesanan telur untuk konsumsi acara adat"
+                  placeholder="Contoh: Pesanan telur untuk konsumsi acara kampung"
                   className="w-full p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
                 />
               </div>

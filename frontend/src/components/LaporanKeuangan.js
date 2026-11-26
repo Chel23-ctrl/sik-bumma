@@ -147,7 +147,7 @@ export default function LaporanKeuangan({ journals, accounts, transactions, prof
     } else if (activeReport === 'calk') {
       reportName = `Catatan_Atas_Laporan_Keuangan_CaLK_${selectedYear || '2026'}`;
       reportData = [
-        { No: 1, 'Topik Pengungkapan': 'Gambaran Umum & Dasar Hukum', 'Penjelasan / Rincian': 'Badan Usaha Milik Masyarakat Adat (BUMMA) Mekar Sari didirikan di wilayah adat Mamta, Kabupaten Jayapura, Papua untuk memberdayakan potensi ekonomi warga adat melalui unit perdagangan peternakan dan jasa penyewaan.' },
+        { No: 1, 'Topik Pengungkapan': 'Gambaran Umum & Dasar Hukum', 'Penjelasan / Rincian': 'Badan Usaha Milik Kampung (BUMKam) Mekar Sari didirikan di Kampung Sabron Sari, Distrik Sentani Barat, Kabupaten Jayapura, Papua untuk memberdayakan potensi ekonomi warga kampung melalui unit perdagangan peternakan dan jasa penyewaan.' },
         { No: 2, 'Topik Pengungkapan': 'Dasar Penyusunan Laporan Keuangan', 'Penjelasan / Rincian': 'Laporan keuangan disusun berdasarkan Standar Akuntansi Keuangan Entitas Mikro, Kecil, dan Menengah (SAK EMKM) dengan sistem pembukuan berpasangan (double-entry). Mata uang pelaporan adalah Rupiah (IDR).' },
         { No: 3, 'Topik Pengungkapan': 'Kebijakan Akuntansi Signifikan', 'Penjelasan / Rincian': 'Kas dan setara kas terdiri dari kas di bendahara dan rekening Bank Papua. Persediaan dinilai dengan metode FIFO. Pendapatan diakui saat penyerahan komoditas atau penyelesaian jasa sewa.' },
         { No: 4, 'Topik Pengungkapan': 'Peristiwa Setelah Tanggal Neraca', 'Penjelasan / Rincian': 'Tidak ada peristiwa luar biasa setelah tanggal neraca yang membutuhkan penyesuaian khusus dalam laporan keuangan ini.' }
@@ -233,7 +233,7 @@ export default function LaporanKeuangan({ journals, accounts, transactions, prof
         {/* KOP SURAT RESMI (SESUAI CATATAN DOCX BUTIR 17) */}
         <div className="text-center border-b-4 border-double border-slate-900 pb-4 mb-6 kop-surat">
           <h2 className="text-lg md:text-xl font-extrabold tracking-wide uppercase text-slate-900">
-            {profile.legalName || 'BADAN USAHA MILIK MASYARAKAT ADAT (BUMMA) MEKAR SARI'}
+            {profile.legalName || 'BADAN USAHA MILIK KAMPUNG (BUMKam) MEKAR SARI'}
           </h2>
           <p className="text-xs font-bold uppercase text-slate-700 tracking-wider">
             {profile.region} &mdash; {profile.location}
@@ -510,7 +510,7 @@ export default function LaporanKeuangan({ journals, accounts, transactions, prof
               <div>
                 <h4 className="font-bold text-slate-900">1. Gambaran Umum &amp; Dasar Hukum</h4>
                 <p className="mt-1">
-                  Badan Usaha Milik Masyarakat Adat (BUMMA) Mekar Sari didirikan di wilayah adat Mamta, Kabupaten Jayapura, Papua untuk memberdayakan potensi ekonomi warga adat melalui unit perdagangan peternakan dan jasa penyewaan.
+                  Badan Usaha Milik Kampung (BUMKam) Mekar Sari didirikan di Kampung Sabron Sari, Distrik Sentani Barat, Kabupaten Jayapura, Papua untuk memberdayakan potensi ekonomi warga kampung melalui unit perdagangan peternakan dan jasa penyewaan.
                 </p>
               </div>
 

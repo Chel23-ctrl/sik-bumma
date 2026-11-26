@@ -292,13 +292,13 @@ DEFAULT_PRODUCTS = [
 
 DEFAULT_CUSTOMERS = [
     {'id': 'cus_1', 'name': 'Koperasi Masyarakat Mamta', 'phone': '0812-4000-1122', 'address': 'Kabupaten Jayapura', 'receivable': 0},
-    {'id': 'cus_2', 'name': 'Toko Harapan Adat', 'phone': '0812-4000-2233', 'address': 'Sentani, Jayapura', 'receivable': 0},
+    {'id': 'cus_2', 'name': 'Toko Harapan Kampung', 'phone': '0812-4000-2233', 'address': 'Sentani, Jayapura', 'receivable': 0},
     {'id': 'cus_3', 'name': 'Panitia Acara Kampung', 'phone': '0812-4000-3344', 'address': 'Distrik Nimboran', 'receivable': 0}
 ]
 
 DEFAULT_SUPPLIERS = [
     {'id': 'sup_1', 'name': 'CV Sumber Pangan Mandiri', 'contact': '0813-5000-1122', 'bank_name': 'Bank Papua', 'bank_account': '101-020-3040', 'bank_holder': 'CV Sumber Pangan', 'address': 'Jayapura', 'payable': 0},
-    {'id': 'sup_2', 'name': 'Kelompok Peternak Adat', 'contact': '0813-5000-2233', 'bank_name': 'Bank BRI', 'bank_account': '4567-01-002345-53-1', 'bank_holder': 'Markus Krey', 'address': 'Sentani', 'payable': 0}
+    {'id': 'sup_2', 'name': 'Kelompok Peternak Kampung', 'contact': '0813-5000-2233', 'bank_name': 'Bank BRI', 'bank_account': '4567-01-002345-53-1', 'bank_holder': 'Markus Krey', 'address': 'Sentani', 'payable': 0}
 ]
 
 DEFAULT_EMPLOYEES = [
@@ -402,7 +402,7 @@ DEFAULT_ASSETS = [
         'asset_type': 'Inventaris Operasional',
         'model_type': 'Kelompok',
         'unit_usaha': 'jasa',
-        'brand': 'Olympic Adat',
+        'brand': 'Olympic',
         'type_name': 'Meja Lipat 120x60',
         'serial_number': '-',
         'qty': 20,
@@ -425,18 +425,18 @@ DEFAULT_ASSETS = [
 
 DEFAULT_PROFILE = {
     'id': 'profile',
-    'name': 'BUMMA MEKAR SARI',
-    'legal_name': 'Badan Usaha Milik Masyarakat Adat Mekar Sari',
-    'region': 'Wilayah Adat Mamta',
+    'name': 'BUMKAM MEKAR SARI',
+    'legal_name': 'Badan Usaha Milik Kampung Mekar Sari',
+    'region': 'Distrik Sentani Barat',
     'location': 'Kabupaten Jayapura, Papua',
-    'address': 'Jl. Raya Adat Mamta No. 12, Sentani, Kabupaten Jayapura',
+    'address': 'Jl. Poros Sabron Sari, Distrik Sentani Barat, Kabupaten Jayapura',
     'phone': '0812-4000-1122',
-    'email': 'bummamekarsari@gmail.com',
+    'email': 'bumkammekarsari.sabronsari@gmail.com',
     'director': 'Eko L Wibowo',
     'treasurer': 'Rita Fanghoi',
     'bank_name': 'Bank Papua',
     'bank_account': '100-01-02-03040-5',
-    'bank_holder': 'BUMMA MEKAR SARI',
+    'bank_holder': 'BUMKAM MEKAR SARI',
     'business_units': [
         {'id': 'perdagangan', 'name': 'Unit Perdagangan & Peternakan', 'type': 'Perdagangan', 'desc': 'Peternakan Ayam Petelur & Komoditas Hasil Bumi'},
         {'id': 'jasa', 'name': 'Unit Jasa Penyewaan', 'type': 'Jasa', 'desc': 'Penyewaan Tenda Acara & Gedung Serba Guna BUMMA'}

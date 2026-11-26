@@ -17,7 +17,9 @@ import {
   LogIn,
   Maximize2,
   X,
-  ArrowUp
+  ArrowUp,
+  Star,
+  Egg
 } from 'lucide-react';
 import { formatIDR } from './Transaksi';
 import SectorBackground from './SectorBackground';
@@ -40,22 +42,22 @@ export const DEFAULT_CORE_PRODUCTS = [
       },
       {
         url: '/images/products/kandang_ayam_2.jpg',
-        caption: 'Kandang Peternakan Modern & Sehat Binaan Masyarakat Adat'
+        caption: 'Kandang Peternakan Modern & Sehat Binaan BUMKam Mekar Sari'
       },
       {
         url: '/images/products/rak_telur_30_3.jpg',
         caption: 'Rak Telur Karton Isi 30 Butir Pilihan - Panen Segar Harian'
       }
     ],
-    description: 'Produksi telur ayam ras & kampung berkualitas prima dari peternakan binaan masyarakat adat BUMKam Mekar Sari. Dijamin selalu segar panen setiap pagi, bebas bahan pengawet, higienis, dan kaya nutrisi untuk kebutuhan konsumsi keluarga, warung, maupun katering.',
+    description: 'Produksi telur ayam ras & kampung berkualitas prima dari peternakan binaan BUMKam Mekar Sari. Dijamin selalu segar panen setiap pagi, bebas bahan pengawet, higienis, dan kaya nutrisi untuk kebutuhan konsumsi keluarga, warung, maupun katering.',
     features: [
       'Panen segar setiap hari langsung dari kandang lokal',
       'Penyortiran higienis ukuran standar & bersih',
       'Harga stabil dan terjangkau bagi warga kampung',
-      'Mendukung kemandirian pangan masyarakat adat'
+      'Mendukung kemandirian pangan masyarakat kampung'
     ],
     whatsappMsg: 'Halo BUMKam Mekar Sari, saya ingin informasi pemesanan Telur Ayam Lokal',
-    floatingBadge: 'ðŸ¥š 60+ Rak Telur Baru Dipanen Pagi Ini'
+    floatingBadge: '🥚 60+ Rak Telur Baru Dipanen Pagi Ini'
   },
   {
     id: 'core_2',
@@ -75,10 +77,10 @@ export const DEFAULT_CORE_PRODUCTS = [
       },
       {
         url: '/images/products/tenda_tratak_3.jpg',
-        caption: 'Tenda Pesta Kapasitas Besar Lengkap Meja & Kursi Acara Adat'
+        caption: 'Tenda Pesta Kapasitas Besar Lengkap Meja & Kursi Acara Kampung'
       }
     ],
-    description: 'Layanan persewaan tenda tratak, kanopi pesta, dan tenda upacara adat untuk berbagai kegiatan keluarga, syukuran, pernikahan, ibadah gereja, maupun acara duka cita warga kampung. Dilengkapi tim pemuda adat yang terampil untuk pemasangan dan pembongkaran cepat.',
+    description: 'Layanan persewaan tenda tratak, kanopi pesta, dan tenda upacara untuk berbagai kegiatan keluarga, syukuran, pernikahan, ibadah gereja, maupun acara duka cita warga kampung. Dilengkapi tim pemuda kampung yang terampil untuk pemasangan dan pembongkaran cepat.',
     features: [
       'Rangka besi kokoh, aman, dan terawat bersih',
       'Kain terpal kanopi tahan cuaca hujan dan panas',
@@ -86,7 +88,7 @@ export const DEFAULT_CORE_PRODUCTS = [
       'Dapat dikombinasikan dengan meja & kursi acara'
     ],
     whatsappMsg: 'Halo BUMKam Mekar Sari, saya ingin konsultasi jadwal Penyewaan Tenda Acara',
-    floatingBadge: 'â›º Tim Siap Antar & Pasang di Lokasi'
+    floatingBadge: '⛺ Tim Siap Antar & Pasang di Lokasi'
   },
   {
     id: 'core_3',
@@ -109,7 +111,7 @@ export const DEFAULT_CORE_PRODUCTS = [
         caption: 'Panggung Kehormatan, Tata Lampu & Sound System Acara Akbar'
       }
     ],
-    description: 'Gedung pertemuan serbaguna BUMKam Mekar Sari yang representatif, nyaman, dan strategis di pusat kampung. Sangat ideal untuk resepsi pernikahan adat, seminar, rapat koordinasi distrik, musyawarah kampung, ibadah perayaan, serta festival budaya.',
+    description: 'Gedung pertemuan serbaguna BUMKam Mekar Sari yang representatif, nyaman, dan strategis di pusat kampung. Sangat ideal untuk resepsi pernikahan, seminar, rapat koordinasi distrik, musyawarah kampung, ibadah perayaan, serta festival budaya.',
     features: [
       'Ruang utama luas berkapasitas 200 s/d 300 tamu',
       'Dilengkapi panggung kehormatan dan fasilitas sound system dasar',
@@ -117,7 +119,7 @@ export const DEFAULT_CORE_PRODUCTS = [
       'Kebersihan dan keamanan gedung terjaga oleh pengurus'
     ],
     whatsappMsg: 'Halo BUMKam Mekar Sari, saya ingin cek ketersediaan Gedung Serbaguna',
-    floatingBadge: 'ðŸ›ï¸ Fasilitas Sound System & Panggung Lengkap'
+    floatingBadge: '🏛️ Fasilitas Sound System & Panggung Lengkap'
   }
 ];
 
@@ -244,13 +246,13 @@ export default function StorefrontUlambox({ onOpenBackoffice, profile = {}, core
           {/* Left Hero Text (7 Cols) */}
           <div className="lg:col-span-7 text-center lg:text-left">
             <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white/20 border border-white/30 text-white text-xs font-extrabold uppercase tracking-wider mb-4">
-              <Award className="w-3.5 h-3.5 text-amber-200" /> Badan Usaha Milik Kampung Adat
+              <Award className="w-3.5 h-3.5 text-amber-200" /> Badan Usaha Milik Kampung
             </span>
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight leading-tight mb-5">
               Komoditas Peternakan &amp; Layanan Mandiri BUMKam Mekar Sari.
             </h1>
             <p className="text-white/90 text-sm sm:text-base leading-relaxed mb-7 font-normal max-w-2xl">
-              Menggerakkan ekonomi lokal masyarakat adat Jayapura melalui peternakan telur ayam berkualitas, penyediaan sarana tenda pesta representatif, dan fasilitas gedung serbaguna terpadu.
+              Menggerakkan ekonomi lokal masyarakat Kampung Sabron Sari, Jayapura melalui peternakan telur ayam berkualitas, penyediaan sarana tenda pesta representatif, dan fasilitas gedung serbaguna terpadu.
             </p>
             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3.5">
               <a
@@ -275,7 +277,7 @@ export default function StorefrontUlambox({ onOpenBackoffice, profile = {}, core
               </div>
               <div>
                 <p className="text-2xl md:text-3xl font-black text-white">24+</p>
-                <p className="text-[11px] text-emerald-100/80 font-medium mt-0.5">Mitra Peternak Adat</p>
+                <p className="text-[11px] text-emerald-100/80 font-medium mt-0.5">Mitra Peternak</p>
               </div>
               <div>
                 <p className="text-2xl md:text-3xl font-black text-emerald-300">SAK EMKM</p>
@@ -308,15 +310,15 @@ export default function StorefrontUlambox({ onOpenBackoffice, profile = {}, core
                     </span>
                   </div>
                   <p className="text-sm font-bold leading-tight">
-                    Komoditas Asli Tanah Adat Mamta
+                    Komoditas Asli Kampung Sabron Sari
                   </p>
                 </div>
               </div>
 
               {/* Floating Animated Badge 1 (Top Right) */}
               <div className="absolute -top-4 -right-3 sm:-right-4 bg-white text-slate-900 px-3.5 py-2.5 rounded-2xl shadow-xl border border-emerald-100 flex items-center gap-2.5 animate-float z-20">
-                <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold">
-                  â­
+                <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-500 flex items-center justify-center shrink-0">
+                  <Star className="w-4 h-4 text-amber-500 fill-amber-400" aria-hidden="true" />
                 </div>
                 <div className="text-left">
                   <p className="text-[10px] font-extrabold text-slate-400 uppercase leading-none">Rating Pelayanan</p>
@@ -326,8 +328,8 @@ export default function StorefrontUlambox({ onOpenBackoffice, profile = {}, core
 
               {/* Floating Animated Badge 2 (Bottom Left) */}
               <div className="absolute -bottom-5 -left-3 sm:-left-5 bg-[#64589F] text-white px-3.5 py-2.5 rounded-2xl shadow-xl border border-emerald-500/30 flex items-center gap-2.5 animate-float-delayed z-20">
-                <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center font-bold">
-                  ðŸ¥š
+                <div className="w-8 h-8 rounded-xl bg-white/15 text-amber-200 flex items-center justify-center shrink-0">
+                  <Egg className="w-4 h-4 text-amber-200" aria-hidden="true" />
                 </div>
                 <div className="text-left">
                   <p className="text-[10px] font-extrabold text-emerald-300 uppercase leading-none">Stok Hari Ini</p>
@@ -351,7 +353,7 @@ export default function StorefrontUlambox({ onOpenBackoffice, profile = {}, core
               BUMKAM IMPACT
             </span>
             <h2 className="text-xl sm:text-2xl font-black text-slate-900">
-              Dampak Nyata Untuk Kesejahteraan Kampung Adat
+              Dampak Nyata Untuk Kesejahteraan Kampung
             </h2>
             <p className="text-xs text-slate-600 mt-1">
               Seluruh perputaran hasil usaha peternakan dan persewaan dialokasikan untuk dividen kas kampung, peremajaan kandang, dan kemakmuran warga.
@@ -610,7 +612,7 @@ export default function StorefrontUlambox({ onOpenBackoffice, profile = {}, core
 
             <div className="max-w-xl space-y-2 text-center md:text-left relative z-10">
               <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-300 bg-emerald-800/80 px-3 py-1 rounded-full inline-block">
-                LAYANAN MASYARAKAT ADAT
+                LAYANAN MASYARAKAT KAMPUNG
               </span>
               <h2 className="text-2xl sm:text-3xl font-black">
                 Butuh Telur Segar, Sewa Tenda, atau Reservasi Gedung?
@@ -685,7 +687,7 @@ export default function StorefrontUlambox({ onOpenBackoffice, profile = {}, core
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 border-t border-slate-800 text-center text-slate-400 text-[11px] flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>&copy; 2026 BUMKam Mekar Sari. Hak Cipta Dilindungi Undang-Undang.</span>
-          <span>Teknologi Digital Akuntansi (TDA) Kelompok 3C &bull; &bull; S1 Akuntansi FEB Uncen</span>
+          <span>Teknologi Digital Akuntansi (TDA) Kelompok 3C &bull; S1 Akuntansi FEB Uncen</span>
         </div>
       </footer>
 

@@ -1292,7 +1292,7 @@ export default function JurnalPenyesuaian({
                         <span className="text-rose-700 dark:text-rose-300">
                           {formTotals.totalDebit === 0 && formTotals.totalCredit === 0
                             ? 'Isi nominal Debit & Kredit terlebih dahulu'
-                            : 'BELUM SEIMBANG Ã¢â‚¬â€ Total Debit harus sama dengan Total Kredit'}
+                            : 'BELUM SEIMBANG — Total Debit harus sama dengan Total Kredit'}
                         </span>
                       </>
                     )}

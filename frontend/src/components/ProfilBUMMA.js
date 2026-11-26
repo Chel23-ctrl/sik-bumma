@@ -115,7 +115,7 @@ export default function ProfilBUMMA({ profile, setProfile, readOnly = false, use
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Wilayah Adat</label>
+            <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Wilayah / Distrik</label>
             <input
               type="text"
               readOnly={isReadOnly}
